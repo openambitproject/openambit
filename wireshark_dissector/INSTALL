@@ -1,0 +1,9 @@
+This wireshark plugin is built with cmake (in a separate build/ directory):
+  mkdir build
+  cd build
+  cmake ..
+  make
+  make install
+
+This will build the .so plugin for wireshark and install it into the user's 
+~/.wireshark/plugins/ directory, where wireshark will load plugins from.
