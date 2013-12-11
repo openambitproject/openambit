@@ -11,5 +11,5 @@ add_executable(
 )
 
 target_link_libraries(
-  ambitconsole libambit
+  ambitconsole ambit
 )
