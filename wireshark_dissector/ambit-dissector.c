@@ -214,8 +214,6 @@ static gint ett_ambit_log_data = -1;
 static gint ett_ambit_log_samples = -1;
 static gint ett_ambit_log_sample = -1;
 
-static expert_field ei_ambit_undecoded= EI_INIT;
-
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
 
@@ -317,7 +315,7 @@ static void dissect_ambit_add_unknown(tvbuff_t *tvb, packet_info *pinfo, proto_t
 {
     proto_item *unknown_item = NULL;
     unknown_item = proto_tree_add_item(tree, hf_ambit_unknown, tvb, offset, len, ENC_LITTLE_ENDIAN);
-    expert_add_info(pinfo, unknown_item, &ei_ambit_undecoded);
+    expert_add_info_format(pinfo, unknown_item, PI_UNDECODED, PI_WARN, "Not dissected yet");
 }
 
 static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1515,7 +1513,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (reassembly_entries[pinfo->fd->num].valid == 1) {
                 new_tvb = tvb_new_subset_remaining(tvb, offset);
                 pkt_len = data_len;
-                col_add_fstr(pinfo->cinfo, COL_INFO, "");
+                col_set_str(pinfo->cinfo, COL_INFO, "");
             }
             else if (reassembly_entries[pinfo->fd->num].start_frame + reassembly_entries[pinfo->fd->num].frame_count - 1 == pinfo->fd->num) {
                 new_tvb = tvb_new_real_data(reassembly_entries[pinfo->fd->num].data, reassembly_entries[pinfo->fd->num].size, reassembly_entries[pinfo->fd->num].size);
@@ -1885,12 +1883,6 @@ proto_register_ambit(void)
         &ett_ambit_log_sample,
     };
 
-    static ei_register_info ei[] = {
-        { &ei_ambit_undecoded, { "ambit.undecoded", PI_UNDECODED, PI_WARN, "Not dissected yet", EXPFILL }},
-    };
-
-    expert_module_t *expert_ambit;
-
     proto_ambit = proto_register_protocol (
         "Suunto Ambit USB Protocol",
         "Ambit",
@@ -1899,8 +1891,6 @@ proto_register_ambit(void)
 
     proto_register_field_array(proto_ambit, hf, array_length(hf));
     proto_register_subtree_array(ett, array_length(ett));
-    expert_ambit = expert_register_protocol(proto_ambit);
-    expert_register_field_array(expert_ambit, ei, array_length(ei));
     //register_dissector("ambit", dissect_ambit, proto_ambit);
 }
 
