@@ -2,16 +2,18 @@ find_package(libusb REQUIRED)
 find_package(UDev REQUIRED)
 
 add_library (
-  libambit
+  ambit
   SHARED
   crc16.c
   libambit.c
   hid.c
+  personal.c
+  pmem20.c
   protocol.c
 )
 
 target_link_libraries(
-  libambit
+  ambit
   ${UDEV_LIBS}
   ${LIBUSB_LIBRARIES}
   m

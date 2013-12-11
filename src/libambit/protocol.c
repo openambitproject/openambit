@@ -1,3 +1,24 @@
+/*
+ * (C) Copyright 2013 Emil Ljungdahl
+ *
+ * This file is part of libambit.
+ *
+ * libambit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *
+ */
 #include "libambit.h"
 #include "libambit_int.h"
 #include "hidapi/hidapi.h"
@@ -11,7 +32,7 @@
 /*
  * Local definitions
  */
-#define READ_TIMEOUT       1000 // ms
+#define READ_TIMEOUT       3000 // ms
 #define READ_POLL_INTERVAL 100  // ms
 #define READ_POLL_RETRY    (READ_TIMEOUT / READ_POLL_INTERVAL)
 
@@ -125,10 +146,10 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
         msg_parts = le16toh(msg->parts_seq);
 
         for (i=2; ret == 0 && i<=msg_parts; i++) {
-            if (protocol_read_packet(object, buf) == 0 && msg->MP == 0x5e) {
+            if (protocol_read_packet(object, buf) == 0 && msg->MP == 0x5e && le16toh(msg->parts_seq) < msg_parts) {
                 packet_payload_len = fmin(54, reply_data_len);
                 if (reply_data != NULL) {
-                    memcpy(&(*reply_data)[dataoffset], &buf[8], packet_payload_len);
+                    memcpy(&(*reply_data)[42+(le16toh(msg->parts_seq)-1)*54], &buf[8], packet_payload_len);
                 }
                 dataoffset += packet_payload_len;
                 reply_data_len -= packet_payload_len;
