@@ -58,12 +58,10 @@ void SettingsDialog::accept()
 void SettingsDialog::showHideUserSettings()
 {
     if (ui->checkBoxMovescountEnable->isChecked()) {
-        ui->lineEditUsername->setHidden(false);
-        ui->lineEditPassword->setHidden(false);
+        ui->lineEditEmail->setHidden(false);
     }
     else {
-        ui->lineEditUsername->setHidden(true);
-        ui->lineEditPassword->setHidden(true);
+        ui->lineEditEmail->setHidden(true);
     }
 }
 
@@ -77,8 +75,7 @@ void SettingsDialog::readSettings()
     settings.beginGroup("movescountSettings");
     ui->checkBoxNewVersions->setChecked(settings.value("checkNewVersions", true).toBool());
     ui->checkBoxMovescountEnable->setChecked(settings.value("movescountEnable", false).toBool());
-    ui->lineEditUsername->setText(settings.value("username", "").toString());
-    ui->lineEditPassword->setText(settings.value("password", "").toString());
+    ui->lineEditEmail->setText(settings.value("email", "").toString());
     ui->checkBoxDebugFiles->setChecked(settings.value("storeDebugFiles", true).toBool());
     settings.endGroup();
 }
@@ -94,12 +91,10 @@ void SettingsDialog::writeSettings()
     settings.setValue("checkNewVersions", ui->checkBoxNewVersions->isChecked());
     settings.setValue("movescountEnable", ui->checkBoxMovescountEnable->isChecked());
     if (ui->checkBoxMovescountEnable->isChecked()) {
-        settings.setValue("username", ui->lineEditUsername->text());
-        settings.setValue("password", ui->lineEditPassword->text());
+        settings.setValue("email", ui->lineEditEmail->text());
     }
     else {
-        settings.setValue("username", "");
-        settings.setValue("password", "");
+        settings.setValue("email", "");
     }
     settings.setValue("storeDebugFiles", ui->checkBoxDebugFiles->isChecked());
     settings.endGroup();

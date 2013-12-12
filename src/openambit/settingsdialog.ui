@@ -145,10 +145,20 @@
               <string>Movescount connectivity</string>
              </property>
              <layout class="QFormLayout" name="formLayout_2">
+              <property name="fieldGrowthPolicy">
+               <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+              </property>
               <item row="0" column="0">
                <widget class="QCheckBox" name="checkBoxNewVersions">
                 <property name="text">
                  <string>Check Movescount for new versions</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="checkBoxDebugFiles">
+                <property name="text">
+                 <string>Generate debug files (XMLs stored in ~/.openambit/movescount)</string>
                 </property>
                </widget>
               </item>
@@ -159,27 +169,10 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QLineEdit" name="lineEditUsername">
+              <item row="3" column="0" colspan="2">
+               <widget class="QLineEdit" name="lineEditEmail">
                 <property name="placeholderText">
-                 <string>Username</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLineEdit" name="lineEditPassword">
-                <property name="echoMode">
-                 <enum>QLineEdit::Password</enum>
-                </property>
-                <property name="placeholderText">
-                 <string>Password</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QCheckBox" name="checkBoxDebugFiles">
-                <property name="text">
-                 <string>Generate debug files (XMLs stored in ~/.openambit/movescount)</string>
+                 <string>Email (Movescount account)</string>
                 </property>
                </widget>
               </item>
