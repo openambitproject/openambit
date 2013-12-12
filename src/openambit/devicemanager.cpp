@@ -62,17 +62,20 @@ void DeviceManager::detect()
 void DeviceManager::startSync(bool readAllLogs = false)
 {
     int res = -1;
+
     mutex.lock();
     if (this->deviceObject != NULL) {
+        emit this->syncProgressInform(QString(tr("Reading personal settings")), true, 0);
         res = libambit_personal_settings_get(this->deviceObject, &currentPersonalSettings);
 
         if (res != -1) {
+            emit this->syncProgressInform(QString(tr("Reading log files")), true, 0);
             res = libambit_log_read(this->deviceObject, readAllLogs ? NULL : &log_skip_cb, &log_push_cb, &log_progress_cb, this);
         }
     }
     mutex.unlock();
 
-    emit syncFinished(res == 0);
+    emit syncFinished(res >= 0);
 
     if (res == -1) {
         // Failed to read! We better try another detect
@@ -126,5 +129,5 @@ void DeviceManager::log_push_cb(void *ref, ambit_log_entry_t *log_entry)
 void DeviceManager::log_progress_cb(void *ref, uint16_t log_count, uint16_t log_current, uint8_t progress_percent)
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
-    emit manager->syncProgressInform(QString("Downloading message %1 of %2").arg(log_current).arg(log_count), false, progress_percent);
+    emit manager->syncProgressInform(QString(tr("Downloading message %1 of %2")).arg(log_current).arg(log_count), false, progress_percent);
 }

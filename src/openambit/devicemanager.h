@@ -66,7 +66,6 @@ private:
     MovesCount movesCount;
     Settings settings;
     LogStore logStore;
-
 };
 
 #endif // DEVICEMANAGER_H

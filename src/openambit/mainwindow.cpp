@@ -81,6 +81,12 @@ void MainWindow::showSettings()
 void MainWindow::syncNowClicked()
 {
     ui->buttonSyncNow->setEnabled(false);
+    currentLogMessageRow = NULL;
+    QLayoutItem *tmpItem;
+    while ((tmpItem = ui->verticalLayoutLogMessages->takeAt(0)) != NULL) {
+        delete tmpItem->widget();
+        delete tmpItem;
+    }
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
     emit MainWindow::syncNow(false);
@@ -126,12 +132,43 @@ void MainWindow::deviceCharge(quint8 percent)
 
 void MainWindow::syncFinished(bool success)
 {
+    if (currentLogMessageRow != NULL) {
+        currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
+    }
+    if (success) {
+        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow->setMessage(tr("Syncronization complete"));
+        currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
+        ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
+    }
+    else {
+        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow->setMessage(tr("Syncronization failed"));
+        currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
+        ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
+    }
     ui->buttonSyncNow->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
+
+    updateLogList();
 }
 
 void MainWindow::syncProgressInform(QString message, bool newRow, quint8 percentDone)
 {
+    if (newRow) {
+        if (currentLogMessageRow != NULL) {
+            currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
+        }
+        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow->setMessage(message);
+        currentLogMessageRow->setStatus(LogMessageRow::StatusRunning);
+        ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
+    }
+    else {
+        if (currentLogMessageRow != NULL) {
+            currentLogMessageRow->setMessage(message);
+        }
+    }
     ui->syncProgressBar->setValue(percentDone);
 }
 
@@ -178,4 +215,43 @@ void MainWindow::updateLogList()
         item->setData(Qt::UserRole, QVariant(entry.filename));
         ui->logsList->addItem(item);
     }
+}
+
+MainWindow::LogMessageRow::LogMessageRow(QWidget *parent) :
+    QHBoxLayout(parent)
+{
+    iconLabel = new QLabel(parent);
+    iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    textLabel = new QLabel(parent);
+    this->addWidget(iconLabel);
+    this->addWidget(textLabel);
+}
+
+MainWindow::LogMessageRow::~LogMessageRow()
+{
+    this->removeWidget(iconLabel);
+    this->removeWidget(textLabel);
+    delete iconLabel;
+    delete textLabel;
+}
+
+void MainWindow::LogMessageRow::setMessage(QString message)
+{
+    textLabel->setText(message);
+}
+
+void MainWindow::LogMessageRow::setStatus(Status status)
+{
+    QIcon icon;
+
+    if (status == StatusRunning) {
+        icon = QIcon::fromTheme("task-ongoing");
+    }
+    else if (status == StatusSuccess) {
+        icon = QIcon::fromTheme("task-complete");
+    }
+    else if (status == StatusFailed) {
+        icon = QIcon::fromTheme("task-reject");
+    }
+    iconLabel->setPixmap(icon.pixmap(8,8));
 }

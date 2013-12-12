@@ -26,6 +26,9 @@
 #include "settingsdialog.h"
 #include <QMainWindow>
 #include <QThread>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 
 namespace Ui {
 class MainWindow;
@@ -59,12 +62,37 @@ private slots:
     void updateLogList();
     
 private:
+    void addLogMessageRow(QString message);
+    void updateLogMessageRow(QString message);
+    void finalizeLogMessageRow();
+
     Ui::MainWindow *ui;
     SettingsDialog *settingsDialog;
     DeviceManager *deviceManager;
     LogStore logStore;
     MovesCount movesCount;
     QThread deviceWorkerThread;
+
+    class LogMessageRow : public QHBoxLayout
+    {
+    public:
+        enum Status {
+            StatusRunning,
+            StatusSuccess,
+            StatusFailed
+        };
+        explicit LogMessageRow(QWidget *parent);
+        ~LogMessageRow();
+
+        void setMessage(QString message);
+        void setStatus(Status status);
+
+    private:
+        QLabel *iconLabel;
+        QLabel *textLabel;
+    };
+
+    LogMessageRow *currentLogMessageRow = NULL;
 };
 
 #endif // MAINWINDOW_H
