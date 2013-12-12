@@ -56,6 +56,12 @@ LogEntry::LogEntry(const LogEntry &other)
                         memcpy(logEntry->samples[i].u.gps_base.satellites, other.logEntry->samples[i].u.gps_base.satellites, sizeof(ambit_log_gps_satellite_t)*logEntry->samples[i].u.gps_base.satellites_count);
                     }
                 }
+                if (other.logEntry->samples[i].type == ambit_log_sample_type_unknown) {
+                    if (other.logEntry->samples[i].u.unknown.datalen > 0 && other.logEntry->samples[i].u.unknown.data != NULL) {
+                        logEntry->samples[i].u.unknown.data = (uint8_t*)malloc(other.logEntry->samples[i].u.unknown.datalen);
+                        memcpy(logEntry->samples[i].u.unknown.data, other.logEntry->samples[i].u.unknown.data, other.logEntry->samples[i].u.unknown.datalen);
+                    }
+                }
             }
         }
     }
@@ -93,6 +99,11 @@ LogEntry::~LogEntry()
                 if (logEntry->samples[i].type == ambit_log_sample_type_gps_base) {
                     if (logEntry->samples[i].u.gps_base.satellites != NULL) {
                         free(logEntry->samples[i].u.gps_base.satellites);
+                    }
+                }
+                if (logEntry->samples[i].type == ambit_log_sample_type_unknown) {
+                    if (logEntry->samples[i].u.unknown.data != NULL) {
+                        free(logEntry->samples[i].u.unknown.data);
                     }
                 }
             }

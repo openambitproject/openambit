@@ -591,6 +591,8 @@ bool MovesCount::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<qui
     case ambit_log_sample_type_position:
         //! TODO: Unknown representation!
         break;
+    default:
+        break;
     }
 
     return true;

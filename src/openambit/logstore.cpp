@@ -48,6 +48,7 @@ static sample_type_names_t sampleTypeNames[] = {
     { ambit_log_sample_type_time, "time" },
     { ambit_log_sample_type_activity, "activity" },
     { ambit_log_sample_type_position, "position" },
+    { ambit_log_sample_type_unknown, "unknown" },
     { (ambit_log_sample_type_t)0, "" }
 };
 
@@ -893,6 +894,23 @@ void LogStore::XMLReader::readLogSamples()
                             xml.skipCurrentElement();
                         }
                         break;
+                    case ambit_log_sample_type_unknown:
+                        if (xml.name() == "Data") {
+                            QByteArray val = xml.readElementText().toLocal8Bit();
+                            const char *c_str = val.data();
+                            if (val.length() >= 2) {
+                                logEntry->logEntry->samples[sampleCount].u.unknown.data = (uint8_t*)malloc(val.length()/2);
+                                for (int i=0; i<val.length()/2; i++) {
+                                    sscanf(c_str, "%2hhx", &logEntry->logEntry->samples[sampleCount].u.unknown.data[i]);
+                                    c_str += 2 * sizeof(char);
+                                }
+                            }
+                        }
+                        else {
+                            /* Should not get here! */
+                            xml.skipCurrentElement();
+                        }
+                        break;
                     default:
                         xml.skipCurrentElement();
                     }
@@ -1436,6 +1454,15 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
         xml.writeTextElement("Latitude", QString("%1").arg(sample->u.position.latitude));
         xml.writeTextElement("Longitude", QString("%1").arg(sample->u.position.longitude));
         break;
+    case ambit_log_sample_type_unknown:
+    {
+        QString data = "";
+        for (size_t i=0; i<sample->u.unknown.datalen; i++) {
+            data += data.sprintf("%02x", sample->u.unknown.data[i]);
+        }
+        xml.writeTextElement("Data", data);
+        break;
+    }
     }
 
     xml.writeEndElement();
@@ -1517,23 +1544,24 @@ bool LogStore::XMLWriter::writePeriodicSample(ambit_log_sample_t *sample)
             break;
         case ambit_log_sample_periodic_type_snr:
         {
-            QString snr = QString("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x")
-                                           .arg(value->u.snr[0])
-                                           .arg(value->u.snr[1])
-                                           .arg(value->u.snr[2])
-                                           .arg(value->u.snr[3])
-                                           .arg(value->u.snr[4])
-                                           .arg(value->u.snr[5])
-                                           .arg(value->u.snr[6])
-                                           .arg(value->u.snr[7])
-                                           .arg(value->u.snr[8])
-                                           .arg(value->u.snr[9])
-                                           .arg(value->u.snr[10])
-                                           .arg(value->u.snr[11])
-                                           .arg(value->u.snr[12])
-                                           .arg(value->u.snr[13])
-                                           .arg(value->u.snr[14])
-                                           .arg(value->u.snr[15]);
+            QString format;
+            QString snr = format.sprintf("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                                         value->u.snr[0],
+                                         value->u.snr[1],
+                                         value->u.snr[2],
+                                         value->u.snr[3],
+                                         value->u.snr[4],
+                                         value->u.snr[5],
+                                         value->u.snr[6],
+                                         value->u.snr[7],
+                                         value->u.snr[8],
+                                         value->u.snr[9],
+                                         value->u.snr[10],
+                                         value->u.snr[11],
+                                         value->u.snr[12],
+                                         value->u.snr[13],
+                                         value->u.snr[14],
+                                         value->u.snr[15]);
             xml.writeTextElement("SNR", snr);
             break;
         }
