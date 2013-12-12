@@ -179,7 +179,7 @@ typedef struct ambit_log_sample_periodic_value_s {
         uint32_t ehpe;              /* meters scale: 0.01 */
         uint32_t evpe;              /* meters scale: 0.01 */
         int16_t  altitude;          /* meters, -1000 <= altitude <= 10000 */
-        uint16_t abspressure;      /* hpa scale 0.1 */
+        uint16_t abspressure;       /* hpa scale 0.1 */
         uint16_t energy;            /* hcal/min */
         int16_t  temperature;       /* celsius scale 0.1, -100 <= temp <= 100 */
         uint8_t  charge;            /* percent */
@@ -190,7 +190,7 @@ typedef struct ambit_log_sample_periodic_value_s {
         uint16_t wristcadence;      /* rpm, ignore if 0xffff */
         uint8_t  snr[16];           /* ? */
         uint8_t  noofsatellites;    /* ignore if 0xff */
-        int16_t  sealevelpressure; /* hpa scale: 0.1 */
+        int16_t  sealevelpressure;  /* hpa scale: 0.1 */
         int16_t  verticalspeed;     /* m/s scale: 0.01 */
         uint8_t  cadence;           /* rpm, ignore if 0xff */
         uint16_t bikepower;         /* watt */
@@ -223,7 +223,7 @@ typedef struct ambit_log_sample_s {
             uint16_t ibi[32];
         } ibi;
         uint16_t ttff;
-        uint8_t  distance_source; /* 2 = GPS, 3 = Wrist */
+        uint8_t  distance_source;               /* 2 = GPS, 3 = Wrist */
         struct {
             uint8_t event_type;                 /* 0x01 = manual lap,
                                                    0x14 = high interval end,
