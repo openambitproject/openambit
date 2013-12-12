@@ -124,7 +124,8 @@ typedef enum ambit_log_sample_type_e {
     ambit_log_sample_type_gps_tiny = 0x0311,
     ambit_log_sample_type_time = 0x0312,
     ambit_log_sample_type_activity = 0x0318,
-    ambit_log_sample_type_position = 0x031b
+    ambit_log_sample_type_position = 0x031b,
+    ambit_log_sample_type_unknown = 0xf000
 } ambit_log_sample_type_t;
 
 typedef enum ambit_log_sample_periodic_type_e {
@@ -279,6 +280,10 @@ typedef struct ambit_log_sample_s {
             int32_t  latitude;                  /* degree, scale: 0.0000001, -90 <= latitude <= 90 */
             int32_t  longitude;                 /* degree, scale: 0.0000001, -180 <= latitude <= 180 */
         } position;
+        struct {
+            size_t datalen;
+            uint8_t *data;
+        } unknown;
     } u;
 } ambit_log_sample_t;
 

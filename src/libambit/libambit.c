@@ -382,6 +382,11 @@ void libambit_log_entry_free(ambit_log_entry_t *log_entry)
                         free(log_entry->samples[i].u.gps_base.satellites);
                     }
                 }
+                if (log_entry->samples[i].type == ambit_log_sample_type_unknown) {
+                    if (log_entry->samples[i].u.unknown.data != NULL) {
+                        free(log_entry->samples[i].u.unknown.data);
+                    }
+                }
             }
             free(log_entry->samples);
         }

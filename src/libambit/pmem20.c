@@ -614,12 +614,20 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
             break;
           default:
             printf("Found unknown episodic sample type (%02x)\n", episodic_type);
+            log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
+            log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
+            log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
+            memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + *offset + 2, sample_len);
             break;
         }
         ret = 1;
         break;
       default:
         printf("Found unknown sample type (%02x)\n", sample_type);
+        log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
+        log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
+        log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
+        memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + *offset + 2, sample_len);
         ret = 1;
         break;
     }
