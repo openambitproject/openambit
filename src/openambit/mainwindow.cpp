@@ -80,6 +80,7 @@ void MainWindow::showSettings()
 
 void MainWindow::syncNowClicked()
 {
+    ui->checkBoxResyncAll->setEnabled(false);
     ui->buttonSyncNow->setEnabled(false);
     currentLogMessageRow = NULL;
     QLayoutItem *tmpItem;
@@ -89,7 +90,7 @@ void MainWindow::syncNowClicked()
     }
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
-    emit MainWindow::syncNow(false);
+    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked());
 }
 
 void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
@@ -147,6 +148,8 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
     }
+    ui->checkBoxResyncAll->setChecked(false);
+    ui->checkBoxResyncAll->setEnabled(true);
     ui->buttonSyncNow->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
 

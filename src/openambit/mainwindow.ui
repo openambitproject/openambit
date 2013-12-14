@@ -228,6 +228,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBoxResyncAll">
+            <property name="text">
+             <string>Resync all</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="buttonSyncNow">
             <property name="text">
              <string>Sync now</string>
