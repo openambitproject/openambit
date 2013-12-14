@@ -635,6 +635,7 @@ void LogStore::XMLReader::readLogSamples()
         if (xml.name() == "Sample") {
             QList<ambit_log_sample_periodic_value_t> periodicValues;
             int ibiCount = 0;
+            type = ambit_log_sample_type_unknown;
             while (xml.readNextStartElement()) {
                 if (xml.name() == "Type") {
                     type = (ambit_log_sample_type_t)xml.attributes().value("id").toString().toUInt();
