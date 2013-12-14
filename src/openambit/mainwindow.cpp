@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->labelNotSupported->setHidden(true);
     ui->labelCharge->setHidden(true);
     ui->chargeIndicator->setHidden(true);
+    ui->checkBoxResyncAll->setHidden(true);
     ui->buttonSyncNow->setHidden(true);
     ui->syncProgressBar->setHidden(true);
 
@@ -102,6 +103,7 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
         ui->labelNotSupported->setHidden(false);
         ui->labelCharge->setHidden(true);
         ui->chargeIndicator->setHidden(true);
+        ui->checkBoxResyncAll->setHidden(true);
         ui->buttonSyncNow->setHidden(true);
         ui->syncProgressBar->setHidden(true);
     }
@@ -110,6 +112,7 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
         ui->labelNotSupported->setHidden(true);
         ui->labelCharge->setHidden(false);
         ui->chargeIndicator->setHidden(false);
+        ui->checkBoxResyncAll->setHidden(false);
         ui->buttonSyncNow->setHidden(false);
     }
 }
@@ -122,6 +125,7 @@ void MainWindow::deviceRemoved(void)
     ui->labelNotSupported->setHidden(true);
     ui->labelCharge->setHidden(true);
     ui->chargeIndicator->setHidden(true);
+    ui->checkBoxResyncAll->setHidden(true);
     ui->buttonSyncNow->setHidden(true);
     ui->syncProgressBar->setHidden(true);
 }
