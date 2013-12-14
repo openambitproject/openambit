@@ -344,7 +344,7 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
                 progress_cb(userref, log_entries_total, log_entries_walked+1, 100*log_entries_walked/log_entries_total);
             }
             // Check if this entry needs to be read
-            if (skip_cb(userref, &log_header) != 0) {
+            if (skip_cb == NULL || skip_cb(userref, &log_header) != 0) {
                 log_entry = libambit_pmem20_read_entry(object);
                 if (log_entry != NULL) {
                     if (push_cb != NULL) {
