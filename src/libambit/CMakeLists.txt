@@ -19,6 +19,8 @@ target_link_libraries(
   m
 )
 
+set_target_properties(ambit PROPERTIES VERSION 0.0.1 SOVERSION 1) 
+
 include_directories(
   hidapi
 )
