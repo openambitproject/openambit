@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    deviceWorkerThread.quit();
+    deviceWorkerThread.wait();
     delete ui;
 }
 
@@ -141,13 +143,13 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
     }
     if (success) {
-        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow = new LogMessageRow(0);
         currentLogMessageRow->setMessage(tr("Syncronization complete"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
     }
     else {
-        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow = new LogMessageRow(0);
         currentLogMessageRow->setMessage(tr("Syncronization failed"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
@@ -166,7 +168,7 @@ void MainWindow::syncProgressInform(QString message, bool newRow, quint8 percent
         if (currentLogMessageRow != NULL) {
             currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         }
-        currentLogMessageRow = new LogMessageRow(this);
+        currentLogMessageRow = new LogMessageRow(0);
         currentLogMessageRow->setMessage(message);
         currentLogMessageRow->setStatus(LogMessageRow::StatusRunning);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
