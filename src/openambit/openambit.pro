@@ -33,6 +33,6 @@ FORMS    += mainwindow.ui \
     settingsdialog.ui
 
 INCLUDEPATH += ../libambit
-QMAKE_LIBDIR += ../build/libambit
+QMAKE_LIBDIR += ../libambit-build
 
 LIBS += -lambit

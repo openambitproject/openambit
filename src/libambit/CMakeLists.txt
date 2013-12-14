@@ -1,3 +1,9 @@
+cmake_minimum_required (VERSION 2.6)
+project (LIBAMBIT)
+
+# Where to lookup modules
+set (CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
+
 find_package(libusb REQUIRED)
 find_package(UDev REQUIRED)
 
