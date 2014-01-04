@@ -40,8 +40,12 @@ static gint dissect_ambit_log_header_get(tvbuff_t *tvb, packet_info *pinfo, prot
 static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
-static gint dissect_ambit_log_header_next_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
-static gint dissect_ambit_log_header_next_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_count_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_data_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length);
@@ -137,6 +141,8 @@ static int hf_ambit_log_header_battery_stop = -1;
 static int hf_ambit_log_header_distance_before_calib = -1;
 
 static int hf_ambit_log_header_more = -1;
+
+static int hf_ambit_log_count = -1;
 
 static int hf_ambit_log_data_addr_frame_ref = -1;
 static int hf_ambit_log_data_address = -1;
@@ -285,10 +291,14 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x0b000a00, "Personal settings reply", dissect_ambit_personal_settings_reply },
     { 0x0b010500, "Write personal settings", dissect_ambit_personal_settings_reply },
     { 0x0b010a00, "Personal settings write reply", dissect_ambit_personal_settings_get },
+    { 0x0b060500, "Get log count", dissect_ambit_log_count_get },
+    { 0x0b060a00, "Log count reply", dissect_ambit_log_count_reply },
     { 0x0b070500, "Log header unwind request", dissect_ambit_log_header_unwind_get },
     { 0x0b070a00, "Log header unwind reply", dissect_ambit_log_header_unwind_reply },
-    { 0x0b080500, "Log header next request", dissect_ambit_log_header_next_get },
-    { 0x0b080a00, "Log header next reply", dissect_ambit_log_header_next_reply },
+    { 0x0b080500, "Log header peek request", dissect_ambit_log_header_peek_get },
+    { 0x0b080a00, "Log header peek reply", dissect_ambit_log_header_peek_reply },
+    { 0x0b0a0500, "Log header step request", dissect_ambit_log_header_step_get },
+    { 0x0b0a0a00, "Log header step reply", dissect_ambit_log_header_step_reply },
     { 0x0b0b0500, "Get log header", dissect_ambit_log_header_get },
     { 0x0b0b0a00, "Log header reply", dissect_ambit_log_header_reply },
     { 0x0b170500, "Get log data", dissect_ambit_log_data_get },
@@ -577,55 +587,67 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_distance_before_calib, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
-        offset += 24;
-        proto_tree_add_item(tree, hf_ambit_log_header_activity_name, tvb, offset, 16, ENC_LITTLE_ENDIAN);
-        offset += 16;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-        offset += 4;
-        year = tvb_get_letohs(tvb, offset);
-        month = tvb_get_guint8(tvb, offset + 2);
-        day = tvb_get_guint8(tvb, offset + 3);
-        proto_tree_add_string_format_value(tree, hf_ambit_log_header_date, tvb, offset, 4, "Date", "%04d-%02d-%02d", year, month, day);
-        offset += 4;
-        hour = tvb_get_guint8(tvb, offset);
-        minute = tvb_get_guint8(tvb, offset + 1);
-        seconds = tvb_get_guint8(tvb, offset + 2);
-        proto_tree_add_string_format_value(tree, hf_ambit_log_header_time, tvb, offset, 3, "Time", "%02d:%02d:%02d", hour, minute, seconds);
-        offset += 3;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
-        offset += 1;
-        proto_tree_add_item(tree, hf_ambit_log_header_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
-        offset += 4;
-        proto_tree_add_item(tree, hf_ambit_log_header_duration, tvb, offset, 4, ENC_LITTLE_ENDIAN);
-        offset += 4;
-        proto_tree_add_item(tree, hf_ambit_log_header_max_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        offset += 2;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
-        offset += 2;
-        proto_tree_add_item(tree, hf_ambit_log_header_ascent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        offset += 2;
-        proto_tree_add_item(tree, hf_ambit_log_header_descent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        offset += 2;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
-        offset += 2;
-        proto_tree_add_item(tree, hf_ambit_log_header_hr_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-        offset += 1;
-        proto_tree_add_item(tree, hf_ambit_log_header_hr_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-        offset += 1;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-        offset += 4;
-        proto_tree_add_item(tree, hf_ambit_log_header_recovery, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        offset += 2;
-        proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        offset += 2;
-        proto_tree_add_item(tree, hf_ambit_log_header_peak_effect, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-        offset += 1;
-        proto_tree_add_item(tree, hf_ambit_log_header_activity_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-        offset += 1;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
-        offset += (header_1_len - 211);
+        if (datalen > offset) {
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
+            offset += 24;
+            proto_tree_add_item(tree, hf_ambit_log_header_activity_name, tvb, offset, 16, ENC_LITTLE_ENDIAN);
+            offset += 16;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+            offset += 4;
+            year = tvb_get_letohs(tvb, offset);
+            month = tvb_get_guint8(tvb, offset + 2);
+            day = tvb_get_guint8(tvb, offset + 3);
+            proto_tree_add_string_format_value(tree, hf_ambit_log_header_date, tvb, offset, 4, "Date", "%04d-%02d-%02d", year, month, day);
+            offset += 4;
+            hour = tvb_get_guint8(tvb, offset);
+            minute = tvb_get_guint8(tvb, offset + 1);
+            seconds = tvb_get_guint8(tvb, offset + 2);
+            proto_tree_add_string_format_value(tree, hf_ambit_log_header_time, tvb, offset, 3, "Time", "%02d:%02d:%02d", hour, minute, seconds);
+            offset += 3;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+            offset += 1;
+            proto_tree_add_item(tree, hf_ambit_log_header_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(tree, hf_ambit_log_header_duration, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(tree, hf_ambit_log_header_max_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+            offset += 2;
+            proto_tree_add_item(tree, hf_ambit_log_header_ascent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(tree, hf_ambit_log_header_descent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+            offset += 2;
+            proto_tree_add_item(tree, hf_ambit_log_header_hr_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(tree, hf_ambit_log_header_hr_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+            offset += 4;
+            proto_tree_add_item(tree, hf_ambit_log_header_recovery, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(tree, hf_ambit_log_header_peak_effect, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(tree, hf_ambit_log_header_activity_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
+            offset += (header_1_len - 211);
+        }
     }
+}
+
+static gint dissect_ambit_log_count_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 2);
+    proto_tree_add_item(tree, hf_ambit_log_count, tvb, 2, 2, ENC_LITTLE_ENDIAN);
 }
 
 static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -637,11 +659,20 @@ static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pi
     proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
 }
 
-static gint dissect_ambit_log_header_next_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
 }
 
-static gint dissect_ambit_log_header_next_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+}
+
+static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
 }
@@ -737,7 +768,7 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     offset += 2;
     if (offset + header_1_len >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_sample_desc, tvb, offset, header_1_len, ENC_LITTLE_ENDIAN);
-    period_sample_spec = offset;
+    period_sample_spec = offset - 2; // Include length as well
     offset += header_1_len;
     if (offset + 2 >= length) return offset;
     header_1_len = tvb_get_letohs(tvb, offset);
@@ -871,75 +902,77 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_distance_before_calib, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
-    if (offset + 24 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
-    offset += 24;
-    if (offset + 16 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_activity_name, tvb, offset, 16, ENC_LITTLE_ENDIAN);
-    offset += 16;
-    if (offset + 4 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-    offset += 4;
-    if (offset + 4 >= length) return offset;
-    year = tvb_get_letohs(tvb, offset);
-    month = tvb_get_guint8(tvb, offset + 2);
-    day = tvb_get_guint8(tvb, offset + 3);
-    proto_tree_add_string_format_value(tree, hf_ambit_log_header_date, tvb, offset, 4, "Date", "%04d-%02d-%02d", year, month, day);
-    offset += 4;
-    if (offset + 3 >= length) return offset;
-    hour = tvb_get_guint8(tvb, offset);
-    minute = tvb_get_guint8(tvb, offset + 1);
-    seconds = tvb_get_guint8(tvb, offset + 2);
-    proto_tree_add_string_format_value(tree, hf_ambit_log_header_time, tvb, offset, 3, "Time", "%02d:%02d:%02d", hour, minute, seconds);
-    offset += 3;
-    if (offset + 1 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
-    offset += 1;
-    if (offset + 4 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
-    offset += 4;
-    if (offset + 4 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_duration, tvb, offset, 4, ENC_LITTLE_ENDIAN);
-    offset += 4;
-    if (offset + 2 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_max_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-    offset += 2;
-    if (offset + 2 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
-    offset += 2;
-    if (offset + 2 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_ascent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-    offset += 2;
-    if (offset + 2 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_descent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-    offset += 2;
-    if (offset + 2 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
-    offset += 2;
-    if (offset + 1 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_hr_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset += 1;
-    if (offset + 1 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_hr_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset += 1;
-    if (offset + 4 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-    offset += 4;
-    if (offset + 2 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_recovery, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-    offset += 2;
-    if (offset + 2 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-    offset += 2;
-    if (offset + 1 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_peak_effect, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset += 1;
-    if (offset + 1 >= length) return offset;
-    proto_tree_add_item(tree, hf_ambit_log_header_activity_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset += 1;
-    if (offset + (header_1_len - 211) >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
-    offset += (header_1_len - 211);
+    if (header_1_len == 913) { /* Long header */
+        if (offset + 24 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
+        offset += 24;
+        if (offset + 16 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_activity_name, tvb, offset, 16, ENC_LITTLE_ENDIAN);
+        offset += 16;
+        if (offset + 4 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
+        if (offset + 4 >= length) return offset;
+        year = tvb_get_letohs(tvb, offset);
+        month = tvb_get_guint8(tvb, offset + 2);
+        day = tvb_get_guint8(tvb, offset + 3);
+        proto_tree_add_string_format_value(tree, hf_ambit_log_header_date, tvb, offset, 4, "Date", "%04d-%02d-%02d", year, month, day);
+        offset += 4;
+        if (offset + 3 >= length) return offset;
+        hour = tvb_get_guint8(tvb, offset);
+        minute = tvb_get_guint8(tvb, offset + 1);
+        seconds = tvb_get_guint8(tvb, offset + 2);
+        proto_tree_add_string_format_value(tree, hf_ambit_log_header_time, tvb, offset, 3, "Time", "%02d:%02d:%02d", hour, minute, seconds);
+        offset += 3;
+        if (offset + 1 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+        offset += 1;
+        if (offset + 4 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+        offset += 4;
+        if (offset + 4 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_duration, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+        offset += 4;
+        if (offset + 2 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_max_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
+        if (offset + 2 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+        offset += 2;
+        if (offset + 2 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_ascent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
+        if (offset + 2 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_descent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
+        if (offset + 2 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+        offset += 2;
+        if (offset + 1 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_hr_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        if (offset + 1 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_hr_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        if (offset + 4 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
+        if (offset + 2 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_recovery, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
+        if (offset + 2 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
+        if (offset + 1 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_peak_effect, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        if (offset + 1 >= length) return offset;
+        proto_tree_add_item(tree, hf_ambit_log_header_activity_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        if (offset + (header_1_len - 211) >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
+        offset += (header_1_len - 211);
+    }
 
     sample_ti = proto_tree_add_text(tree, tvb, 0, 0, "Samples");
     samples_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_samples);
@@ -1047,6 +1080,31 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
       case 3:
         inner_type = tvb_get_guint8(tvb, offset + 7);
         switch(inner_type) {
+          case 0x04:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Pause)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            break;
+          case 0x05:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Restart)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            break;
+            break;
           case 0x06:
             sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (IBI)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
@@ -1062,6 +1120,20 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 proto_tree_add_item(sample_tree, hf_ambit_log_ibi, tvb, offset, 2, ENC_LITTLE_ENDIAN);
                 offset += 2;
             }
+            break;
+          case 0x07:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (TTFF)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 2);
+            offset += 2;
             break;
           case 0x08:
             sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Distance source)", (*sampleno)++);
@@ -1741,6 +1813,9 @@ proto_register_ambit(void)
 
         { &hf_ambit_log_header_more,
           { "More values", "ambit.log_header.more", FT_UINT32, BASE_HEX, VALS(log_header_more_vals), 0, NULL, HFILL } },
+
+        { &hf_ambit_log_count,
+          { "Log count", "ambit.log.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_data_addr_frame_ref,
           { "In frame", "ambit.log_data.inframe", FT_FRAMENUM, BASE_NONE, NULL, 0, NULL, HFILL } },
