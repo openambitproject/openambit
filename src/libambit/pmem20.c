@@ -31,7 +31,6 @@
  */
 #define PMEM20_LOG_START          0x000f4240
 #define PMEM20_LOG_SIZE           0x0029f630 /* 2 750 000 */
-#define PMEM20_LOG_READ_CHUNKS    0x00000400 /* 1024 */
 #define PMEM20_LOG_HEADER_MIN_LEN        512 /* Header actually longer, but not interesting*/
 
 typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
@@ -59,7 +58,7 @@ static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval);
 /*
  * Public functions
  */
-int libambit_pmem20_init(ambit_object_t *object)
+int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size)
 {
     int ret = -1;
     size_t offset;
@@ -71,8 +70,9 @@ int libambit_pmem20_init(ambit_object_t *object)
     memset(&object->pmem20, 0, sizeof(object->pmem20));
     object->pmem20.buffer = malloc(PMEM20_LOG_SIZE);
     if (object->pmem20.buffer != NULL) {
+        object->pmem20.chunk_size = chunk_size;
         // Read initial log header
-        ret = read_log_chunk(object, PMEM20_LOG_START, PMEM20_LOG_READ_CHUNKS, object->pmem20.buffer);
+        ret = read_log_chunk(object, PMEM20_LOG_START, object->pmem20.chunk_size, object->pmem20.buffer);
         if (ret == 0) {
             object->pmem20.prev_read = PMEM20_LOG_START;
 
@@ -194,7 +194,7 @@ ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
     while (sample_count < log_entry->samples_count) {
         if (PMEM20_LOG_START + buffer_offset + 2 >= object->pmem20.last_addr ||
             PMEM20_LOG_START + buffer_offset + 2 + read16(object->pmem20.buffer, buffer_offset) >= object->pmem20.last_addr) {
-            read_upto(object, PMEM20_LOG_START + buffer_offset, PMEM20_LOG_READ_CHUNKS);
+            read_upto(object, PMEM20_LOG_START + buffer_offset, object->pmem20.chunk_size);
         }
 
         if (parse_sample(object->pmem20.buffer, &buffer_offset, &periodic_sample_spec, log_entry, &sample_count) == 1) {
@@ -337,8 +337,10 @@ int libambit_pmem20_parse_header(uint8_t *data, size_t datalen, ambit_log_header
 
     log_header->distance_before_calib = read32inc(data, &offset);
 
-    memcpy(log_header->unknown6, data+offset, 24);
-    offset += 24;
+    if (datalen >= offset + 24) {
+        memcpy(log_header->unknown6, data+offset, 24);
+        offset += 24;
+    }
 
     return 0;
 }
@@ -640,17 +642,17 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
 
 static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length)
 {
-    uint32_t start_address = address - ((address - PMEM20_LOG_START) % PMEM20_LOG_READ_CHUNKS);
+    uint32_t start_address = address - ((address - PMEM20_LOG_START) % object->pmem20.chunk_size);
 
     while (start_address < address + length) {
         if (object->pmem20.prev_read != start_address) {
-            if (read_log_chunk(object, start_address, PMEM20_LOG_READ_CHUNKS, object->pmem20.buffer + (start_address - PMEM20_LOG_START)) != 0) {
+            if (read_log_chunk(object, start_address, object->pmem20.chunk_size, object->pmem20.buffer + (start_address - PMEM20_LOG_START)) != 0) {
                 return -1;
             }
             object->pmem20.prev_read = start_address;
-            object->pmem20.last_addr = start_address + PMEM20_LOG_READ_CHUNKS - 1;
+            object->pmem20.last_addr = start_address + object->pmem20.chunk_size - 1;
         }
-        start_address += PMEM20_LOG_READ_CHUNKS;
+        start_address += object->pmem20.chunk_size;
     }
 
     return 0;

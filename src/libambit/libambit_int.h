@@ -38,6 +38,7 @@ typedef struct ambit_object_s {
 
     struct {
         bool initialized;
+        uint16_t chunk_size;
         uint32_t first_entry;
         uint32_t last_entry;
         uint32_t entries;
@@ -77,7 +78,7 @@ uint16_t crc16_ccitt_false_init(unsigned char *buf, size_t buflen, uint16_t crc)
 int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_personal_settings_t *settings);
 
 // pmem20.c
-int libambit_pmem20_init(ambit_object_t *object);
+int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size);
 int libambit_pmem20_deinit(ambit_object_t *object);
 int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_header);
 ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object);
