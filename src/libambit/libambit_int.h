@@ -28,7 +28,7 @@
 
 typedef struct ambit_supported_device_s ambit_supported_device_t;
 
-typedef struct ambit_object_s {
+struct ambit_object_s {
     hid_device *handle;
     uint16_t vendor_id;
     uint16_t product_id;
@@ -52,7 +52,7 @@ typedef struct ambit_object_s {
         uint32_t prev_read;
         uint32_t last_addr;
     } pmem20;
-} ambit_object_t;
+};
 
 enum ambit_commands_e {
     ambit_command_device_info        = 0x0000,
@@ -67,7 +67,7 @@ enum ambit_commands_e {
     ambit_command_log_head           = 0x0b0b,
     ambit_command_log_read           = 0x0b17,
     ambit_command_lock_check         = 0x0b19,
-    ambit_command_lock_set           = 0x0b1a,
+    ambit_command_lock_set           = 0x0b1a
 };
 
 // crc16.c
@@ -108,17 +108,20 @@ static inline uint32_t read32(uint8_t *buf, size_t offset)
 
 static inline uint8_t read8inc(uint8_t *buf, size_t *offset)
 {
-    return buf[(*offset)++];
+    *offset += 1;
+    return buf[(*offset)-1];
 }
 
 static inline uint16_t read16inc(uint8_t *buf, size_t *offset)
 {
-    return (buf[(*offset)++] | (buf[(*offset)++] << 8));
+    *offset += 2;
+    return (buf[(*offset)-2] | (buf[(*offset)-1] << 8));
 }
 
 static inline uint32_t read32inc(uint8_t *buf, size_t *offset)
 {
-    return (buf[(*offset)++] | (buf[(*offset)++] << 8) | (buf[(*offset)++] << 16) | (buf[(*offset)++] << 24));
+    *offset += 4;
+    return (buf[(*offset)-4] | (buf[(*offset)-3] << 8) | (buf[(*offset)-2] << 16) | (buf[(*offset)-1] << 24));
 }
 
 #endif /* __LIBAMBIT_INT_H__ */

@@ -106,7 +106,7 @@ int libambit_pmem20_deinit(ambit_object_t *object)
 
 int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_header)
 {
-    int ret = -1, tmp_ret;
+    int ret = -1;
     size_t buffer_offset;
     uint16_t tmp_len;
 
@@ -122,7 +122,7 @@ int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_
     if (read_upto(object, object->pmem20.current.next, PMEM20_LOG_HEADER_MIN_LEN) == 0) {
         buffer_offset = (object->pmem20.current.next - PMEM20_LOG_START);
         // First check that header seems to be correctly present
-        if (strncmp(object->pmem20.buffer + buffer_offset, "PMEM", 4) == 0) {
+        if (strncmp((char*)object->pmem20.buffer + buffer_offset, "PMEM", 4) == 0) {
             object->pmem20.current.current = object->pmem20.current.next;
             buffer_offset += 4;
             object->pmem20.current.next = read32inc(object->pmem20.buffer, &buffer_offset);
@@ -151,7 +151,7 @@ ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
     uint16_t tmp_len;
     size_t buffer_offset, sample_count = 0, i;
     ambit_log_entry_t *log_entry;
-    ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *gpsbase = NULL, *altisource = NULL;
+    ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *altisource = NULL;
     ambit_date_time_t utcbase;
     uint32_t altisource_index = 0;
     uint32_t last_base_lat = 0, last_base_long = 0;
@@ -270,7 +270,6 @@ ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
 int libambit_pmem20_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header)
 {
     size_t offset = 0;
-    int i;
 
     // Check that header is long enough to be parsed correctly
     if (datalen < 129) {

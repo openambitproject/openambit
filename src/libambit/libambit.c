@@ -248,7 +248,6 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
 
     uint32_t more = 0x00000400;
 
-    int i=0, j, q;
     bool read_pmem = false;
 
     ambit_log_header_t log_header;

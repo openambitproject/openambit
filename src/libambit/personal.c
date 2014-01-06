@@ -36,10 +36,9 @@
 int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_personal_settings_t *settings)
 {
     size_t offset = 0;
-    int i;
 
     // Check that data is long enough
-    if (datalen < 137) {
+    if (datalen < 132) {
         return -1;
     }
 
@@ -111,9 +110,13 @@ int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_person
     offset = 0x80;
     settings->bikepod_calibration = read16inc(data, &offset);
     settings->bikepod_calibration2 = read16inc(data, &offset);
-    settings->bikepod_calibration3 = read16inc(data, &offset);
-    settings->footpod_calibration = read16inc(data, &offset);
-    settings->automatic_bikepower_calib = read8inc(data, &offset);
+
+    if (datalen >= 137) {
+        // Only Ambit 2 got this!
+        settings->bikepod_calibration3 = read16inc(data, &offset);
+        settings->footpod_calibration = read16inc(data, &offset);
+        settings->automatic_bikepower_calib = read8inc(data, &offset);
+    }
 
     return 0;
 }
