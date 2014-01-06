@@ -4,6 +4,8 @@ project (LIBAMBIT)
 # Where to lookup modules
 set (CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+
 find_package(libusb REQUIRED)
 find_package(UDev REQUIRED)
 
