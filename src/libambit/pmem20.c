@@ -138,7 +138,7 @@ int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *
             tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
             buffer_offset += tmp_len;
             tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
-            if (libambit_pmem20_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, log_header) == 0) {
+            if (libambit_pmem20_log_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, log_header) == 0) {
                 ret = 1;
             }
         }
