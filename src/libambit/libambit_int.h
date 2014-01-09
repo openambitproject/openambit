@@ -37,20 +37,22 @@ struct ambit_object_s {
     ambit_device_info_t device_info;
 
     struct {
-        bool initialized;
         uint16_t chunk_size;
-        uint32_t first_entry;
-        uint32_t last_entry;
-        uint32_t entries;
-        uint32_t next_free_address;
         struct {
-            uint32_t current;
-            uint32_t next;
-            uint32_t prev;
-        } current;
-        uint8_t *buffer;
-        uint32_t prev_read;
-        uint32_t last_addr;
+            bool initialized;
+            uint32_t first_entry;
+            uint32_t last_entry;
+            uint32_t entries;
+            uint32_t next_free_address;
+            struct {
+                uint32_t current;
+                uint32_t next;
+                uint32_t prev;
+            } current;
+            uint8_t *buffer;
+            uint32_t prev_read;
+            uint32_t last_addr;
+        } log;
     } pmem20;
 };
 
@@ -60,14 +62,19 @@ enum ambit_commands_e {
     ambit_command_date               = 0x0302,
     ambit_command_status             = 0x0306,
     ambit_command_personal_settings  = 0x0b00,
+    ambit_command_unknown1           = 0x0b04,
     ambit_command_log_count          = 0x0b06,
     ambit_command_log_head_first     = 0x0b07,
     ambit_command_log_head_peek      = 0x0b08,
     ambit_command_log_head_step      = 0x0b0a,
     ambit_command_log_head           = 0x0b0b,
+    ambit_command_gps_orbit_head     = 0x0b15,
+    ambit_command_data_write         = 0x0b16,
     ambit_command_log_read           = 0x0b17,
+    ambit_command_data_tail_len      = 0x0b18,
     ambit_command_lock_check         = 0x0b19,
-    ambit_command_lock_set           = 0x0b1a
+    ambit_command_lock_set           = 0x0b1a,
+    ambit_command_write_start        = 0x0b1b // Really!? Just a guess...
 };
 
 // crc16.c
@@ -79,10 +86,12 @@ int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_person
 
 // pmem20.c
 int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size);
-int libambit_pmem20_deinit(ambit_object_t *object);
-int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_header);
-ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object);
-int libambit_pmem20_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header);
+int libambit_pmem20_log_init(ambit_object_t *object);
+int libambit_pmem20_log_deinit(ambit_object_t *object);
+int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *log_header);
+ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object);
+int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header);
+int libambit_pmem20_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
 // protocol.c
 int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t *data, size_t datalen, uint8_t **reply_data, size_t *replylen, uint8_t legacy_format);

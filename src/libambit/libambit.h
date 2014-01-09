@@ -365,6 +365,18 @@ bool libambit_device_supported(ambit_object_t *object);
 int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *status);
 
 /**
+ * Set sync message to device display
+ * \param object Object to set display on
+ */
+void libambit_sync_display_show(ambit_object_t *object);
+
+/**
+ * Clear sync message from device display
+ * \param object Object to clear display on
+ */
+void libambit_sync_display_clear(ambit_object_t *object);
+
+/**
  * Set current date and time to clock
  * \param object Object to write to
  * \param date_time Date and time to set
@@ -387,6 +399,24 @@ int libambit_device_status_get(ambit_object_t *object, ambit_device_status_t *st
  * \return 0 on success, else -1
  */
 int libambit_personal_settings_get(ambit_object_t *object, ambit_personal_settings_t *settings);
+
+/**
+ * Read GPS orbit header, useful to check if new write is needed.
+ * NOTE! Reversed byte order compared to the data that is written.
+ * \param object Object to get settings from
+ * \param data Header data (date + !?)
+ * \return 0 on success, else -1
+ */
+int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
+
+/**
+ * Write GPS orbit data
+ * \param object Object to get settings from
+ * \param data Data to be written
+ * \param datalen Length of data
+ * \return 0 on success, else -1
+ */
+int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
 /**
  * Callback function for checking if a specific log entry should be read out or

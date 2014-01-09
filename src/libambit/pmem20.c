@@ -32,6 +32,7 @@
 #define PMEM20_LOG_START          0x000f4240
 #define PMEM20_LOG_SIZE           0x0029f630 /* 2 750 000 */
 #define PMEM20_LOG_HEADER_MIN_LEN        512 /* Header actually longer, but not interesting*/
+#define PMEM20_GPS_ORBIT_START    0x000704e0
 
 typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
     uint16_t type;
@@ -45,6 +46,7 @@ typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
 static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count);
 static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length);
 static int read_log_chunk(ambit_object_t *object, uint32_t address, uint32_t length, uint8_t *buffer);
+static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buffer_count, uint8_t **buffers, size_t *buffer_sizes);
 static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_t *outtime);
 static int is_leap(unsigned int y);
 static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval);
@@ -60,34 +62,40 @@ static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval);
  */
 int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size)
 {
+    object->pmem20.chunk_size = chunk_size;
+
+    return 0;
+}
+
+int libambit_pmem20_log_init(ambit_object_t *object)
+{
     int ret = -1;
     size_t offset;
 
     // Allocate buffer for complete memory
-    if (object->pmem20.buffer != NULL) {
-        free(object->pmem20.buffer);
+    if (object->pmem20.log.buffer != NULL) {
+        free(object->pmem20.log.buffer);
     }
-    memset(&object->pmem20, 0, sizeof(object->pmem20));
-    object->pmem20.buffer = malloc(PMEM20_LOG_SIZE);
-    if (object->pmem20.buffer != NULL) {
-        object->pmem20.chunk_size = chunk_size;
+    memset(&object->pmem20.log, 0, sizeof(object->pmem20.log));
+    object->pmem20.log.buffer = malloc(PMEM20_LOG_SIZE);
+    if (object->pmem20.log.buffer != NULL) {
         // Read initial log header
-        ret = read_log_chunk(object, PMEM20_LOG_START, object->pmem20.chunk_size, object->pmem20.buffer);
+        ret = read_log_chunk(object, PMEM20_LOG_START, object->pmem20.chunk_size, object->pmem20.log.buffer);
         if (ret == 0) {
-            object->pmem20.prev_read = PMEM20_LOG_START;
+            object->pmem20.log.prev_read = PMEM20_LOG_START;
 
             // Parse PMEM header
             offset = 0;
-            object->pmem20.last_entry = read32inc(object->pmem20.buffer, &offset);
-            object->pmem20.first_entry = read32inc(object->pmem20.buffer, &offset);
-            object->pmem20.entries = read32inc(object->pmem20.buffer, &offset);
-            object->pmem20.next_free_address = read32inc(object->pmem20.buffer, &offset);
-            object->pmem20.current.current = PMEM20_LOG_START;
-            object->pmem20.current.next = object->pmem20.first_entry;
-            object->pmem20.current.prev = PMEM20_LOG_START;
+            object->pmem20.log.last_entry = read32inc(object->pmem20.log.buffer, &offset);
+            object->pmem20.log.first_entry = read32inc(object->pmem20.log.buffer, &offset);
+            object->pmem20.log.entries = read32inc(object->pmem20.log.buffer, &offset);
+            object->pmem20.log.next_free_address = read32inc(object->pmem20.log.buffer, &offset);
+            object->pmem20.log.current.current = PMEM20_LOG_START;
+            object->pmem20.log.current.next = object->pmem20.log.first_entry;
+            object->pmem20.log.current.prev = PMEM20_LOG_START;
 
             // Set initialized
-            object->pmem20.initialized = true;
+            object->pmem20.log.initialized = true;
         }
     }
 
@@ -96,41 +104,41 @@ int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size)
 
 int libambit_pmem20_deinit(ambit_object_t *object)
 {
-    if (object->pmem20.buffer != NULL) {
-        free(object->pmem20.buffer);
+    if (object->pmem20.log.buffer != NULL) {
+        free(object->pmem20.log.buffer);
     }
-    memset(&object->pmem20, 0, sizeof(object->pmem20));
+    memset(&object->pmem20.log, 0, sizeof(object->pmem20.log));
 
     return 0;
 }
 
-int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_header)
+int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *log_header)
 {
     int ret = -1;
     size_t buffer_offset;
     uint16_t tmp_len;
 
-    if (!object->pmem20.initialized) {
+    if (!object->pmem20.log.initialized) {
         return -1;
     }
 
     // Check if we reached end of entries
-    if (object->pmem20.current.current == object->pmem20.current.next) {
+    if (object->pmem20.log.current.current == object->pmem20.log.current.next) {
         return 0;
     }
 
-    if (read_upto(object, object->pmem20.current.next, PMEM20_LOG_HEADER_MIN_LEN) == 0) {
-        buffer_offset = (object->pmem20.current.next - PMEM20_LOG_START);
+    if (read_upto(object, object->pmem20.log.current.next, PMEM20_LOG_HEADER_MIN_LEN) == 0) {
+        buffer_offset = (object->pmem20.log.current.next - PMEM20_LOG_START);
         // First check that header seems to be correctly present
-        if (strncmp((char*)object->pmem20.buffer + buffer_offset, "PMEM", 4) == 0) {
-            object->pmem20.current.current = object->pmem20.current.next;
+        if (strncmp((char*)object->pmem20.log.buffer + buffer_offset, "PMEM", 4) == 0) {
+            object->pmem20.log.current.current = object->pmem20.log.current.next;
             buffer_offset += 4;
-            object->pmem20.current.next = read32inc(object->pmem20.buffer, &buffer_offset);
-            object->pmem20.current.prev = read32inc(object->pmem20.buffer, &buffer_offset);
-            tmp_len = read16inc(object->pmem20.buffer, &buffer_offset);
+            object->pmem20.log.current.next = read32inc(object->pmem20.log.buffer, &buffer_offset);
+            object->pmem20.log.current.prev = read32inc(object->pmem20.log.buffer, &buffer_offset);
+            tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
             buffer_offset += tmp_len;
-            tmp_len = read16inc(object->pmem20.buffer, &buffer_offset);
-            if (libambit_pmem20_parse_header(object->pmem20.buffer + buffer_offset, tmp_len, log_header) == 0) {
+            tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
+            if (libambit_pmem20_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, log_header) == 0) {
                 ret = 1;
             }
         }
@@ -138,15 +146,15 @@ int libambit_pmem20_next_header(ambit_object_t *object, ambit_log_header_t *log_
 
     // Unset initialized of something went wrong
     if (ret < 0) {
-        object->pmem20.initialized = false;
+        object->pmem20.log.initialized = false;
     }
 
     return ret;
 }
 
-ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
+ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
 {
-    // Note! We assume that the caller has called libambit_pmem20_next_header just before
+    // Note! We assume that the caller has called libambit_pmem20_log_next_header just before
     uint8_t *periodic_sample_spec;
     uint16_t tmp_len;
     size_t buffer_offset, sample_count = 0, i;
@@ -158,46 +166,46 @@ ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
     uint32_t last_small_lat = 0, last_small_long = 0;
     uint32_t last_ehpe = 0;
 
-    if (!object->pmem20.initialized) {
+    if (!object->pmem20.log.initialized) {
         return NULL;
     }
 
     // Allocate log entry
     if ((log_entry = calloc(1, sizeof(ambit_log_entry_t))) == NULL) {
-        object->pmem20.initialized = false;
+        object->pmem20.log.initialized = false;
         return NULL;
     }
 
-    buffer_offset = (object->pmem20.current.current - PMEM20_LOG_START);
+    buffer_offset = (object->pmem20.log.current.current - PMEM20_LOG_START);
     buffer_offset += 12;
     // Read samples content definition
-    tmp_len = read16inc(object->pmem20.buffer, &buffer_offset);
-    periodic_sample_spec = object->pmem20.buffer + buffer_offset;
+    tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
+    periodic_sample_spec = object->pmem20.log.buffer + buffer_offset;
     buffer_offset += tmp_len;
     // Parse header
-    tmp_len = read16inc(object->pmem20.buffer, &buffer_offset);
-    if (libambit_pmem20_parse_header(object->pmem20.buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
+    tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
+    if (libambit_pmem20_log_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
         free(log_entry);
-        object->pmem20.initialized = false;
+        object->pmem20.log.initialized = false;
         return NULL;
     }
     buffer_offset += tmp_len;
     // Now that we know number of samples, allocate space for them!
     if ((log_entry->samples = calloc(log_entry->header.samples_count, sizeof(ambit_log_sample_t))) == NULL) {
         free(log_entry);
-        object->pmem20.initialized = false;
+        object->pmem20.log.initialized = false;
         return NULL;
     }
     log_entry->samples_count = log_entry->header.samples_count;
 
     // OK, so we are at start of samples, get them all!
     while (sample_count < log_entry->samples_count) {
-        if (PMEM20_LOG_START + buffer_offset + 2 >= object->pmem20.last_addr ||
-            PMEM20_LOG_START + buffer_offset + 2 + read16(object->pmem20.buffer, buffer_offset) >= object->pmem20.last_addr) {
+        if (PMEM20_LOG_START + buffer_offset + 2 >= object->pmem20.log.last_addr ||
+            PMEM20_LOG_START + buffer_offset + 2 + read16(object->pmem20.log.buffer, buffer_offset) >= object->pmem20.log.last_addr) {
             read_upto(object, PMEM20_LOG_START + buffer_offset, object->pmem20.chunk_size);
         }
 
-        if (parse_sample(object->pmem20.buffer, &buffer_offset, &periodic_sample_spec, log_entry, &sample_count) == 1) {
+        if (parse_sample(object->pmem20.log.buffer, &buffer_offset, &periodic_sample_spec, log_entry, &sample_count) == 1) {
             // Calculate times
             if (log_entry->samples[sample_count-1].type == ambit_log_sample_type_periodic) {
                 last_periodic = &log_entry->samples[sample_count-1];
@@ -267,7 +275,7 @@ ambit_log_entry_t *libambit_pmem20_read_entry(ambit_object_t *object)
     return log_entry;
 }
 
-int libambit_pmem20_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header)
+int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header)
 {
     size_t offset = 0;
 
@@ -342,6 +350,49 @@ int libambit_pmem20_parse_header(uint8_t *data, size_t datalen, ambit_log_header
     }
 
     return 0;
+}
+
+int libambit_pmem20_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen)
+{
+    int ret = -1;
+    uint8_t *bufptrs[2];
+    size_t bufsizes[2];
+    uint8_t startheader[4];
+    uint8_t tailbuf[8];
+    uint32_t *_sizeptr = (uint32_t*)&startheader[0];
+    uint32_t address = PMEM20_GPS_ORBIT_START;
+    size_t offset = 0;
+
+    *_sizeptr = htole32(datalen);
+    bufptrs[0] = startheader;
+    bufsizes[0] = 4;
+    bufptrs[1] = data;
+    bufsizes[1] = object->pmem20.chunk_size - 4; // We assume that data is
+                                                 // always > chunk_size
+
+    // Write first chunk (including length)
+    ret = write_data_chunk(object, address, 2, bufptrs, bufsizes);
+    offset += bufsizes[1];
+    address += object->pmem20.chunk_size;
+
+    // Write rest of the chunks
+    while (ret == 0 && offset < datalen) {
+        bufptrs[0] = data + offset;
+        bufsizes[0] = (datalen - offset > object->pmem20.chunk_size ? object->pmem20.chunk_size : datalen - offset);
+
+        ret = write_data_chunk(object, address, 1, bufptrs, bufsizes);
+        offset += bufsizes[0];
+        address += bufsizes[0];
+    }
+
+    // Write tail length (or what is really!?)
+    if (ret == 0) {
+        *((uint32_t*)(&tailbuf[0])) = htole32(PMEM20_GPS_ORBIT_START);
+        *((uint32_t*)(&tailbuf[4])) = htole32(bufsizes[0]);
+        ret = libambit_protocol_command(object, ambit_command_data_tail_len, tailbuf, sizeof(tailbuf), NULL, NULL, 0);
+    }
+
+    return ret;
 }
 
 /**
@@ -644,12 +695,12 @@ static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length)
     uint32_t start_address = address - ((address - PMEM20_LOG_START) % object->pmem20.chunk_size);
 
     while (start_address < address + length) {
-        if (object->pmem20.prev_read != start_address) {
-            if (read_log_chunk(object, start_address, object->pmem20.chunk_size, object->pmem20.buffer + (start_address - PMEM20_LOG_START)) != 0) {
+        if (object->pmem20.log.prev_read != start_address) {
+            if (read_log_chunk(object, start_address, object->pmem20.chunk_size, object->pmem20.log.buffer + (start_address - PMEM20_LOG_START)) != 0) {
                 return -1;
             }
-            object->pmem20.prev_read = start_address;
-            object->pmem20.last_addr = start_address + object->pmem20.chunk_size - 1;
+            object->pmem20.log.prev_read = start_address;
+            object->pmem20.log.last_addr = start_address + object->pmem20.chunk_size - 1;
         }
         start_address += object->pmem20.chunk_size;
     }
@@ -678,6 +729,46 @@ static int read_log_chunk(ambit_object_t *object, uint32_t address, uint32_t len
     }
 
     libambit_protocol_free(reply);
+
+    return ret;
+}
+
+static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buffer_count, uint8_t **buffers, size_t *buffer_sizes)
+{
+    int ret = -1;
+
+    uint8_t *reply = NULL;
+    size_t replylen = 0;
+
+    uint8_t *send_data;
+    size_t send_data_len = 8;
+
+    int i;
+    for (i=0; i<buffer_count; i++) {
+        send_data_len += buffer_sizes[i];
+    }
+    send_data = malloc(send_data_len);
+
+    if (send_data != NULL) {
+        uint32_t *_address = (uint32_t*)&send_data[0];
+        uint32_t *_length = (uint32_t*)&send_data[4];
+        uint8_t *send_data_ptr = &send_data[8];
+
+        *_address = htole32(address);
+        *_length = htole32(send_data_len - 8);
+
+        for (i=0; i<buffer_count; i++) {
+            memcpy(send_data_ptr, buffers[i], buffer_sizes[i]);
+            send_data_ptr += buffer_sizes[i];
+        }
+
+        if (libambit_protocol_command(object, ambit_command_data_write, send_data, send_data_len, &reply, &replylen, 0) == 0) {
+            ret = 0;
+        }
+
+        free(send_data);
+        libambit_protocol_free(reply);
+    }
 
     return ret;
 }

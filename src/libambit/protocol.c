@@ -32,7 +32,7 @@
 /*
  * Local definitions
  */
-#define READ_TIMEOUT       3000 // ms
+#define READ_TIMEOUT       20000 // ms
 #define READ_POLL_INTERVAL 100  // ms
 #define READ_POLL_RETRY    (READ_TIMEOUT / READ_POLL_INTERVAL)
 
@@ -117,9 +117,9 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
     dataoffset += packet_payload_len;
 
     // Send additional packets
-    for(i=2; i<=packet_count; i++) {
+    for(i=1; i<packet_count; i++) {
         msg->MP = 0x5e;
-        msg->parts_seq = htobe16(i);
+        msg->parts_seq = htole16(i);
         packet_payload_len = fmin(54, datalen);
         memcpy(&buf[8], &data[dataoffset], packet_payload_len);
         finalize_packet(buf, packet_payload_len);

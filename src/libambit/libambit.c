@@ -127,6 +127,9 @@ ambit_object_t *libambit_detect(void)
                 }
                 ret_object->device = device;
                 strncpy(ret_object->device_info.name, device->name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+
+                // Initialize pmem
+                libambit_pmem20_init(ret_object, device->pmem20_chunksize);
             }
             else {
                 free(ret_object);
@@ -146,6 +149,8 @@ void libambit_close(ambit_object_t *object)
 {
     if (object != NULL) {
         if (object->handle != NULL) {
+            // Make sure to clear log lock (if possible)
+            lock_log(object, false);
             hid_close(object->handle);
         }
 
@@ -177,6 +182,16 @@ int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *info)
     }
 
     return ret;
+}
+
+void libambit_sync_display_show(ambit_object_t *object)
+{
+    lock_log(object, true);
+}
+
+void libambit_sync_display_clear(ambit_object_t *object)
+{
+    lock_log(object, false);
 }
 
 int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
@@ -237,6 +252,51 @@ int libambit_personal_settings_get(ambit_object_t *object, ambit_personal_settin
     return ret;
 }
 
+int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8])
+{
+    uint8_t *reply_data = NULL;
+    size_t replylen = 0;
+    int ret = -1;
+
+    if (libambit_protocol_command(object, ambit_command_gps_orbit_head, NULL, 0, &reply_data, &replylen, 0) == 0 && replylen == 9) {
+        memcpy(data, &reply_data[1], 8);
+        libambit_protocol_free(reply_data);
+
+        ret = 0;
+    }
+
+    return ret;
+}
+
+int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen)
+{
+    uint8_t header[8], cmpheader[8];
+    int ret = -1;
+
+    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
+
+    if (libambit_gps_orbit_header_read(object, header) == 0) {
+        cmpheader[0] = data[7]; // Year, swap bytes
+        cmpheader[1] = data[6];
+        cmpheader[2] = data[8];
+        cmpheader[3] = data[9];
+        cmpheader[4] = data[13]; // 4 byte swap
+        cmpheader[5] = data[12];
+        cmpheader[6] = data[11];
+        cmpheader[7] = data[10];
+
+        // Check if new data differs 
+        if (memcmp(header, cmpheader, 8) != 0) {
+            ret = libambit_pmem20_gps_orbit_write(object, data, datalen);
+        }
+        else {
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
 {
     int entries_read = 0;
@@ -253,13 +313,10 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
     ambit_log_header_t log_header;
     ambit_log_entry_t *log_entry;
 
-    lock_log(object, true);
-
     /*
      * Read number of log entries
      */
     if (libambit_protocol_command(object, ambit_command_log_count, NULL, 0, &reply_data, &replylen, 0) != 0) {
-        lock_log(object, false);
         return -1;
     }
     log_entries_total = le16toh(*(uint16_t*)(reply_data + 2));
@@ -275,7 +332,6 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
     if (skip_cb != NULL) {
         // Rewind
         if (libambit_protocol_command(object, ambit_command_log_head_first, NULL, 0, &reply_data, &replylen, 0) != 0) {
-            lock_log(object, false);
             return -1;
         }
         more = le32toh(*(uint32_t*)reply_data);
@@ -285,7 +341,6 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
         while (more == 0x00000400) {
             // Go to next entry
             if (libambit_protocol_command(object, ambit_command_log_head_step, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                lock_log(object, false);
                 return -1;
             }
             libambit_protocol_free(reply_data);
@@ -293,13 +348,12 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
             // Assume every header is composited by 2 parts, where only the
             // second is of interrest right now
             if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                lock_log(object, false);
                 return -1;
             }
             libambit_protocol_free(reply_data);
 
             if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) == 0) {
-                if (replylen > 8 && libambit_pmem20_parse_header(reply_data + 8, replylen - 8, &log_header) == 0) {
+                if (replylen > 8 && libambit_pmem20_log_parse_header(reply_data + 8, replylen - 8, &log_header) == 0) {
                     if (skip_cb(userref, &log_header) != 0) {
                         // Header was NOT skipped, break out!
                         read_pmem = true;
@@ -308,19 +362,16 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
                 }
                 else {
                     printf("Failed to parse log header\n");
-                    lock_log(object, false);
                     return -1;
                 }
                 libambit_protocol_free(reply_data);
             }
             else {
-                lock_log(object, false);
                 return -1;
             }
 
             // Is there more entries to read?
             if (libambit_protocol_command(object, ambit_command_log_head_peek, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                lock_log(object, false);
                 return -1;
             }
             more = le32toh(*(uint32_t*)reply_data);
@@ -332,19 +383,18 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
     }
 
     if (read_pmem) {
-        if (libambit_pmem20_init(object, object->device->pmem20_chunksize) != 0) {
-            lock_log(object, false);
+        if (libambit_pmem20_log_init(object) != 0) {
             return -1;
         }
 
         // Loop through all log entries, first check headers
-        while (log_entries_walked < log_entries_total && libambit_pmem20_next_header(object, &log_header) == 1) {
+        while (log_entries_walked < log_entries_total && libambit_pmem20_log_next_header(object, &log_header) == 1) {
             if (progress_cb != NULL) {
                 progress_cb(userref, log_entries_total, log_entries_walked+1, 100*log_entries_walked/log_entries_total);
             }
             // Check if this entry needs to be read
             if (skip_cb == NULL || skip_cb(userref, &log_header) != 0) {
-                log_entry = libambit_pmem20_read_entry(object);
+                log_entry = libambit_pmem20_log_read_entry(object);
                 if (log_entry != NULL) {
                     if (push_cb != NULL) {
                         push_cb(userref, log_entry);
@@ -358,8 +408,6 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
             }
         }
     }
-
-    lock_log(object, false);
 
     return entries_read;
 }
