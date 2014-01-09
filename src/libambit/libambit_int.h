@@ -86,6 +86,7 @@ int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_person
 
 // pmem20.c
 int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size);
+int libambit_pmem20_deinit(ambit_object_t *object);
 int libambit_pmem20_log_init(ambit_object_t *object);
 int libambit_pmem20_log_deinit(ambit_object_t *object);
 int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *log_header);
