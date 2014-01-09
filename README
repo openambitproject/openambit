@@ -16,7 +16,7 @@ cd YOUR/git/REPO/loaction
 
 DEPENDENCIES
 ============
-sudo apt-get install libudev-dev libusb-1.0-0-dev
+sudo apt-get install libudev-dev libusb-1.0-0-dev libqjson-dev
 
 
 src/libambit
