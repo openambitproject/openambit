@@ -8,6 +8,16 @@ application, running it from the build directory is quite
 sufficient. Thus, the building instructions below has left
 out the installation parts.
 
+BUILD SCRIPT
+============
+cd YOUR/git/REPO/loaction
+./buils.sh
+
+
+DEPENDENCIES
+============
+sudo apt-get install libudev-dev libusb-1.0-0-dev
+
 
 src/libambit
 ============
