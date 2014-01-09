@@ -6,14 +6,14 @@ CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
 cd $SOURCE_LOCATION
 
 echo "------building libambit------"
-mkdir -f libambit-build
+mkdir -p libambit-build
 cd libambit-build
 cmake ../src/libambit
 make -j$CORES
 
 cd $SOURCE_LOCATION
 echo "------building openambit------"
-mkdir -f openambit-build
+mkdir -p openambit-build
 cd openambit-build
 qmake ../src/openambit
 make -j$CORES
