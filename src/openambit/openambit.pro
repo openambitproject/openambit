@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -19,6 +19,8 @@ SOURCES += main.cpp\
     settings.cpp \
     logstore.cpp \
     logentry.cpp \
+    movescountxml.cpp \
+    movescountjson.cpp \
     movescount.cpp
 
 HEADERS  += mainwindow.h \
@@ -27,6 +29,8 @@ HEADERS  += mainwindow.h \
     settings.h \
     logstore.h \
     logentry.h \
+    movescountxml.h \
+    movescountjson.h \
     movescount.h
 
 FORMS    += mainwindow.ui \
@@ -35,4 +39,4 @@ FORMS    += mainwindow.ui \
 INCLUDEPATH += ../libambit
 QMAKE_LIBDIR += ../libambit-build
 
-LIBS += -lambit
+LIBS += -lambit -lqjson -lz

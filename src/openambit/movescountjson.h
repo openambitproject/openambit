@@ -19,30 +19,36 @@
  * Contributors:
  *
  */
-#ifndef LOGENTRY_H
-#define LOGENTRY_H
+#ifndef MOVESCOUNTJSON_H
+#define MOVESCOUNTJSON_H
 
-#include <QDateTime>
+#include <QObject>
+#include <QList>
+#include <QVariantMap>
 #include <libambit.h>
+#include "logentry.h"
 
-class LogEntry
+class MovesCountJSON : public QObject
 {
+    Q_OBJECT
 public:
-    explicit LogEntry();
-    LogEntry(const LogEntry &other);
-    ~LogEntry();
+    explicit MovesCountJSON(QObject *parent = 0);
 
-    LogEntry& operator=(const LogEntry &rhs);
+    int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[4]);
+    int parseLogReply(QByteArray &input, QString &moveId);
 
-    QString device;
-    QDateTime time;
-    ambit_device_info_t *deviceInfo = NULL;
-    ambit_personal_settings_t *personalSettings = NULL;
-    ambit_log_entry_t *logEntry = NULL;
+    int generateLogData(LogEntry *logEntry, QByteArray &output);
+    
 signals:
     
 public slots:
-    
+
+private:
+    bool writePeriodicSample(ambit_log_sample_t *sample, QVariantMap &output);
+
+    int compressData(QByteArray &content, QByteArray &output);
+    QList<int> rearrangeSamples(LogEntry *logEntry);
+    QString dateTimeString(QDateTime dateTime);
 };
 
-#endif // LOGENTRY_H
+#endif // MOVESCOUNTJSON_H

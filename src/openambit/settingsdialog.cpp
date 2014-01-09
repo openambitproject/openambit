@@ -98,4 +98,6 @@ void SettingsDialog::writeSettings()
     }
     settings.setValue("storeDebugFiles", ui->checkBoxDebugFiles->isChecked());
     settings.endGroup();
+
+    emit settingsSaved();
 }

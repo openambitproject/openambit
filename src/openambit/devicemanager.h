@@ -31,23 +31,25 @@
 #include "settings.h"
 #include "logstore.h"
 #include "movescount.h"
+#include "movescountxml.h"
 #include <libambit.h>
 
 class DeviceManager : public QObject
 {
     Q_OBJECT
 public:
-    void start();
+    explicit DeviceManager(QObject *parent = 0);
     ~DeviceManager();
+    void start();
 signals:
     void deviceDetected(ambit_device_info_t deviceInfo, bool supported);
     void deviceRemoved(void);
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);
-    void syncProgressInform(QString message, bool newRow, quint8 percentDone);
+    void syncProgressInform(QString message, bool error, bool newRow, quint8 percentDone);
 public slots:
     void detect(void);
-    void startSync(bool readAllLogs);
+    void startSync(bool readAllLogs, bool syncTime, bool syncOrbit, bool syncMovescount);
 
 private slots:
     void chargeTimerHit();
@@ -61,9 +63,14 @@ private:
     ambit_device_info_t currentDeviceInfo;
     ambit_personal_settings_t currentPersonalSettings;
 
+    int syncParts;
+    int currentSyncPart;
+    bool syncMovescount;
+
     QMutex mutex;
     QTimer chargeTimer;
-    MovesCount movesCount;
+    MovesCount *movesCount;
+    MovesCountXML movesCountXML;
     Settings settings;
     LogStore logStore;
 };

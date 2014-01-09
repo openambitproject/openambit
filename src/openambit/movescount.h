@@ -23,44 +23,71 @@
 #define MOVESCOUNT_H
 
 #include <QObject>
-#include <QList>
-#include <QIODevice>
-#include <QXmlStreamWriter>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+#include <QTimer>
+#include <libambit.h>
 #include "logentry.h"
+#include "movescountjson.h"
 
 class MovesCount : public QObject
 {
     Q_OBJECT
 public:
-    explicit MovesCount(QObject *parent = 0);
-    
+    static MovesCount* instance();
+
+    void setBaseAddress(QString baseAddress);
+    void setAppkey(QString appkey);
+    void setUsername(QString username);
+    void setUserkey(QString userkey);
+    QString generateUserkey();
+    void setDevice(ambit_device_info_t *device_info);
+
+    bool isAuthorized();
+    int getOrbitalData(u_int8_t **data);
+    int getPersonalSettings(ambit_personal_settings_t *settings);
+    int getDeviceSettings();
 signals:
+    void newerFirmwareExists(QByteArray fw_version);
+    void movesCountAuth(bool authorized);
+    void logMoveID(QString device, QDateTime time, QString moveID);
     
 public slots:
-    void sendLog(LogEntry *logEntry);
+    void checkLatestFirmwareVersion();
+    void writePersonalSettings(ambit_personal_settings_t *settings);
+    void writeLog(LogEntry *logEntry);
+
+private slots:
+    void firmwareReplyFinished();
+    void recheckAuthorization();
 
 private:
-    QString logEntryPath(LogEntry *logEntry);
+    MovesCount();
+    MovesCount(const MovesCount &);
+    MovesCount& operator=(const MovesCount &);
 
-    QString storagePath;
+    QNetworkReply *asyncGET(QString path, QString additionalHeaders, bool auth);
+    QNetworkReply *syncGET(QString path, QString additionalHeaders, bool auth);
 
-    class XMLWriter
-    {
-    public:
-        XMLWriter(LogEntry *logEntry);
-        bool write(QIODevice *device);
+    QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
 
-    private:
-        bool writeLogEntry();
-        bool writeLogSample(ambit_log_sample_t *sample, QList<quint16> *ibis);
-        bool writePeriodicSample(ambit_log_sample_t *sample);
+    bool checkReplyAuthorization(QNetworkReply *reply);
 
-        QString dateTimeString(QDateTime &dateTime);
-        QList<int> rearrangeSamples();
+    bool authorized = false;
 
-        LogEntry *logEntry;
-        QXmlStreamWriter xml;
-    };
+    QString baseAddress;
+    QString appkey;
+    QString username;
+    QString userkey;
+    QString model;
+    QString serial;
+    ambit_device_info_t device_info;
+
+    QNetworkAccessManager *manager;
+    QNetworkReply *firmwareCheckReply = NULL;
+
+    MovesCountJSON jsonParser;
 };
 
 #endif // MOVESCOUNT_H

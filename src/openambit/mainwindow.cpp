@@ -24,6 +24,9 @@
 
 #include <QListWidgetItem>
 
+#define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
+#define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -32,9 +35,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Setup UI parts
     QIcon warningIcon = QIcon::fromTheme("dialog-warning");
+    QIcon infoIcon = QIcon::fromTheme("dialog-information");
     ui->labelNotSupportedIcon->setPixmap(warningIcon.pixmap(8,8));
     ui->labelNotSupportedIcon->setHidden(true);
     ui->labelNotSupported->setHidden(true);
+    ui->labelMovescountAuthIcon->setPixmap(warningIcon.pixmap(8,8));
+    ui->labelMovescountAuthIcon->setHidden(true);
+    ui->labelMovescountAuth->setHidden(true);
+    ui->labelNewFirmwareIcon->setPixmap(infoIcon.pixmap(8,8));
+    ui->labelNewFirmwareIcon->setHidden(true);
+    ui->labelNewFirmware->setHidden(true);
     ui->labelCharge->setHidden(true);
     ui->chargeIndicator->setHidden(true);
     ui->checkBoxResyncAll->setHidden(true);
@@ -51,10 +61,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(deviceManager, SIGNAL(deviceRemoved()), this, SLOT(deviceRemoved()), Qt::QueuedConnection);
     connect(deviceManager, SIGNAL(deviceCharge(quint8)), this, SLOT(deviceCharge(quint8)), Qt::QueuedConnection);
     connect(deviceManager, SIGNAL(syncFinished(bool)), this, SLOT(syncFinished(bool)), Qt::QueuedConnection);
-    connect(deviceManager, SIGNAL(syncProgressInform(QString,bool,quint8)), this, SLOT(syncProgressInform(QString,bool,quint8)), Qt::QueuedConnection);
+    connect(deviceManager, SIGNAL(syncProgressInform(QString,bool,bool,quint8)), this, SLOT(syncProgressInform(QString,bool,bool,quint8)), Qt::QueuedConnection);
     connect(ui->buttonDeviceReload, SIGNAL(clicked()), deviceManager, SLOT(detect()));
     connect(ui->buttonSyncNow, SIGNAL(clicked()), this, SLOT(syncNowClicked()));
-    connect(this, SIGNAL(syncNow(bool)), deviceManager, SLOT(startSync(bool)));
+    connect(this, SIGNAL(syncNow(bool,bool,bool,bool)), deviceManager, SLOT(startSync(bool,bool,bool,bool)));
     deviceWorkerThread.start();
     deviceManager->start();
     deviceManager->detect();
@@ -65,6 +75,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->logsList, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenuForLogItem(QPoint)));
 
     updateLogList();
+
+    // Setup Movescount
+    movesCountSetup();
 }
 
 MainWindow::~MainWindow()
@@ -78,11 +91,20 @@ void MainWindow::showSettings()
 {
     settingsDialog = new SettingsDialog(this);
     settingsDialog->setModal(true);
+    connect(settingsDialog, SIGNAL(settingsSaved()), this, SLOT(settingsSaved()));
     settingsDialog->show();
+}
+
+void MainWindow::settingsSaved()
+{
+    // Update Movescount
+    movesCountSetup();
 }
 
 void MainWindow::syncNowClicked()
 {
+    bool syncTime, syncOrbit, syncMovescount;
+
     ui->checkBoxResyncAll->setEnabled(false);
     ui->buttonSyncNow->setEnabled(false);
     currentLogMessageRow = NULL;
@@ -93,7 +115,15 @@ void MainWindow::syncNowClicked()
     }
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
-    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked());
+
+    settings.beginGroup("syncSettings");
+    syncTime = settings.value("syncTime", true).toBool();
+    syncOrbit = settings.value("syncOrbit", true).toBool();
+    settings.endGroup();
+    settings.beginGroup("movescountSettings");
+    syncMovescount = settings.value("movescountEnable", true).toBool();
+    settings.endGroup();
+    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
 }
 
 void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
@@ -103,6 +133,10 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
     if (!supported) {
         ui->labelNotSupportedIcon->setHidden(false);
         ui->labelNotSupported->setHidden(false);
+        ui->labelMovescountAuthIcon->setHidden(true);
+        ui->labelMovescountAuth->setHidden(true);
+        ui->labelNewFirmwareIcon->setHidden(true);
+        ui->labelNewFirmware->setHidden(true);
         ui->labelCharge->setHidden(true);
         ui->chargeIndicator->setHidden(true);
         ui->checkBoxResyncAll->setHidden(true);
@@ -112,10 +146,27 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
     else {
         ui->labelNotSupportedIcon->setHidden(true);
         ui->labelNotSupported->setHidden(true);
+        ui->labelMovescountAuthIcon->setHidden(true);
+        ui->labelMovescountAuth->setHidden(true);
+        ui->labelNewFirmwareIcon->setHidden(true);
+        ui->labelNewFirmware->setHidden(true);
         ui->labelCharge->setHidden(false);
         ui->chargeIndicator->setHidden(false);
         ui->checkBoxResyncAll->setHidden(false);
         ui->buttonSyncNow->setHidden(false);
+
+        movesCountSetup();
+        if (movesCount != NULL) {
+            movesCount->setDevice(&deviceInfo);
+            settings.beginGroup("movescountSettings");
+            if (settings.value("checkNewVersions", true).toBool()) {
+                movesCount->checkLatestFirmwareVersion();
+            }
+            if (settings.value("movescountEnable", true).toBool()) {
+                movesCount->getDeviceSettings();
+            }
+            settings.endGroup();
+        }
     }
 }
 
@@ -125,6 +176,10 @@ void MainWindow::deviceRemoved(void)
     ui->labelSerial->setText("");
     ui->labelNotSupportedIcon->setHidden(true);
     ui->labelNotSupported->setHidden(true);
+    ui->labelMovescountAuthIcon->setHidden(true);
+    ui->labelMovescountAuth->setHidden(true);
+    ui->labelNewFirmwareIcon->setHidden(true);
+    ui->labelNewFirmware->setHidden(true);
     ui->labelCharge->setHidden(true);
     ui->chargeIndicator->setHidden(true);
     ui->checkBoxResyncAll->setHidden(true);
@@ -162,7 +217,7 @@ void MainWindow::syncFinished(bool success)
     updateLogList();
 }
 
-void MainWindow::syncProgressInform(QString message, bool newRow, quint8 percentDone)
+void MainWindow::syncProgressInform(QString message, bool error, bool newRow, quint8 percentDone)
 {
     if (newRow) {
         if (currentLogMessageRow != NULL) {
@@ -176,9 +231,25 @@ void MainWindow::syncProgressInform(QString message, bool newRow, quint8 percent
     else {
         if (currentLogMessageRow != NULL) {
             currentLogMessageRow->setMessage(message);
+            if (error) {
+                currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
+            }
         }
     }
     ui->syncProgressBar->setValue(percentDone);
+}
+
+void MainWindow::newerFirmwareExists(QByteArray fw_version)
+{
+    ui->labelNewFirmware->setText(QString(tr("Newer firmware exists (%1.%2.%3)")).arg((int)fw_version[0]).arg((int)fw_version[1]).arg((int)(fw_version[2] | ((int)fw_version[3] << 8))));
+    ui->labelNewFirmware->setHidden(false);
+    ui->labelNewFirmwareIcon->setHidden(false);
+}
+
+void MainWindow::movesCountAuth(bool authorized)
+{
+    ui->labelMovescountAuth->setHidden(authorized);
+    ui->labelMovescountAuthIcon->setHidden(authorized);
 }
 
 void MainWindow::logItemSelected(QListWidgetItem *current,QListWidgetItem *previous)
@@ -209,7 +280,8 @@ void MainWindow::logItemWriteMovescount()
 
     logEntry = logStore.read(ui->logsList->selectedItems().at(0)->data(Qt::UserRole).toString());
     if (logEntry != NULL) {
-        movesCount.sendLog(logEntry);
+        movesCount->writeLog(logEntry);
+        movesCountXML.writeLog(logEntry);
         delete logEntry;
     }
 }
@@ -263,4 +335,33 @@ void MainWindow::LogMessageRow::setStatus(Status status)
         icon = QIcon::fromTheme("task-reject");
     }
     iconLabel->setPixmap(icon.pixmap(8,8));
+}
+
+void MainWindow::movesCountSetup()
+{
+    bool syncOrbit = false;
+    bool movescountEnable = false;
+
+    settings.beginGroup("syncSettings");
+    syncOrbit = settings.value("syncOrbit").toBool();
+    settings.endGroup();
+
+    settings.beginGroup("movescountSettings");
+    movescountEnable = settings.value("movescountEnable").toBool();
+    if (syncOrbit || movescountEnable) {
+        if (movesCount == NULL) {
+            movesCount = MovesCount::instance();
+            movesCount->setAppkey(APPKEY);
+            movesCount->setBaseAddress(settings.value("movescountBaseAddress", MOVESCOUNT_DEFAULT_URL).toString());
+            if (settings.value("movescountUserkey", "").toString().length() == 0) {
+                settings.setValue("movescountUserkey", movesCount->generateUserkey());
+            }
+            movesCount->setUserkey(settings.value("movescountUserkey").toString());
+
+            connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
+            connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
+        }
+        movesCount->setUsername(settings.value("email").toString());
+    }
+    settings.endGroup();
 }

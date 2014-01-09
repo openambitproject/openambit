@@ -39,6 +39,9 @@ public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
 
+signals:
+    void settingsSaved();
+
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
     void accept();

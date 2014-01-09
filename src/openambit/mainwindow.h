@@ -24,6 +24,7 @@
 
 #include "devicemanager.h"
 #include "settingsdialog.h"
+#include "movescount.h"
 #include <QMainWindow>
 #include <QThread>
 #include <QVBoxLayout>
@@ -43,10 +44,11 @@ public:
     ~MainWindow();
 
 signals:
-    void syncNow(bool readAll);
+    void syncNow(bool readAll, bool syncTime, bool syncOrbit, bool syncMovescount);
 
 private slots:
     void showSettings();
+    void settingsSaved();
 
     void syncNowClicked();
 
@@ -54,7 +56,10 @@ private slots:
     void deviceRemoved();
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);
-    void syncProgressInform(QString message, bool newRow, quint8 percentDone);
+    void syncProgressInform(QString message, bool error, bool newRow, quint8 percentDone);
+
+    void newerFirmwareExists(QByteArray fw_version);
+    void movesCountAuth(bool authorized);
 
     void logItemSelected(QListWidgetItem *current,QListWidgetItem *previous);
     void showContextMenuForLogItem(const QPoint &pos);
@@ -66,11 +71,15 @@ private:
     void updateLogMessageRow(QString message);
     void finalizeLogMessageRow();
 
+    void movesCountSetup();
+
     Ui::MainWindow *ui;
+    Settings settings;
     SettingsDialog *settingsDialog;
     DeviceManager *deviceManager;
     LogStore logStore;
-    MovesCount movesCount;
+    MovesCountXML movesCountXML;
+    MovesCount *movesCount = NULL;
     QThread deviceWorkerThread;
 
     class LogMessageRow : public QHBoxLayout

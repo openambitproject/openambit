@@ -94,14 +94,14 @@ LogStore::LogStore(QObject *parent) :
     storagePath = QString(getenv("HOME")) + "/.openambit";
 }
 
-LogEntry *LogStore::store(QString device, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
+LogEntry *LogStore::store(ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
 {
     LogEntry *retEntry = new LogEntry();
     QDateTime dateTime(QDate(logEntry->header.date_time.year, logEntry->header.date_time.month, logEntry->header.date_time.day),
                        QTime(logEntry->header.date_time.hour, logEntry->header.date_time.minute, logEntry->header.date_time.msec/1000));
 
-    XMLWriter writer(device, dateTime, personalSettings, logEntry);
-    QFile logfile(logEntryPath(device, dateTime));
+    XMLWriter writer(deviceInfo, dateTime, personalSettings, logEntry);
+    QFile logfile(logEntryPath(QString(deviceInfo->serial), dateTime));
     logfile.open(QIODevice::WriteOnly);
     writer.write(&logfile);
     logfile.close();
@@ -227,6 +227,9 @@ void LogStore::XMLReader::readRoot()
         else if (xml.name() == "Time") {
             readTime();
         }
+        else if (xml.name() == "DeviceInfo") {
+            readDeviceInfo();
+        }
         else if (xml.name() == "PersonalSettings") {
             readPersonalSettings();
         }
@@ -252,6 +255,49 @@ void LogStore::XMLReader::readTime()
 
     QString datestring = xml.readElementText();
     logEntry->time = QDateTime::fromString(datestring, Qt::ISODate);
+}
+
+void LogStore::XMLReader::readDeviceInfo()
+{
+    QRegExp versionRX("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+
+    Q_ASSERT(xml.isStartElement() && xml.name() == "DeviceInfo");
+
+    if (logEntry->deviceInfo == NULL) {
+        logEntry->deviceInfo = (ambit_device_info_t*)malloc(sizeof(ambit_device_info_t));
+        memset(logEntry->deviceInfo, 0, sizeof(ambit_device_info_t));
+    }
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "Serial") {
+            strcpy(logEntry->deviceInfo->serial, xml.readElementText().toAscii().data());
+        }
+        else if (xml.name() == "Model") {
+            strcpy(logEntry->deviceInfo->model, xml.readElementText().toAscii().data());
+        }
+        else if (xml.name() == "Name") {
+            strcpy(logEntry->deviceInfo->name, xml.readElementText().toAscii().data());
+        }
+        else if (xml.name() == "FWVersion") {
+            if (versionRX.indexIn(xml.readElementText()) >= 0) {
+                logEntry->deviceInfo->fw_version[0] = versionRX.cap(1).toInt();
+                logEntry->deviceInfo->fw_version[1] = versionRX.cap(2).toInt();
+                logEntry->deviceInfo->fw_version[2] = versionRX.cap(3).toInt() & 0xff;
+                logEntry->deviceInfo->fw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+            }
+        }
+        else if (xml.name() == "HWVersion") {
+            if (versionRX.indexIn(xml.readElementText()) >= 0) {
+                logEntry->deviceInfo->hw_version[0] = versionRX.cap(1).toInt();
+                logEntry->deviceInfo->hw_version[1] = versionRX.cap(2).toInt();
+                logEntry->deviceInfo->hw_version[2] = versionRX.cap(3).toInt() & 0xff;
+                logEntry->deviceInfo->hw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+            }
+        }
+        else {
+            xml.skipCurrentElement();
+        }
+    }
 }
 
 void LogStore::XMLReader::readPersonalSettings()
@@ -1112,8 +1158,8 @@ void LogStore::XMLReader::readPeriodicSample(QList<ambit_log_sample_periodic_val
 }
 
 
-LogStore::XMLWriter::XMLWriter(QString serial, QDateTime time, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
-    serial(serial), time(time), personalSettings(personalSettings), logEntry(logEntry)
+LogStore::XMLWriter::XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
+    deviceInfo(deviceInfo), time(time), personalSettings(personalSettings), logEntry(logEntry)
 {
     xml.setAutoFormatting(true);
 }
@@ -1129,8 +1175,9 @@ bool LogStore::XMLWriter::write(QIODevice *device)
     xml.writeStartElement("openambitlog");
     xml.writeAttribute("version", "1.0");
 
-    xml.writeTextElement("SerialNumber", serial);
+    xml.writeTextElement("SerialNumber", QString("%1").arg(deviceInfo->serial));
     xml.writeTextElement("Time", time.toString(Qt::ISODate));
+    ret = writeDeviceInfo();
     ret = writePersonalSettings();
     if (ret) {
         ret = writeLogEntry();
@@ -1139,6 +1186,19 @@ bool LogStore::XMLWriter::write(QIODevice *device)
     xml.writeEndDocument();
 
     return ret;
+}
+
+bool LogStore::XMLWriter::writeDeviceInfo()
+{
+    xml.writeStartElement("DeviceInfo");
+    xml.writeTextElement("Serial", QString("%1").arg(deviceInfo->serial));
+    xml.writeTextElement("Model", QString("%1").arg(deviceInfo->model));
+    xml.writeTextElement("Name", QString("%1").arg(deviceInfo->name));
+    xml.writeTextElement("FWVersion", QString("%1.%2.%3").arg((int)deviceInfo->fw_version[0]).arg((int)deviceInfo->fw_version[1]).arg((int)deviceInfo->fw_version[2] | ((int)deviceInfo->fw_version[3] << 8)));
+    xml.writeTextElement("HWVersion", QString("%1.%2.%3").arg((int)deviceInfo->hw_version[0]).arg((int)deviceInfo->hw_version[1]).arg((int)deviceInfo->hw_version[2] | ((int)deviceInfo->hw_version[3] << 8)));
+    xml.writeEndElement();
+
+    return true;
 }
 
 bool LogStore::XMLWriter::writePersonalSettings()

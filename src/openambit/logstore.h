@@ -45,7 +45,7 @@ public:
     };
 
     explicit LogStore(QObject *parent = 0);
-    LogEntry *store(QString device, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
+    LogEntry *store(ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
     bool logExists(QString device, ambit_log_header_t *logHeader);
     LogEntry *read(QString device, QDateTime time);
     LogEntry *read(LogDirEntry dirEntry);
@@ -71,6 +71,7 @@ private:
         void readRoot();
         void readSerial();
         void readTime();
+        void readDeviceInfo();
         void readPersonalSettings();
         void readLog();
         void readLogHeader();
@@ -83,16 +84,17 @@ private:
     class XMLWriter
     {
     public:
-        XMLWriter(QString serial, QDateTime time, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
+        XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
         bool write(QIODevice *device);
 
     private:
+        bool writeDeviceInfo();
         bool writePersonalSettings();
         bool writeLogEntry();
         bool writeLogSample(ambit_log_sample_t *sample);
         bool writePeriodicSample(ambit_log_sample_t *sample);
 
-        QString serial;
+        ambit_device_info_t *deviceInfo;
         QDateTime time;
         QXmlStreamWriter xml;
         ambit_personal_settings_t *personalSettings;
