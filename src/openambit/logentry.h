@@ -36,9 +36,9 @@ public:
 
     QString device;
     QDateTime time;
-    ambit_device_info_t *deviceInfo = NULL;
-    ambit_personal_settings_t *personalSettings = NULL;
-    ambit_log_entry_t *logEntry = NULL;
+    ambit_device_info_t *deviceInfo;
+    ambit_personal_settings_t *personalSettings;
+    ambit_log_entry_t *logEntry;
 signals:
     
 public slots:

@@ -29,7 +29,9 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    movesCount(NULL),
+    currentLogMessageRow(NULL)
 {
     ui->setupUi(this);
 

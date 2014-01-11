@@ -21,7 +21,10 @@
  */
 #include "logentry.h"
 
-LogEntry::LogEntry()
+LogEntry::LogEntry() :
+    deviceInfo(NULL),
+    personalSettings(NULL),
+    logEntry(NULL)
 {
 }
 

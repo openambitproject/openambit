@@ -82,7 +82,7 @@ private:
     DeviceManager *deviceManager;
     LogStore logStore;
     MovesCountXML movesCountXML;
-    MovesCount *movesCount = NULL;
+    MovesCount *movesCount;
     QThread deviceWorkerThread;
 
     class LogMessageRow : public QHBoxLayout
@@ -104,7 +104,7 @@ private:
         QLabel *textLabel;
     };
 
-    LogMessageRow *currentLogMessageRow = NULL;
+    LogMessageRow *currentLogMessageRow;
 };
 
 #endif // MAINWINDOW_H

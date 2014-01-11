@@ -197,7 +197,8 @@ void MovesCount::recheckAuthorization()
     getDeviceSettings();
 }
 
-MovesCount::MovesCount()
+MovesCount::MovesCount() :
+    firmwareCheckReply(NULL)
 {
     this->manager = new QNetworkAccessManager(this);
 }

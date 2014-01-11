@@ -85,7 +85,7 @@ private:
     ambit_device_info_t device_info;
 
     QNetworkAccessManager *manager;
-    QNetworkReply *firmwareCheckReply = NULL;
+    QNetworkReply *firmwareCheckReply;
 
     MovesCountJSON jsonParser;
 };
