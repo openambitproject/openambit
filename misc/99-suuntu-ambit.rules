@@ -1,0 +1,13 @@
+#
+# Suunto Ambit / Ambit 2 UDEV rules
+# Change the permissions for devices to 0666 (work readable/writeable)
+#
+
+# Bluebird (a.k.a Suunto Ambit)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="0010", MODE="0666"
+
+# Duck (a.k.a Suunto Ambit2)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="0019", MODE="0666"
+
+# Colibri (a.k.a Suunto Ambit2 S)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001a", MODE="0666"
