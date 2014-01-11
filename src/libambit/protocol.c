@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Emil Ljungdahl
+ * (C) Copyright 2014 Emil Ljungdahl
  *
  * This file is part of libambit.
  *

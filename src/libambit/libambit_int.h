@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Emil Ljungdahl
+ * (C) Copyright 2014 Emil Ljungdahl
  *
  * This file is part of libambit.
  *
@@ -98,7 +98,28 @@ int libambit_pmem20_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_
 int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t *data, size_t datalen, uint8_t **reply_data, size_t *replylen, uint8_t legacy_format);
 void libambit_protocol_free(uint8_t *data);
 
-
+// debug.c
+typedef enum debug_level_e {
+    debug_level_err,
+    debug_level_warn,
+    debug_level_info
+} debug_level_t;
+void debug_printf(debug_level_t level, const char *file, int line, const char *func, const char *fmt, ...);
+#ifdef DEBUG_PRINT_ERROR
+#define LOG_ERROR(fmt, ...) debug_printf(debug_level_err, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#else
+#define LOG_ERROR(fmt, ...)
+#endif
+#ifdef DEBUG_PRINT_WARNING
+#define LOG_WARNING(fmt, ...) debug_printf(debug_level_warn, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#else
+#define LOG_WARNING(fmt, ...)
+#endif
+#ifdef DEBUG_PRINT_INFO
+#define LOG_INFO(fmt, ...) debug_printf(debug_level_info, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#else
+#define LOG_INFO(fmt, ...)
+#endif
 
 // static helpers
 static inline uint8_t read8(uint8_t *buf, size_t offset)

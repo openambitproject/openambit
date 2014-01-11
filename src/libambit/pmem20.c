@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Emil Ljungdahl
+ * (C) Copyright 2014 Emil Ljungdahl
  *
  * This file is part of libambit.
  *
@@ -80,6 +80,7 @@ int libambit_pmem20_log_init(ambit_object_t *object)
     object->pmem20.log.buffer = malloc(PMEM20_LOG_SIZE);
     if (object->pmem20.log.buffer != NULL) {
         // Read initial log header
+        LOG_INFO("Reading first log data chunk");
         ret = read_log_chunk(object, PMEM20_LOG_START, object->pmem20.chunk_size, object->pmem20.log.buffer);
         if (ret == 0) {
             object->pmem20.log.prev_read = PMEM20_LOG_START;
@@ -94,8 +95,13 @@ int libambit_pmem20_log_init(ambit_object_t *object)
             object->pmem20.log.current.next = object->pmem20.log.first_entry;
             object->pmem20.log.current.prev = PMEM20_LOG_START;
 
+            LOG_INFO("log data header read, entries=%d, first_entry=%08x, last_entry=%08x, next_free_address=%08x", object->pmem20.log.entries, object->pmem20.log.first_entry, object->pmem20.log.last_entry, object->pmem20.log.next_free_address);
+
             // Set initialized
             object->pmem20.log.initialized = true;
+        }
+        else {
+            LOG_WARNING("Failed to read first data chunk");
         }
     }
 
@@ -118,12 +124,16 @@ int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *
     size_t buffer_offset;
     uint16_t tmp_len;
 
+    LOG_INFO("Reading header of next log entry");
+
     if (!object->pmem20.log.initialized) {
+        LOG_ERROR("Trying to get next log without initialization");
         return -1;
     }
 
     // Check if we reached end of entries
     if (object->pmem20.log.current.current == object->pmem20.log.current.next) {
+        LOG_INFO("No more entries to read");
         return 0;
     }
 
@@ -139,9 +149,19 @@ int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *
             buffer_offset += tmp_len;
             tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
             if (libambit_pmem20_log_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, log_header) == 0) {
+                LOG_INFO("Log entry header parsed");
                 ret = 1;
             }
+            else {
+                LOG_ERROR("Failed to parse log entry header correctly");
+            }
         }
+        else {
+            LOG_ERROR("Failed to find valid log entry header start");
+        }
+    }
+    else {
+        LOG_WARNING("Failed to read log entry header");
     }
 
     // Unset initialized of something went wrong
@@ -167,6 +187,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
     uint32_t last_ehpe = 0;
 
     if (!object->pmem20.log.initialized) {
+        LOG_ERROR("Trying to get log entry without initialization");
         return NULL;
     }
 
@@ -175,6 +196,8 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
         object->pmem20.log.initialized = false;
         return NULL;
     }
+
+    LOG_INFO("Reading log entry from address=%08x", object->pmem20.log.current.current);
 
     buffer_offset = (object->pmem20.log.current.current - PMEM20_LOG_START);
     buffer_offset += 12;
@@ -185,6 +208,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
     // Parse header
     tmp_len = read16inc(object->pmem20.log.buffer, &buffer_offset);
     if (libambit_pmem20_log_parse_header(object->pmem20.log.buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
+        LOG_ERROR("Failed to parse log entry header correctly");
         free(log_entry);
         object->pmem20.log.initialized = false;
         return NULL;
@@ -197,6 +221,8 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
         return NULL;
     }
     log_entry->samples_count = log_entry->header.samples_count;
+
+    LOG_INFO("Log entry got %d samples, reading", log_entry->samples_count);
 
     // OK, so we are at start of samples, get them all!
     while (sample_count < log_entry->samples_count) {
@@ -250,6 +276,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
                 altisource = &log_entry->samples[sample_count-1];
                 altisource_index = sample_count-1;
             }
+        }
+        else {
+            LOG_ERROR("Failed to parse sample %d of %d", sample_count, log_entry->samples_count);
         }
     }
 
@@ -665,7 +694,7 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
             log_entry->samples[*sample_count].u.position.longitude = read32inc(buf, &int_offset);
             break;
           default:
-            printf("Found unknown episodic sample type (%02x)\n", episodic_type);
+            LOG_WARNING("Found unknown episodic sample type (%02x)", episodic_type);
             log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
             log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
             log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
@@ -675,7 +704,7 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
         ret = 1;
         break;
       default:
-        printf("Found unknown sample type (%02x)\n", sample_type);
+        LOG_WARNING("Found unknown sample type (%02x)", sample_type);
         log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
         log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
         log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
