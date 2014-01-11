@@ -1,2 +1,6 @@
 # Ignore build directories
 *build*/
+
+# Ignore temporary and user files
+*~
+*.user
