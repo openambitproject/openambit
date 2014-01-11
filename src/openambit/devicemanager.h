@@ -27,12 +27,16 @@
 #include <QMutex>
 #include <QTimer>
 #include <QMetaType>
+#include <QSocketNotifier>
 
 #include "settings.h"
 #include "logstore.h"
 #include "movescount.h"
 #include "movescountxml.h"
+#include "udevlistener.h"
 #include <libambit.h>
+
+#include <libudev.h>
 
 class DeviceManager : public QObject
 {
@@ -59,7 +63,9 @@ private:
     static void log_push_cb(void *ref, ambit_log_entry_t *log_entry);
     static void log_progress_cb(void *ref, uint16_t log_count, uint16_t log_current, uint8_t progress_percent);
 
-    ambit_object_t *deviceObject = NULL;
+    ambit_object_t *deviceObject;
+    UdevListener *udevListener;
+
     ambit_device_info_t currentDeviceInfo;
     ambit_personal_settings_t currentPersonalSettings;
 

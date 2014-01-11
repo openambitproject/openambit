@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     logentry.cpp \
     movescountxml.cpp \
     movescountjson.cpp \
-    movescount.cpp
+    movescount.cpp \
+    udevlistener.cpp
 
 HEADERS  += mainwindow.h \
     devicemanager.h \
@@ -31,7 +32,8 @@ HEADERS  += mainwindow.h \
     logentry.h \
     movescountxml.h \
     movescountjson.h \
-    movescount.h
+    movescount.h \
+    udevlistener.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui
@@ -39,4 +41,9 @@ FORMS    += mainwindow.ui \
 INCLUDEPATH += ../libambit
 QMAKE_LIBDIR += ../libambit-build
 
-LIBS += -lambit -lqjson -lz
+LIBS += -lambit -lqjson -ludev -lz
+
+OTHER_FILES +=
+
+RESOURCES += \
+    resources.qrc

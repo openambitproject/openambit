@@ -25,13 +25,14 @@
 #include <libambit.h>
 
 DeviceManager::DeviceManager(QObject *parent) :
-    QObject(parent)
+    QObject(parent), deviceObject(NULL), udevListener(NULL)
 {
     movesCount = MovesCount::instance();
 }
 
 DeviceManager::~DeviceManager()
 {
+    delete udevListener;
     chargeTimer.stop();
 }
 
@@ -40,6 +41,10 @@ void DeviceManager::start()
     connect(&chargeTimer, SIGNAL(timeout()), this, SLOT(chargeTimerHit()));
     chargeTimer.setInterval(10000);
     chargeTimer.start();
+
+    // Connect udev listener, fire a chargeTimerHit (implicit device detect), if hit
+    udevListener = new UdevListener();
+    connect(udevListener, SIGNAL(deviceEvent()), this, SLOT(chargeTimerHit()));
 }
 
 void DeviceManager::detect()

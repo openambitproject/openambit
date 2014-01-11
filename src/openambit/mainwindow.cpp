@@ -53,6 +53,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(showSettings()));
 
+    // System tray icon
+    trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"));
+    trayIcon->show();
+
     // Setup device manager
     deviceManager = new DeviceManager();
     deviceManager->moveToThread(&deviceWorkerThread);
@@ -123,6 +127,9 @@ void MainWindow::syncNowClicked()
     settings.beginGroup("movescountSettings");
     syncMovescount = settings.value("movescountEnable", true).toBool();
     settings.endGroup();
+
+    trayIcon->setIcon(QIcon(":/icon_syncing"));
+
     emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
 }
 
@@ -168,6 +175,8 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
             settings.endGroup();
         }
     }
+
+    trayIcon->setIcon(QIcon(":/icon_connected"));
 }
 
 void MainWindow::deviceRemoved(void)
@@ -185,6 +194,8 @@ void MainWindow::deviceRemoved(void)
     ui->checkBoxResyncAll->setHidden(true);
     ui->buttonSyncNow->setHidden(true);
     ui->syncProgressBar->setHidden(true);
+
+    trayIcon->setIcon(QIcon(":/icon_disconnected"));
 }
 
 void MainWindow::deviceCharge(quint8 percent)
@@ -213,6 +224,8 @@ void MainWindow::syncFinished(bool success)
     ui->checkBoxResyncAll->setEnabled(true);
     ui->buttonSyncNow->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
+
+    trayIcon->setIcon(QIcon(":/icon_connected"));
 
     updateLogList();
 }

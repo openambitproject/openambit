@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="icon_syncing">icons/icon_sync.png</file>
+        <file alias="icon_connected">icons/icon_connected.png</file>
+        <file alias="icon_disconnected">icons/icon_disconnected.png</file>
+    </qresource>
+</RCC>

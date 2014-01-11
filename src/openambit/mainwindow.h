@@ -30,6 +30,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QSystemTrayIcon>
 
 namespace Ui {
 class MainWindow;
@@ -74,6 +75,8 @@ private:
     void movesCountSetup();
 
     Ui::MainWindow *ui;
+    QSystemTrayIcon *trayIcon;
+
     Settings settings;
     SettingsDialog *settingsDialog;
     DeviceManager *deviceManager;
