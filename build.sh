@@ -17,9 +17,3 @@ mkdir -p openambit-build
 cd openambit-build
 qmake ../src/openambit
 make -j$CORES
-
-cd $SOURCE_LOCATION
-echo "------running openambit------"
-cd openambit-build
-LD_LIBRARY_PATH=../libambit-build ./openambit
-
