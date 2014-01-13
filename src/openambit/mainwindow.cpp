@@ -53,6 +53,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->buttonSyncNow->setHidden(true);
     ui->syncProgressBar->setHidden(true);
 
+
+    //check if there is a settings to skip the beta check
+    settings.beginGroup("generalSettings");
+    bool skip;
+    skip = settings.value("skipBetaCheck", false).toBool();
+    if (! skip){
+        confirmBetaDialog = new ConfirmBetaDialog(this);
+        if (confirmBetaDialog->exec() == false){
+            // exit if user doesn't accept the early beta dialog
+            exit(1);
+        }
+    }
+
     connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(showSettings()));
 
     // System tray icon

@@ -67,6 +67,10 @@ void SettingsDialog::showHideUserSettings()
 
 void SettingsDialog::readSettings()
 {
+    settings.beginGroup("generalSettings");
+    ui->checkBoxSkipBetaCheck->setChecked(settings.value("skipBetaCheck", false).toBool());
+    settings.endGroup();
+
     settings.beginGroup("syncSettings");
     ui->checkBoxSyncTime->setChecked(settings.value("syncTime", true).toBool());
     ui->checkBoxSyncOrbit->setChecked(settings.value("syncOrbit", true).toBool());
@@ -82,6 +86,10 @@ void SettingsDialog::readSettings()
 
 void SettingsDialog::writeSettings()
 {
+    settings.beginGroup("generalSettings");
+    settings.setValue("skipBetaCheck", ui->checkBoxSkipBetaCheck->isChecked());
+    settings.endGroup();
+
     settings.beginGroup("syncSettings");
     settings.setValue("syncTime", ui->checkBoxSyncTime->isChecked());
     settings.setValue("syncOrbit", ui->checkBoxSyncOrbit->isChecked());

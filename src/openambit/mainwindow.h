@@ -24,6 +24,7 @@
 
 #include "devicemanager.h"
 #include "settingsdialog.h"
+#include "confirmbetadialog.h"
 #include "movescount.h"
 #include <QMainWindow>
 #include <QThread>
@@ -79,6 +80,7 @@ private:
 
     Settings settings;
     SettingsDialog *settingsDialog;
+    ConfirmBetaDialog *confirmBetaDialog;
     DeviceManager *deviceManager;
     LogStore logStore;
     MovesCountXML movesCountXML;

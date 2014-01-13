@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     movescountxml.cpp \
     movescountjson.cpp \
     movescount.cpp \
-    udevlistener.cpp
+    udevlistener.cpp \
+    confirmbetadialog.cpp
 
 HEADERS  += mainwindow.h \
     devicemanager.h \
@@ -33,10 +34,12 @@ HEADERS  += mainwindow.h \
     movescountxml.h \
     movescountjson.h \
     movescount.h \
-    udevlistener.h
+    udevlistener.h \
+    confirmbetadialog.h
 
 FORMS    += mainwindow.ui \
-    settingsdialog.ui
+    settingsdialog.ui \
+    confirmbetadialog.ui
 
 INCLUDEPATH += ../libambit
 QMAKE_LIBDIR += ../libambit-build

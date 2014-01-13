@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>682</width>
+    <width>729</width>
     <height>438</height>
    </rect>
   </property>
@@ -87,6 +87,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
          <widget class="QWidget" name="generalSettingsPage">
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
@@ -94,6 +97,15 @@
              <property name="title">
               <string>General settings</string>
              </property>
+             <layout class="QFormLayout" name="formLayout_3">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="checkBoxSkipBetaCheck">
+                <property name="text">
+                 <string>Skip Beta check at startup</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
