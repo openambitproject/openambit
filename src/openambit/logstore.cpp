@@ -270,13 +270,13 @@ void LogStore::XMLReader::readDeviceInfo()
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "Serial") {
-            strcpy(logEntry->deviceInfo->serial, xml.readElementText().toAscii().data());
+            strcpy(logEntry->deviceInfo->serial, xml.readElementText().toLatin1().data());
         }
         else if (xml.name() == "Model") {
-            strcpy(logEntry->deviceInfo->model, xml.readElementText().toAscii().data());
+            strcpy(logEntry->deviceInfo->model, xml.readElementText().toLatin1().data());
         }
         else if (xml.name() == "Name") {
-            strcpy(logEntry->deviceInfo->name, xml.readElementText().toAscii().data());
+            strcpy(logEntry->deviceInfo->name, xml.readElementText().toLatin1().data());
         }
         else if (xml.name() == "FWVersion") {
             if (versionRX.indexIn(xml.readElementText()) >= 0) {
