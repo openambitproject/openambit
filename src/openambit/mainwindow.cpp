@@ -58,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     settings.beginGroup("generalSettings");
     bool skip;
     skip = settings.value("skipBetaCheck", false).toBool();
+    settings.endGroup();
     if (! skip){
         confirmBetaDialog = new ConfirmBetaDialog(this);
         if (confirmBetaDialog->exec() == false){
