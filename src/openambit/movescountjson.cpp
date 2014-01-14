@@ -280,7 +280,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("Distance", value->u.distance);
             break;
         case ambit_log_sample_periodic_type_speed:
-            output.insert("Speed", (double)value->u.speed/100.0);
+            if (value->u.speed != 0xffff) {
+                output.insert("Speed", (double)value->u.speed/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_hr:
             output.insert("HeartRate", value->u.hr);
@@ -289,13 +291,19 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("Time", (double)value->u.time/1000.0);
             break;
         case ambit_log_sample_periodic_type_gpsspeed:
-            output.insert("GPSSpeed", (double)value->u.gpsspeed/100.0);
+            if (value->u.gpsspeed != 0xffff) {
+                output.insert("GPSSpeed", (double)value->u.gpsspeed/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_wristaccspeed:
-            output.insert("WristAccSpeed", (double)value->u.wristaccspeed/100.0);
+            if (value->u.wristaccspeed != 0xffff) {
+                output.insert("WristAccSpeed", (double)value->u.wristaccspeed/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_bikepodspeed:
-            output.insert("BikePodSpeed", (double)value->u.bikepodspeed/100.0);
+            if (value->u.bikepodspeed != 0xffff) {
+                output.insert("BikePodSpeed", (double)value->u.bikepodspeed/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_ehpe:
             output.insert("EHPE", value->u.ehpe);
