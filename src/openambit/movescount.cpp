@@ -24,8 +24,6 @@
 #include <QEventLoop>
 #include <QMutex>
 
-#include <qdebug.h>
-
 #define AUTH_CHECK_TIMEOUT 5000 /* ms */
 #define GPS_ORBIT_DATA_MIN_SIZE 30000 /* byte */
 
