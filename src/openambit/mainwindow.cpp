@@ -309,7 +309,9 @@ void MainWindow::logItemWriteMovescount()
 
     logEntry = logStore.read(ui->logsList->selectedItems().at(0)->data(Qt::UserRole).toString());
     if (logEntry != NULL) {
-        movesCount->writeLog(logEntry);
+        if (movesCount != NULL) {
+            movesCount->writeLog(logEntry);
+        }
         movesCountXML.writeLog(logEntry);
         delete logEntry;
     }
