@@ -220,11 +220,13 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("Energy", logEntry->logEntry->header.energy_consumption);
     content.insert("FlatTime", QVariant::Invalid);
     content.insert("HighAltitude", (double)logEntry->logEntry->header.altitude_max);
-    uncompressedData = serializer.serialize(IBIContent);
-    compressData(uncompressedData, compressedData);
-    QVariantMap IBIDataMap;
-    IBIDataMap.insert("CompressedValues", compressedData.toBase64());
-    content.insert("IBIData", IBIDataMap);                        /* compressed */
+    if (IBIContent.count() > 0) {
+        uncompressedData = serializer.serialize(IBIContent);
+        compressData(uncompressedData, compressedData);
+        QVariantMap IBIDataMap;
+        IBIDataMap.insert("CompressedValues", compressedData.toBase64());
+        content.insert("IBIData", IBIDataMap);                        /* compressed */
+    }
     content.insert("LocalStartTime", dateTimeString(localBaseTime));
     content.insert("LowAltitude", (double)logEntry->logEntry->header.altitude_min);
     content.insert("Marks", marksContent);
@@ -236,19 +238,23 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("PeakHR", logEntry->logEntry->header.heartrate_max);
     content.insert("PeakTrainingEffect", (double)logEntry->logEntry->header.peak_training_effect/10.0);
     content.insert("RecoveryTime", (double)logEntry->logEntry->header.recovery_time/1000.0);
-    uncompressedData = serializer.serialize(periodicSamplesContent);
-    compressData(uncompressedData, compressedData);
-    QVariantMap periodicSamplesDataMap;
-    periodicSamplesDataMap.insert("CompressedSampleSets", compressedData.toBase64());
-    content.insert("Samples", periodicSamplesDataMap);            /* compressed */
+    if (periodicSamplesContent.count() > 0) {
+        uncompressedData = serializer.serialize(periodicSamplesContent);
+        compressData(uncompressedData, compressedData);
+        QVariantMap periodicSamplesDataMap;
+        periodicSamplesDataMap.insert("CompressedSampleSets", compressedData.toBase64());
+        content.insert("Samples", periodicSamplesDataMap);            /* compressed */
+    }
     content.insert("SerialNumber", QVariant::Invalid);
     content.insert("StartLatitude", QVariant::Invalid);
     content.insert("StartLongitude", QVariant::Invalid);
-    uncompressedData = serializer.serialize(GPSSamplesContent);
-    compressData(uncompressedData, compressedData);
-    QVariantMap GPSSamplesDataMap;
-    GPSSamplesDataMap.insert("CompressedTrackPoints", compressedData.toBase64());
-    content.insert("Track", GPSSamplesDataMap);                   /* compressed */
+    if (GPSSamplesContent.count() > 0) {
+        uncompressedData = serializer.serialize(GPSSamplesContent);
+        compressData(uncompressedData, compressedData);
+        QVariantMap GPSSamplesDataMap;
+        GPSSamplesDataMap.insert("CompressedTrackPoints", compressedData.toBase64());
+        content.insert("Track", GPSSamplesDataMap);                   /* compressed */
+    }
 
     output = serializer.serialize(content, &ok);
 
