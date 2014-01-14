@@ -57,6 +57,7 @@ public slots:
 
 private slots:
     void chargeTimerHit();
+    void logMovescountID(QString device, QDateTime time, QString moveID);
 
 private:
     static int log_skip_cb(void *ref, ambit_log_header_t *log_header);

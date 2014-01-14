@@ -45,6 +45,9 @@ void DeviceManager::start()
     // Connect udev listener, fire a chargeTimerHit (implicit device detect), if hit
     udevListener = new UdevListener();
     connect(udevListener, SIGNAL(deviceEvent()), this, SLOT(chargeTimerHit()));
+
+    // Connect movescount Id feedback to local handler
+    connect(movesCount, SIGNAL(logMoveID(QString,QDateTime,QString)), this, SLOT(logMovescountID(QString,QDateTime,QString)));
 }
 
 void DeviceManager::detect()
@@ -156,6 +159,11 @@ void DeviceManager::chargeTimerHit()
         // Failed to read! We better try another detect
         detect();
     }
+}
+
+void DeviceManager::logMovescountID(QString device, QDateTime time, QString moveID)
+{
+    logStore.storeMovescountId(device, time, moveID);
 }
 
 int DeviceManager::log_skip_cb(void *ref, ambit_log_header_t *log_header)

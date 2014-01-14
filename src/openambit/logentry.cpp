@@ -32,6 +32,10 @@ LogEntry::LogEntry(const LogEntry &other)
 {
     u_int32_t i;
 
+    device = other.device;
+    time = other.time;
+    movescountId = other.movescountId;
+
     if (other.deviceInfo != NULL) {
         deviceInfo = (ambit_device_info_t*)malloc(sizeof(ambit_device_info_t));
         memcpy(deviceInfo, other.deviceInfo, sizeof(ambit_device_info_t));
@@ -84,6 +88,7 @@ LogEntry& LogEntry::operator=(const LogEntry &rhs)
 
     std::swap(device, tmp.device);
     std::swap(time, tmp.time);
+    std::swap(movescountId, tmp.movescountId);
     std::swap(deviceInfo, tmp.deviceInfo);
     std::swap(personalSettings, tmp.personalSettings);
     std::swap(logEntry, tmp.logEntry);

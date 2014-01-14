@@ -96,23 +96,28 @@ LogStore::LogStore(QObject *parent) :
 
 LogEntry *LogStore::store(ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
 {
-    LogEntry *retEntry = new LogEntry();
     QDateTime dateTime(QDate(logEntry->header.date_time.year, logEntry->header.date_time.month, logEntry->header.date_time.day),
                        QTime(logEntry->header.date_time.hour, logEntry->header.date_time.minute, logEntry->header.date_time.msec/1000));
 
-    XMLWriter writer(deviceInfo, dateTime, personalSettings, logEntry);
-    QFile logfile(logEntryPath(QString(deviceInfo->serial), dateTime));
-    logfile.open(QIODevice::WriteOnly);
-    writer.write(&logfile);
-    logfile.close();
-    logfile.open(QIODevice::ReadOnly);
-    XMLReader reader(retEntry);
-    if (!reader.read(&logfile)) {
-        delete retEntry;
-        retEntry = NULL;
-    }
+    return storeInternal(QString(deviceInfo->serial), dateTime, deviceInfo, personalSettings, logEntry);
+}
 
-    return retEntry;
+LogEntry *LogStore::store(LogEntry *entry)
+{
+    return storeInternal(entry->device, entry->time, entry->deviceInfo, entry->personalSettings, entry->logEntry, entry->movescountId);
+}
+
+void LogStore::storeMovescountId(QString device, QDateTime time, QString movescountId)
+{
+    LogEntry *entry, *retEntry;
+
+    if ((entry = read(device, time)) != NULL) {
+        entry->movescountId = movescountId;
+
+        retEntry = store(entry);
+        delete retEntry;
+        delete entry;
+    }
 }
 
 bool LogStore::logExists(QString device, ambit_log_header_t *logHeader)
@@ -125,31 +130,17 @@ bool LogStore::logExists(QString device, ambit_log_header_t *logHeader)
 
 LogEntry *LogStore::read(QString device, QDateTime time)
 {
-    return read(logEntryPath(device, time));
+    return readInternal(logEntryPath(device, time));
 }
 
 LogEntry *LogStore::read(LogDirEntry dirEntry)
 {
-    return read(dirEntry.filename);
+    return readInternal(storagePath + "/" + dirEntry.filename);
 }
 
 LogEntry *LogStore::read(QString filename)
 {
-    LogEntry *retEntry = new LogEntry();
-
-    if (QFile::exists(storagePath + "/" + filename)) {
-        QFile logfile(storagePath + "/" + filename);
-        logfile.open(QIODevice::ReadOnly);
-        XMLReader reader(retEntry);
-        if (!reader.read(&logfile)) {
-            QString error = reader.errorString();
-            qDebug() << error;
-            delete retEntry;
-            retEntry = NULL;
-        }
-    }
-
-    return retEntry;
+    return readInternal(storagePath + "/" + filename);
 }
 
 QList<LogStore::LogDirEntry> LogStore::dir(QString device)
@@ -184,6 +175,45 @@ QList<LogStore::LogDirEntry> LogStore::dir(QString device)
 QString LogStore::logEntryPath(QString device, QDateTime time)
 {
     return storagePath + "/log_" + device + "_" + time.toString("yyyy_MM_dd_hh_mm_ss") + ".log";
+}
+
+LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId)
+{
+    LogEntry *retEntry = new LogEntry();
+
+    XMLWriter writer(deviceInfo, dateTime, movescountId, personalSettings, logEntry);
+    QFile logfile(logEntryPath(serial, dateTime));
+    logfile.open(QIODevice::WriteOnly);
+    writer.write(&logfile);
+    logfile.close();
+    logfile.open(QIODevice::ReadOnly);
+    XMLReader reader(retEntry);
+    if (!reader.read(&logfile)) {
+        delete retEntry;
+        retEntry = NULL;
+    }
+
+    return retEntry;
+}
+
+LogEntry *LogStore::readInternal(QString path)
+{
+    LogEntry *retEntry = NULL;
+
+    if (QFile::exists(path)) {
+        retEntry = new LogEntry();
+        QFile logfile(path);
+        logfile.open(QIODevice::ReadOnly);
+        XMLReader reader(retEntry);
+        if (!reader.read(&logfile)) {
+            QString error = reader.errorString();
+            qDebug() << error;
+            delete retEntry;
+            retEntry = NULL;
+        }
+    }
+
+    return retEntry;
 }
 
 
@@ -227,6 +257,9 @@ void LogStore::XMLReader::readRoot()
         else if (xml.name() == "Time") {
             readTime();
         }
+        else if (xml.name() == "MovescountId") {
+            readMovescountId();
+        }
         else if (xml.name() == "DeviceInfo") {
             readDeviceInfo();
         }
@@ -255,6 +288,13 @@ void LogStore::XMLReader::readTime()
 
     QString datestring = xml.readElementText();
     logEntry->time = QDateTime::fromString(datestring, Qt::ISODate);
+}
+
+void LogStore::XMLReader::readMovescountId()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "MovescountId");
+
+    logEntry->movescountId = xml.readElementText();
 }
 
 void LogStore::XMLReader::readDeviceInfo()
@@ -1158,8 +1198,8 @@ void LogStore::XMLReader::readPeriodicSample(QList<ambit_log_sample_periodic_val
 }
 
 
-LogStore::XMLWriter::XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
-    deviceInfo(deviceInfo), time(time), personalSettings(personalSettings), logEntry(logEntry)
+LogStore::XMLWriter::XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, QString movescountId, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
+    deviceInfo(deviceInfo), time(time), movescountId(movescountId), personalSettings(personalSettings), logEntry(logEntry)
 {
     xml.setAutoFormatting(true);
 }
@@ -1177,6 +1217,7 @@ bool LogStore::XMLWriter::write(QIODevice *device)
 
     xml.writeTextElement("SerialNumber", QString("%1").arg(deviceInfo->serial));
     xml.writeTextElement("Time", time.toString(Qt::ISODate));
+    xml.writeTextElement("MovescountId", QString("%1").arg(movescountId));
     ret = writeDeviceInfo();
     ret = writePersonalSettings();
     if (ret) {

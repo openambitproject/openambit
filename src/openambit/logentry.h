@@ -36,6 +36,7 @@ public:
 
     QString device;
     QDateTime time;
+    QString movescountId;
     ambit_device_info_t *deviceInfo;
     ambit_personal_settings_t *personalSettings;
     ambit_log_entry_t *logEntry;
