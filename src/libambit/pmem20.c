@@ -277,9 +277,6 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
                 altisource_index = sample_count-1;
             }
         }
-        else {
-            LOG_ERROR("Failed to parse sample %d of %d", sample_count, log_entry->samples_count);
-        }
     }
 
     // Loop through samples again and correct times etc
