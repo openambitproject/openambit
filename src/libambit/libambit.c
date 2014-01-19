@@ -210,7 +210,7 @@ int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
     LOG_INFO("Writing date and time to clock");
 
     // Set date
-    *(uint16_t*)(&date_data[0]) = htole16(tm->tm_year);
+    *(uint16_t*)(&date_data[0]) = 1900 + htole16(tm->tm_year);
     date_data[2] = 1 + tm->tm_mon;
     date_data[3] = tm->tm_mday;
     memset(&date_data[4], 0, 4); // ????? Unknown data
