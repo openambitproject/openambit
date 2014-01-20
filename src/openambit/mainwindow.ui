@@ -179,7 +179,10 @@
                <bool>true</bool>
               </property>
               <property name="text">
-               <string>Auth on movescount.com!</string>
+               <string>Auth on &lt;a href=&quot;http://www.movescount.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;movescount.com&lt;/span&gt;&lt;/a&gt;!</string>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
