@@ -78,6 +78,31 @@ int MovesCountJSON::parseLogReply(QByteArray &input, QString &moveId)
     return -1;
 }
 
+int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries)
+{
+    QJson::Parser parser;
+    QVariantList logList;
+
+    bool ok;
+
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    logList = parser.parse(input, &ok).toList();
+
+    if (ok) {
+        foreach(QVariant entryVar, logList) {
+            QVariantMap entry = entryVar.toMap();
+            entries.append(MovesCountLogDirEntry(entry["MoveID"].toString(), QDateTime::fromString(entry["LocalStartTime"].toString(), "yyyy-MM-ddThh:mm:ss.zzz"), entry["ActivityID"].toUInt()));
+        }
+
+        return 0;
+    }
+
+    return -1;
+}
+
 int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
 {
     QJson::Serializer serializer;
@@ -219,7 +244,8 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("Duration", (double)logEntry->logEntry->header.duration/1000.0);
     content.insert("Energy", logEntry->logEntry->header.energy_consumption);
     content.insert("FlatTime", QVariant::Invalid);
-    content.insert("HighAltitude", (double)logEntry->logEntry->header.altitude_max);
+    if (logEntry->logEntry->header.altitude_max >= -1000 && logEntry->logEntry->header.altitude_max <= 10000)
+        content.insert("HighAltitude", (double)logEntry->logEntry->header.altitude_max);
     if (IBIContent.count() > 0) {
         uncompressedData = serializer.serialize(IBIContent);
         compressData(uncompressedData, compressedData);
@@ -228,7 +254,8 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
         content.insert("IBIData", IBIDataMap);                        /* compressed */
     }
     content.insert("LocalStartTime", dateTimeString(localBaseTime));
-    content.insert("LowAltitude", (double)logEntry->logEntry->header.altitude_min);
+    if (logEntry->logEntry->header.altitude_min >= -1000 && logEntry->logEntry->header.altitude_min <= 10000)
+        content.insert("LowAltitude", (double)logEntry->logEntry->header.altitude_min);
     content.insert("Marks", marksContent);
     content.insert("MaxCadence", QVariant::Invalid);
     content.insert("MaxSpeed", (double)logEntry->logEntry->header.speed_max/3600.0);
@@ -312,7 +339,8 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("EVPE", value->u.evpe);
             break;
         case ambit_log_sample_periodic_type_altitude:
-            output.insert("Altitude", (double)value->u.altitude);
+            if (value->u.altitude >= -1000 && value->u.altitude <= 10000)
+                output.insert("Altitude", (double)value->u.altitude);
             break;
         case ambit_log_sample_periodic_type_abspressure:
             output.insert("AbsPressure", (int)round((double)value->u.abspressure/10.0));
@@ -327,7 +355,8 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("BatteryCharge", (double)value->u.charge/100.0);
             break;
         case ambit_log_sample_periodic_type_gpsaltitude:
-            output.insert("GPSAltitude", value->u.gpsaltitude);
+            if (value->u.gpsaltitude >= -1000 && value->u.gpsaltitude <= 10000)
+                output.insert("GPSAltitude", value->u.gpsaltitude);
             break;
         case ambit_log_sample_periodic_type_gpsheading:
             output.insert("GPSHeading", (double)value->u.gpsheading/10000000);

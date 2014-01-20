@@ -24,6 +24,8 @@
 #include <QEventLoop>
 #include <QMutex>
 
+#include "logstore.h"
+
 #define AUTH_CHECK_TIMEOUT 5000 /* ms */
 #define GPS_ORBIT_DATA_MIN_SIZE 30000 /* byte */
 
@@ -60,6 +62,8 @@ void MovesCount::setAppkey(QString appkey)
 void MovesCount::setUsername(QString username)
 {
     this->username = username;
+
+    checkAuthorization();
 }
 
 void MovesCount::setUserkey(QString userkey)
@@ -134,6 +138,33 @@ int MovesCount::getDeviceSettings()
     return -1;
 }
 
+QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, QDate endTime)
+{
+    QNetworkReply *reply;
+    QList<MovesCountLogDirEntry> retList;
+
+    reply = syncGET("/moves/private", "startdate=" + startTime.toString("yyyy-MM-dd") + "&enddate=" + endTime.toString("yyyy-MM-dd"), true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseLogDirReply(_data, retList) != 0) {
+            // empty list if parse failed
+            retList.clear();
+        }
+    }
+
+    return retList;
+}
+
+void MovesCount::checkAuthorization()
+{
+    if (authCheckReply == NULL) {
+        authCheckReply = asyncGET("/members/private", "", true);
+        connect(authCheckReply, SIGNAL(finished()), this, SLOT(authCheckFinished()));
+    }
+}
+
 void MovesCount::checkLatestFirmwareVersion()
 {
     if (firmwareCheckReply == NULL) {
@@ -169,6 +200,15 @@ void MovesCount::writeLog(LogEntry *logEntry)
     }
 }
 
+void MovesCount::authCheckFinished()
+{
+    if (authCheckReply != NULL) {
+        checkReplyAuthorization(authCheckReply);
+        authCheckReply->deleteLater();
+        authCheckReply = NULL;
+    }
+}
+
 void MovesCount::firmwareReplyFinished()
 {
     u_int8_t fw_version[4];
@@ -195,10 +235,95 @@ void MovesCount::recheckAuthorization()
     getDeviceSettings();
 }
 
+void MovesCount::handleAuthorizationSignal(bool authorized)
+{
+    if (authorized) {
+        checkUploadedLogs();
+    }
+}
+
 MovesCount::MovesCount() :
-    firmwareCheckReply(NULL)
+    authorized(false), uploadedCheckRunning(false), authCheckReply(NULL), firmwareCheckReply(NULL)
 {
     this->manager = new QNetworkAccessManager(this);
+
+    this->moveToThread(&workerThread);
+    workerThread.start();
+
+    connect(this, SIGNAL(movesCountAuth(bool)), this, SLOT(handleAuthorizationSignal(bool)));
+}
+
+MovesCount::~MovesCount()
+{
+    workerThread.exit();
+    workerThread.wait();
+}
+
+bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
+{
+    if (reply->error() == QNetworkReply::AuthenticationRequiredError) {
+        authorized = false;
+        emit movesCountAuth(false);
+        QTimer::singleShot(AUTH_CHECK_TIMEOUT, this, SLOT(recheckAuthorization()));
+    }
+    else if(reply->error() == QNetworkReply::NoError) {
+        authorized = true;
+        emit movesCountAuth(true);
+    }
+
+    return authorized;
+}
+
+void MovesCount::checkUploadedLogs()
+{
+    QDateTime firstUnknown = QDateTime::currentDateTime();
+    QDateTime lastUnknown = QDateTime::fromTime_t(0);
+    QList<LogEntry*> missingEntries;
+
+    if (!uploadedCheckRunning) {
+        uploadedCheckRunning = true;
+
+        QList<LogStore::LogDirEntry> entries = logStore.dir();
+        foreach(LogStore::LogDirEntry entry, entries) {
+            LogEntry *logEntry = logStore.read(entry);
+            if (logEntry->movescountId.length() == 0) {
+                missingEntries.append(logEntry);
+                if (logEntry->time < firstUnknown) {
+                    firstUnknown = logEntry->time;
+                }
+                if (logEntry->time > lastUnknown) {
+                    lastUnknown = logEntry->time;
+                }
+            }
+            else {
+                delete logEntry;
+            }
+        }
+
+        if (missingEntries.count() > 0) {
+            QList<MovesCountLogDirEntry> movescountEntries = getMovescountEntries(firstUnknown.date(), lastUnknown.date());
+            foreach(MovesCountLogDirEntry entry, movescountEntries) {
+                foreach(LogEntry *logEntry, missingEntries) {
+                    if (entry.time == logEntry->time) {
+                        missingEntries.removeOne(logEntry);
+                        logStore.storeMovescountId(logEntry->device, logEntry->time, entry.moveId);
+                        delete logEntry;
+                        break;
+                    }
+                }
+            }
+
+            // Delete remaining entries
+            while (missingEntries.count() > 0) {
+                LogEntry *logEntry = missingEntries.first();
+                writeLog(logEntry);
+                missingEntries.removeOne(logEntry);
+                delete logEntry;
+            }
+        }
+
+        uploadedCheckRunning = false;
+    }
 }
 
 QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, bool auth)
@@ -260,20 +385,4 @@ QNetworkReply *MovesCount::syncPOST(QString path, QString additionalHeaders, QBy
     loop.exec();
 
     return reply;
-}
-
-
-bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
-{
-    if (reply->error() == QNetworkReply::AuthenticationRequiredError) {
-        authorized = false;
-        emit movesCountAuth(false);
-        QTimer::singleShot(AUTH_CHECK_TIMEOUT, this, SLOT(recheckAuthorization()));
-    }
-    else if(reply->error() == QNetworkReply::NoError) {
-        authorized = true;
-        emit movesCountAuth(true);
-    }
-
-    return authorized;
 }

@@ -392,7 +392,9 @@ void MainWindow::movesCountSetup()
             connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
             connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
         }
-        movesCount->setUsername(settings.value("email").toString());
+        if (movescountEnable) {
+            movesCount->setUsername(settings.value("email").toString());
+        }
     }
     settings.endGroup();
 }

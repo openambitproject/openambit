@@ -26,7 +26,9 @@
 #include <QList>
 #include <QVariantMap>
 #include <libambit.h>
+
 #include "logentry.h"
+#include "movescountlogdirentry.h"
 
 class MovesCountJSON : public QObject
 {
@@ -36,6 +38,7 @@ public:
 
     int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[4]);
     int parseLogReply(QByteArray &input, QString &moveId);
+    int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
 
     int generateLogData(LogEntry *logEntry, QByteArray &output);
     
