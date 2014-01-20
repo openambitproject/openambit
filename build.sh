@@ -8,7 +8,7 @@ cd $SOURCE_LOCATION
 echo "------building libambit------"
 mkdir -p libambit-build
 cd libambit-build
-cmake ../src/libambit
+cmake -DCMAKE_BUILD_TYPE=Debug ../src/libambit
 make -j$CORES
 
 cd $SOURCE_LOCATION
