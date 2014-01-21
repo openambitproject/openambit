@@ -69,9 +69,7 @@ private slots:
     void updateLogList();
     
 private:
-    void addLogMessageRow(QString message);
-    void updateLogMessageRow(QString message);
-    void finalizeLogMessageRow();
+    void startSync();
 
     void movesCountSetup();
 

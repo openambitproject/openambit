@@ -72,6 +72,7 @@ void SettingsDialog::readSettings()
     settings.endGroup();
 
     settings.beginGroup("syncSettings");
+    ui->checkBoxSyncAutomatically->setChecked(settings.value("syncAutomatically", false).toBool());
     ui->checkBoxSyncTime->setChecked(settings.value("syncTime", true).toBool());
     ui->checkBoxSyncOrbit->setChecked(settings.value("syncOrbit", true).toBool());
     settings.endGroup();
@@ -91,6 +92,7 @@ void SettingsDialog::writeSettings()
     settings.endGroup();
 
     settings.beginGroup("syncSettings");
+    settings.setValue("syncAutomatically", ui->checkBoxSyncAutomatically->isChecked());
     settings.setValue("syncTime", ui->checkBoxSyncTime->isChecked());
     settings.setValue("syncOrbit", ui->checkBoxSyncOrbit->isChecked());
     settings.endGroup();

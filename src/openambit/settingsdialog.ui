@@ -88,7 +88,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="generalSettingsPage">
           <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -130,17 +130,24 @@
               <string>Device syncronisation settings</string>
              </property>
              <layout class="QFormLayout" name="formLayout">
-              <item row="0" column="0">
+              <item row="1" column="0">
                <widget class="QCheckBox" name="checkBoxSyncTime">
                 <property name="text">
                  <string>Sync time from computer</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
+              <item row="2" column="0">
                <widget class="QCheckBox" name="checkBoxSyncOrbit">
                 <property name="text">
                  <string>Sync orbital data (from Movescount)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="checkBoxSyncAutomatically">
+                <property name="text">
+                 <string>Start sync automatically when device connected</string>
                 </property>
                </widget>
               </item>

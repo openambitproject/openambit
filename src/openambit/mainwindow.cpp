@@ -67,8 +67,6 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 
-    connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(showSettings()));
-
     // System tray icon
     trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"));
     trayIcon->show();
@@ -123,36 +121,14 @@ void MainWindow::settingsSaved()
 
 void MainWindow::syncNowClicked()
 {
-    bool syncTime, syncOrbit, syncMovescount;
-
-    ui->checkBoxResyncAll->setEnabled(false);
-    ui->buttonSyncNow->setEnabled(false);
-    currentLogMessageRow = NULL;
-    QLayoutItem *tmpItem;
-    while ((tmpItem = ui->verticalLayoutLogMessages->takeAt(0)) != NULL) {
-        delete tmpItem->widget();
-        delete tmpItem;
-    }
-    ui->syncProgressBar->setHidden(false);
-    ui->syncProgressBar->setValue(0);
-
-    settings.beginGroup("syncSettings");
-    syncTime = settings.value("syncTime", true).toBool();
-    syncOrbit = settings.value("syncOrbit", true).toBool();
-    settings.endGroup();
-    settings.beginGroup("movescountSettings");
-    syncMovescount = settings.value("movescountEnable", true).toBool();
-    settings.endGroup();
-
-    trayIcon->setIcon(QIcon(":/icon_syncing"));
-
-    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
+    startSync();
 }
 
 void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
 {
     ui->labelDeviceDetected->setText(deviceInfo.name);
     ui->labelSerial->setText(deviceInfo.serial);
+    trayIcon->setIcon(QIcon(":/icon_connected"));
     if (!supported) {
         ui->labelNotSupportedIcon->setHidden(false);
         ui->labelNotSupported->setHidden(false);
@@ -190,9 +166,13 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
             }
             settings.endGroup();
         }
-    }
 
-    trayIcon->setIcon(QIcon(":/icon_connected"));
+        settings.beginGroup("syncSettings");
+        if (settings.value("syncAutomatically", false).toBool()) {
+            startSync();
+        }
+        settings.endGroup();
+    }
 }
 
 void MainWindow::deviceRemoved(void)
@@ -329,6 +309,65 @@ void MainWindow::updateLogList()
     }
 }
 
+void MainWindow::startSync()
+{
+    bool syncTime, syncOrbit, syncMovescount;
+
+    ui->checkBoxResyncAll->setEnabled(false);
+    ui->buttonSyncNow->setEnabled(false);
+    currentLogMessageRow = NULL;
+    QLayoutItem *tmpItem;
+    while ((tmpItem = ui->verticalLayoutLogMessages->takeAt(0)) != NULL) {
+        delete tmpItem->widget();
+        delete tmpItem;
+    }
+    ui->syncProgressBar->setHidden(false);
+    ui->syncProgressBar->setValue(0);
+
+    settings.beginGroup("syncSettings");
+    syncTime = settings.value("syncTime", true).toBool();
+    syncOrbit = settings.value("syncOrbit", true).toBool();
+    settings.endGroup();
+    settings.beginGroup("movescountSettings");
+    syncMovescount = settings.value("movescountEnable", true).toBool();
+    settings.endGroup();
+
+    trayIcon->setIcon(QIcon(":/icon_syncing"));
+
+    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
+}
+
+void MainWindow::movesCountSetup()
+{
+    bool syncOrbit = false;
+    bool movescountEnable = false;
+
+    settings.beginGroup("syncSettings");
+    syncOrbit = settings.value("syncOrbit").toBool();
+    settings.endGroup();
+
+    settings.beginGroup("movescountSettings");
+    movescountEnable = settings.value("movescountEnable").toBool();
+    if (syncOrbit || movescountEnable) {
+        if (movesCount == NULL) {
+            movesCount = MovesCount::instance();
+            movesCount->setAppkey(APPKEY);
+            movesCount->setBaseAddress(settings.value("movescountBaseAddress", MOVESCOUNT_DEFAULT_URL).toString());
+            if (settings.value("movescountUserkey", "").toString().length() == 0) {
+                settings.setValue("movescountUserkey", movesCount->generateUserkey());
+            }
+            movesCount->setUserkey(settings.value("movescountUserkey").toString());
+
+            connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
+            connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
+        }
+        if (movescountEnable) {
+            movesCount->setUsername(settings.value("email").toString());
+        }
+    }
+    settings.endGroup();
+}
+
 MainWindow::LogMessageRow::LogMessageRow(QWidget *parent) :
     QHBoxLayout(parent)
 {
@@ -368,33 +407,3 @@ void MainWindow::LogMessageRow::setStatus(Status status)
     iconLabel->setPixmap(icon.pixmap(8,8));
 }
 
-void MainWindow::movesCountSetup()
-{
-    bool syncOrbit = false;
-    bool movescountEnable = false;
-
-    settings.beginGroup("syncSettings");
-    syncOrbit = settings.value("syncOrbit").toBool();
-    settings.endGroup();
-
-    settings.beginGroup("movescountSettings");
-    movescountEnable = settings.value("movescountEnable").toBool();
-    if (syncOrbit || movescountEnable) {
-        if (movesCount == NULL) {
-            movesCount = MovesCount::instance();
-            movesCount->setAppkey(APPKEY);
-            movesCount->setBaseAddress(settings.value("movescountBaseAddress", MOVESCOUNT_DEFAULT_URL).toString());
-            if (settings.value("movescountUserkey", "").toString().length() == 0) {
-                settings.setValue("movescountUserkey", movesCount->generateUserkey());
-            }
-            movesCount->setUserkey(settings.value("movescountUserkey").toString());
-
-            connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
-            connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
-        }
-        if (movescountEnable) {
-            movesCount->setUsername(settings.value("email").toString());
-        }
-    }
-    settings.endGroup();
-}
