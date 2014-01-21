@@ -243,7 +243,7 @@ void MovesCount::handleAuthorizationSignal(bool authorized)
 }
 
 MovesCount::MovesCount() :
-    authorized(false), uploadedCheckRunning(false), authCheckReply(NULL), firmwareCheckReply(NULL)
+    authorized(false), uploadedCheckRunning(false), firmwareCheckReply(NULL), authCheckReply(NULL)
 {
     this->manager = new QNetworkAccessManager(this);
 
