@@ -23,6 +23,7 @@
 #include "ui_mainwindow.h"
 
 #include <QListWidgetItem>
+#include <QCloseEvent>
 
 #define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
@@ -30,10 +31,12 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    forceClose(false),
     movesCount(NULL),
     currentLogMessageRow(NULL)
 {
     ui->setupUi(this);
+    ui->actionE_xit->setShortcut(QKeySequence(QKeySequence::Quit));
 
     // Setup UI parts
     QIcon warningIcon = QIcon::fromTheme("dialog-warning");
@@ -68,7 +71,20 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // System tray icon
+    trayIconSyncAction = new QAction(QIcon::fromTheme("view-refresh"), tr("Sync now"), this);
+    trayIconSyncAction->setDisabled(true);
+    trayIconMinimizeRestoreAction = new QAction(tr("Minimize"), this);
+    connect(trayIconSyncAction, SIGNAL(triggered()), this, SLOT(syncNowClicked()));
+    connect(trayIconMinimizeRestoreAction, SIGNAL(triggered()), this, SLOT(showHideWindow()));
+
+    trayIconMenu = new QMenu(this);
+    trayIconMenu->addAction(trayIconSyncAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(trayIconMinimizeRestoreAction);
+    trayIconMenu->addAction(ui->actionE_xit);
     trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"));
+    trayIcon->setContextMenu(trayIconMenu);
+    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
     trayIcon->show();
 
     // Setup device manager
@@ -103,6 +119,54 @@ MainWindow::~MainWindow()
     deviceWorkerThread.quit();
     deviceWorkerThread.wait();
     delete ui;
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        if (isMinimized()) {
+            trayIconMinimizeRestoreAction->setText(tr("Restore"));
+            QTimer::singleShot(0, this, SLOT(hide()));
+        }
+        else {
+            trayIconMinimizeRestoreAction->setText(tr("Minimize"));
+        }
+    }
+    QMainWindow::changeEvent(event);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (forceClose) {
+        event->accept();
+    }
+    else {
+        showHideWindow();
+        event->ignore();
+    }
+}
+
+void MainWindow::closeRequested()
+{
+    forceClose = true;
+    close();
+}
+
+void MainWindow::showHideWindow()
+{
+    if (isMinimized()) {
+        showNormal();
+    }
+    else {
+        showMinimized();
+    }
+}
+
+void MainWindow::trayIconClicked(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::Trigger) {
+        showHideWindow();
+    }
 }
 
 void MainWindow::showSettings()
@@ -140,6 +204,7 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
         ui->chargeIndicator->setHidden(true);
         ui->checkBoxResyncAll->setHidden(true);
         ui->buttonSyncNow->setHidden(true);
+        trayIconSyncAction->setDisabled(true);
         ui->syncProgressBar->setHidden(true);
     }
     else {
@@ -153,6 +218,7 @@ void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
         ui->chargeIndicator->setHidden(false);
         ui->checkBoxResyncAll->setHidden(false);
         ui->buttonSyncNow->setHidden(false);
+        trayIconSyncAction->setDisabled(false);
 
         movesCountSetup();
         if (movesCount != NULL) {
@@ -189,6 +255,7 @@ void MainWindow::deviceRemoved(void)
     ui->chargeIndicator->setHidden(true);
     ui->checkBoxResyncAll->setHidden(true);
     ui->buttonSyncNow->setHidden(true);
+    trayIconSyncAction->setDisabled(true);
     ui->syncProgressBar->setHidden(true);
 
     trayIcon->setIcon(QIcon(":/icon_disconnected"));
@@ -219,6 +286,7 @@ void MainWindow::syncFinished(bool success)
     ui->checkBoxResyncAll->setChecked(false);
     ui->checkBoxResyncAll->setEnabled(true);
     ui->buttonSyncNow->setEnabled(true);
+    trayIconSyncAction->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
 
     trayIcon->setIcon(QIcon(":/icon_connected"));
@@ -315,6 +383,7 @@ void MainWindow::startSync()
 
     ui->checkBoxResyncAll->setEnabled(false);
     ui->buttonSyncNow->setEnabled(false);
+    trayIconSyncAction->setEnabled(false);
     currentLogMessageRow = NULL;
     QLayoutItem *tmpItem;
     while ((tmpItem = ui->verticalLayoutLogMessages->takeAt(0)) != NULL) {

@@ -48,7 +48,15 @@ public:
 signals:
     void syncNow(bool readAll, bool syncTime, bool syncOrbit, bool syncMovescount);
 
+protected:
+    void changeEvent(QEvent *event);
+    void closeEvent(QCloseEvent *event);
+
 private slots:
+    void closeRequested();
+    void showHideWindow();
+    void trayIconClicked(QSystemTrayIcon::ActivationReason reason);
+
     void showSettings();
     void settingsSaved();
 
@@ -74,7 +82,12 @@ private:
     void movesCountSetup();
 
     Ui::MainWindow *ui;
+    bool forceClose;
+
     QSystemTrayIcon *trayIcon;
+    QMenu *trayIconMenu;
+    QAction *trayIconSyncAction;
+    QAction *trayIconMinimizeRestoreAction;
 
     Settings settings;
     SettingsDialog *settingsDialog;
