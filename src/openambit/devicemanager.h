@@ -31,8 +31,8 @@
 
 #include "settings.h"
 #include "logstore.h"
-#include "movescount.h"
-#include "movescountxml.h"
+#include "movescount/movescount.h"
+#include "movescount/movescountxml.h"
 #include "udevlistener.h"
 #include <libambit.h>
 

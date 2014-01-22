@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = openambit
 TEMPLATE = app
 
+include(movescount/include.pri)
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -19,12 +20,8 @@ SOURCES += main.cpp\
     settings.cpp \
     logstore.cpp \
     logentry.cpp \
-    movescountxml.cpp \
-    movescountjson.cpp \
-    movescount.cpp \
     udevlistener.cpp \
     confirmbetadialog.cpp \
-    movescountlogdirentry.cpp \
     single_application.cpp
 
 HEADERS  += mainwindow.h \
@@ -33,12 +30,8 @@ HEADERS  += mainwindow.h \
     settings.h \
     logstore.h \
     logentry.h \
-    movescountxml.h \
-    movescountjson.h \
-    movescount.h \
     udevlistener.h \
     confirmbetadialog.h \
-    movescountlogdirentry.h \
     single_application.h
 
 FORMS    += mainwindow.ui \

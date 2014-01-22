@@ -25,7 +25,7 @@
 #include "devicemanager.h"
 #include "settingsdialog.h"
 #include "confirmbetadialog.h"
-#include "movescount.h"
+#include "movescount/movescount.h"
 #include <QMainWindow>
 #include <QThread>
 #include <QVBoxLayout>
