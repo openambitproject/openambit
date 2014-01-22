@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     movescount.cpp \
     udevlistener.cpp \
     confirmbetadialog.cpp \
-    movescountlogdirentry.cpp
+    movescountlogdirentry.cpp \
+    single_application.cpp
 
 HEADERS  += mainwindow.h \
     devicemanager.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     movescount.h \
     udevlistener.h \
     confirmbetadialog.h \
-    movescountlogdirentry.h
+    movescountlogdirentry.h \
+    single_application.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \

@@ -20,13 +20,18 @@
  *
  */
 #include "mainwindow.h"
-#include <QApplication>
 #include <QSettings>
+
+#include "single_application.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
+    SingleApplication a(argc, argv, "openambit_single_application_lock");
+
+    if (a.isRunning()) {
+        a.sendMessage("focus");
+        return 0;
+    }
 
     // Set application settings
     QCoreApplication::setOrganizationName("openambit");
@@ -34,6 +39,11 @@ int main(int argc, char *argv[])
 #ifdef Q_WS_X11
     QSettings::setPath(QSettings::NativeFormat, QSettings::UserScope, "~/.openambit/openambit.conf");
 #endif
+
+    MainWindow w;
+
+    // Connect single application message bus
+    QObject::connect(&a, SIGNAL(messageAvailable(QString)), &w, SLOT(singleApplicationMsgRecv(QString)));
 
     w.show();
     

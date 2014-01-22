@@ -121,6 +121,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::singleApplicationMsgRecv(QString msg)
+{
+    if (msg == "focus") {
+        // Another instance of application has asked use to gain focus, let's do so!
+        if (isMinimized()) {
+            showHideWindow();
+        }
+        else {
+            raise();
+            activateWindow();
+        }
+    }
+}
+
 void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange) {

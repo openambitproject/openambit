@@ -48,6 +48,9 @@ public:
 signals:
     void syncNow(bool readAll, bool syncTime, bool syncOrbit, bool syncMovescount);
 
+public slots:
+    void singleApplicationMsgRecv(QString msg);
+
 protected:
     void changeEvent(QEvent *event);
     void closeEvent(QCloseEvent *event);
