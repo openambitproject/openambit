@@ -290,12 +290,18 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setMessage(tr("Syncronization complete"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
+        if (isMinimized()) {
+            trayIcon->showMessage(tr("openambit"), tr("Syncronisation finished"));
+        }
     }
     else {
         currentLogMessageRow = new LogMessageRow(0);
         currentLogMessageRow->setMessage(tr("Syncronization failed"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
+        if (isMinimized()) {
+            trayIcon->showMessage(tr("openambit"), tr("Syncronisation failed"), QSystemTrayIcon::Critical);
+        }
     }
     ui->checkBoxResyncAll->setChecked(false);
     ui->checkBoxResyncAll->setEnabled(true);
@@ -416,6 +422,9 @@ void MainWindow::startSync()
     settings.endGroup();
 
     trayIcon->setIcon(QIcon(":/icon_syncing"));
+    if (isMinimized()) {
+        trayIcon->showMessage(tr("openambit"), tr("Syncronisation started"));
+    }
 
     emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
 }
