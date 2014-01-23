@@ -1,9 +1,9 @@
-SOURCES += movescountxml.cpp \
-    movescountjson.cpp \
-    movescount.cpp \
-    movescountlogdirentry.cpp
-HEADERS += movescountxml.h \
-    movescountjson.h \
-    movescount.h \
-    movescountlogdirentry.h
+SOURCES += movescount/movescountxml.cpp \
+    movescount/movescountjson.cpp \
+    movescount/movescount.cpp \
+    movescount/movescountlogdirentry.cpp
 
+HEADERS += movescount/movescountxml.h \
+    movescount/movescountjson.h \
+    movescount/movescount.h \
+    movescount/movescountlogdirentry.h
