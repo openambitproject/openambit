@@ -50,8 +50,7 @@ struct ambit_object_s {
                 uint32_t prev;
             } current;
             uint8_t *buffer;
-            uint32_t prev_read;
-            uint32_t last_addr;
+            uint8_t *chunks_read;
         } log;
     } pmem20;
 };

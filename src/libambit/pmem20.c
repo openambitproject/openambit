@@ -29,10 +29,13 @@
 /*
  * Local definitions
  */
-#define PMEM20_LOG_START          0x000f4240
-#define PMEM20_LOG_SIZE           0x0029f630 /* 2 750 000 */
-#define PMEM20_LOG_HEADER_MIN_LEN        512 /* Header actually longer, but not interesting*/
-#define PMEM20_GPS_ORBIT_START    0x000704e0
+#define PMEM20_LOG_START                  0x000f4240
+#define PMEM20_LOG_SIZE                   0x0029f630 /* 2 750 000 */
+#define PMEM20_LOG_WRAP_START_OFFSET      0x00000012
+#define PMEM20_LOG_WRAP_BUFFER_MARGIN     0x00010000 /* Max theoretical size of sample */
+#define PMEM20_LOG_HEADER_MIN_LEN                512 /* Header actually longer, but not interesting*/
+
+#define PMEM20_GPS_ORBIT_START            0x000704e0
 
 typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
     uint16_t type;
@@ -43,9 +46,9 @@ typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
 /*
  * Static functions
  */
-static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count);
+static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count);
 static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length);
-static int read_log_chunk(ambit_object_t *object, uint32_t address, uint32_t length, uint8_t *buffer);
+static int read_log_chunk(ambit_object_t *object, uint32_t address);
 static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buffer_count, uint8_t **buffers, size_t *buffer_sizes);
 static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_t *outtime);
 static int is_leap(unsigned int y);
@@ -76,15 +79,23 @@ int libambit_pmem20_log_init(ambit_object_t *object)
     if (object->pmem20.log.buffer != NULL) {
         free(object->pmem20.log.buffer);
     }
+    if (object->pmem20.log.chunks_read != NULL) {
+        free(object->pmem20.log.chunks_read);
+    }
     memset(&object->pmem20.log, 0, sizeof(object->pmem20.log));
-    object->pmem20.log.buffer = malloc(PMEM20_LOG_SIZE);
-    if (object->pmem20.log.buffer != NULL) {
+
+    object->pmem20.log.buffer = malloc(PMEM20_LOG_SIZE + PMEM20_LOG_WRAP_BUFFER_MARGIN);
+    object->pmem20.log.chunks_read = malloc((PMEM20_LOG_SIZE/object->pmem20.chunk_size)+1);
+
+    if (object->pmem20.log.buffer != NULL && object->pmem20.log.chunks_read != NULL) {
+        // Set all chunks to NOT read
+        memset(object->pmem20.log.chunks_read, 0, (PMEM20_LOG_SIZE/object->pmem20.chunk_size)+1);
+
         // Read initial log header
         LOG_INFO("Reading first log data chunk");
-        ret = read_log_chunk(object, PMEM20_LOG_START, object->pmem20.chunk_size, object->pmem20.log.buffer);
+        ret = read_log_chunk(object, PMEM20_LOG_START);
+        
         if (ret == 0) {
-            object->pmem20.log.prev_read = PMEM20_LOG_START;
-
             // Parse PMEM header
             offset = 0;
             object->pmem20.log.last_entry = read32inc(object->pmem20.log.buffer, &offset);
@@ -112,6 +123,9 @@ int libambit_pmem20_deinit(ambit_object_t *object)
 {
     if (object->pmem20.log.buffer != NULL) {
         free(object->pmem20.log.buffer);
+    }
+    if (object->pmem20.log.chunks_read != NULL) {
+        free(object->pmem20.log.chunks_read);
     }
     memset(&object->pmem20.log, 0, sizeof(object->pmem20.log));
 
@@ -176,7 +190,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
 {
     // Note! We assume that the caller has called libambit_pmem20_log_next_header just before
     uint8_t *periodic_sample_spec;
-    uint16_t tmp_len;
+    uint16_t tmp_len, sample_len;
     size_t buffer_offset, sample_count = 0, i;
     ambit_log_entry_t *log_entry;
     ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *altisource = NULL;
@@ -226,12 +240,36 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
 
     // OK, so we are at start of samples, get them all!
     while (sample_count < log_entry->samples_count) {
-        if (PMEM20_LOG_START + buffer_offset + 2 >= object->pmem20.log.last_addr ||
-            PMEM20_LOG_START + buffer_offset + 2 + read16(object->pmem20.log.buffer, buffer_offset) >= object->pmem20.log.last_addr) {
-            read_upto(object, PMEM20_LOG_START + buffer_offset, object->pmem20.chunk_size);
+        /* NOTE! The double reads below seems a bit unoptimized,
+           but if we need optimization, we should optimize read_upto
+           instead...
+           To ease the pain on wraparound we simply duplicate the sample
+           to the end of the buffer. */
+
+        // First check for log area wrap
+        if (buffer_offset >= PMEM20_LOG_SIZE - 1) {
+            read_upto(object, PMEM20_LOG_START + PMEM20_LOG_WRAP_START_OFFSET, 2);
+            sample_len = read16(object->pmem20.log.buffer, PMEM20_LOG_WRAP_START_OFFSET);
+        }
+        else if (buffer_offset == PMEM20_LOG_SIZE - 2) {
+            read_upto(object, PMEM20_LOG_START + PMEM20_LOG_WRAP_START_OFFSET, 1);
+            sample_len = object->pmem20.log.buffer[buffer_offset] | (object->pmem20.log.buffer[PMEM20_LOG_WRAP_START_OFFSET] << 8);
+        }
+        else {
+            read_upto(object, PMEM20_LOG_START + buffer_offset, 2);
+            sample_len = read16(object->pmem20.log.buffer, buffer_offset);
         }
 
-        if (parse_sample(object->pmem20.log.buffer, &buffer_offset, &periodic_sample_spec, log_entry, &sample_count) == 1) {
+        // Read all data
+        if (buffer_offset + 2 < (PMEM20_LOG_SIZE-1)) {
+            read_upto(object, PMEM20_LOG_START + buffer_offset + 2, sample_len);
+        }
+        if (buffer_offset + 2 + sample_len > PMEM20_LOG_SIZE) {
+            read_upto(object, PMEM20_LOG_START + PMEM20_LOG_WRAP_START_OFFSET, (buffer_offset + 2 + sample_len) - PMEM20_LOG_SIZE);
+            memcpy(object->pmem20.log.buffer + PMEM20_LOG_SIZE, object->pmem20.log.buffer + PMEM20_LOG_WRAP_START_OFFSET, (buffer_offset + 2 + sample_len) - PMEM20_LOG_SIZE);
+        }
+
+        if (parse_sample(object->pmem20.log.buffer, buffer_offset, &periodic_sample_spec, log_entry, &sample_count) == 1) {
             // Calculate times
             if (log_entry->samples[sample_count-1].type == ambit_log_sample_type_periodic) {
                 last_periodic = &log_entry->samples[sample_count-1];
@@ -276,6 +314,11 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object)
                 altisource = &log_entry->samples[sample_count-1];
                 altisource_index = sample_count-1;
             }
+        }
+        buffer_offset += 2 + sample_len;
+        // Wrap
+        if (buffer_offset >= PMEM20_LOG_SIZE) {
+            buffer_offset = PMEM20_LOG_WRAP_START_OFFSET + (buffer_offset - PMEM20_LOG_SIZE);
         }
     }
 
@@ -425,10 +468,10 @@ int libambit_pmem20_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_
  * Parse the given sample
  * \return number of samples added (1 or 0)
  */
-static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count)
+static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count)
 {
     int ret = 0;
-    size_t int_offset = *offset;
+    size_t int_offset = offset;
     uint16_t sample_len = read16inc(buf, &int_offset);
     uint8_t  sample_type = read8inc(buf, &int_offset);
     uint8_t  episodic_type;
@@ -439,11 +482,11 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
     switch (sample_type) {
       case 0:   /* periodic sample specifier */
         // Update specifier on input
-        *spec = buf + *offset + 2;
+        *spec = buf + offset + 2;
         break;
       case 2:   /* periodic sample */
         log_entry->samples[*sample_count].type = ambit_log_sample_type_periodic;
-        log_entry->samples[*sample_count].time = read32(buf, *offset + sample_len - 2);
+        log_entry->samples[*sample_count].time = read32(buf, offset + sample_len - 2);
         
         // Loop through specifier and set corresponding fields
         spec_count = read16(*spec, 1);
@@ -691,27 +734,26 @@ static int parse_sample(uint8_t *buf, size_t *offset, uint8_t **spec, ambit_log_
             log_entry->samples[*sample_count].u.position.longitude = read32inc(buf, &int_offset);
             break;
           default:
-            LOG_WARNING("Found unknown episodic sample type (%02x)", episodic_type);
+            LOG_WARNING("Found unknown episodic sample type (0x%02x)", episodic_type);
             log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
             log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
             log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
-            memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + *offset + 2, sample_len);
+            memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + offset + 2, sample_len);
             break;
         }
         ret = 1;
         break;
       default:
-        LOG_WARNING("Found unknown sample type (%02x)", sample_type);
+        LOG_WARNING("Found unknown sample type (0x%02x)", sample_type);
         log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
         log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
         log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
-        memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + *offset + 2, sample_len);
+        memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + offset + 2, sample_len);
         ret = 1;
         break;
     }
 
     *sample_count += ret;
-    *offset += 2 + sample_len;
 
     return ret;
 }
@@ -721,12 +763,11 @@ static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length)
     uint32_t start_address = address - ((address - PMEM20_LOG_START) % object->pmem20.chunk_size);
 
     while (start_address < address + length) {
-        if (object->pmem20.log.prev_read != start_address) {
-            if (read_log_chunk(object, start_address, object->pmem20.chunk_size, object->pmem20.log.buffer + (start_address - PMEM20_LOG_START)) != 0) {
+        if (object->pmem20.log.chunks_read[(start_address - PMEM20_LOG_START)/object->pmem20.chunk_size] == 0) {
+            if (read_log_chunk(object, start_address) != 0) {
                 return -1;
             }
-            object->pmem20.log.prev_read = start_address;
-            object->pmem20.log.last_addr = start_address + object->pmem20.chunk_size - 1;
+            object->pmem20.log.chunks_read[(start_address - PMEM20_LOG_START)/object->pmem20.chunk_size] = 1;
         }
         start_address += object->pmem20.chunk_size;
     }
@@ -734,9 +775,12 @@ static int read_upto(ambit_object_t *object, uint32_t address, uint32_t length)
     return 0;
 }
 
-static int read_log_chunk(ambit_object_t *object, uint32_t address, uint32_t length, uint8_t *buffer)
+static int read_log_chunk(ambit_object_t *object, uint32_t address)
 {
     int ret = -1;
+
+    uint8_t *buffer = object->pmem20.log.buffer + (address - PMEM20_LOG_START);
+    uint32_t length = object->pmem20.chunk_size;
 
     uint8_t *reply = NULL;
     size_t replylen = 0;
@@ -744,6 +788,10 @@ static int read_log_chunk(ambit_object_t *object, uint32_t address, uint32_t len
     uint8_t send_data[8];
     uint32_t *_address = (uint32_t*)&send_data[0];
     uint32_t *_length = (uint32_t*)&send_data[4];
+
+    if ((address + object->pmem20.chunk_size) > (PMEM20_LOG_START + PMEM20_LOG_SIZE)) {
+        length = PMEM20_LOG_START + PMEM20_LOG_SIZE - address;
+    }
 
     *_address = htole32(address);
     *_length = htole32(length);
