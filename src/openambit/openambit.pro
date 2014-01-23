@@ -8,6 +8,8 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+VERSION = HEAD
+
 TARGET = openambit
 TEMPLATE = app
 
@@ -47,3 +49,5 @@ OTHER_FILES +=
 
 RESOURCES += \
     resources.qrc
+
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"

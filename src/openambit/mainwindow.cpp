@@ -22,8 +22,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QListWidgetItem>
 #include <QCloseEvent>
+#include <QListWidgetItem>
+#include <QMessageBox>
 
 #define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
@@ -189,6 +190,13 @@ void MainWindow::showSettings()
     settingsDialog->setModal(true);
     connect(settingsDialog, SIGNAL(settingsSaved()), this, SLOT(settingsSaved()));
     settingsDialog->show();
+}
+
+void MainWindow::showAbout()
+{
+    QMessageBox::about(this, tr("About openambit"),
+                       tr("<h2>openambit</h2><b>Version %1</b><br />Using Qt %2").arg(QCoreApplication::applicationVersion()).arg(QString(qVersion())) +
+                       "<br /><br /><a href=\"http://sourceforge.net/projects/openambit\">http://sourceforge.net/projects/openambit</a>");
 }
 
 void MainWindow::settingsSaved()

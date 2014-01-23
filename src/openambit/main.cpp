@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     }
 
     // Set application settings
+    QCoreApplication::setApplicationVersion(APP_VERSION);
     QCoreApplication::setOrganizationName("openambit");
     QCoreApplication::setApplicationName("openambit");
 #ifdef Q_WS_X11
