@@ -431,13 +431,13 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
 
         // Loop through all log entries, first check headers
         while (log_entries_walked < log_entries_total && libambit_pmem20_log_next_header(object, &log_header) == 1) {
-            LOG_INFO("Reading header of log %d of %d", log_entries_walked, log_entries_total);
+            LOG_INFO("Reading header of log %d of %d", log_entries_walked + 1, log_entries_total);
             if (progress_cb != NULL) {
                 progress_cb(userref, log_entries_total, log_entries_walked+1, 100*log_entries_walked/log_entries_total);
             }
             // Check if this entry needs to be read
             if (skip_cb == NULL || skip_cb(userref, &log_header) != 0) {
-                LOG_INFO("Reading data of log %d of %d", log_entries_walked, log_entries_total);
+                LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
                 log_entry = libambit_pmem20_log_read_entry(object);
                 if (log_entry != NULL) {
                     if (push_cb != NULL) {
@@ -447,7 +447,7 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
                 }
             }
             else {
-                LOG_INFO("Log %d of %d already exists, skip reading data", log_entries_walked, log_entries_total);
+                LOG_INFO("Log %d of %d already exists, skip reading data", log_entries_walked + 1, log_entries_total);
             }
             log_entries_walked++;
             if (progress_cb != NULL) {
