@@ -244,8 +244,12 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("Duration", (double)logEntry->logEntry->header.duration/1000.0);
     content.insert("Energy", logEntry->logEntry->header.energy_consumption);
     content.insert("FlatTime", QVariant::Invalid);
-    if (logEntry->logEntry->header.altitude_max >= -1000 && logEntry->logEntry->header.altitude_max <= 10000)
+    if (logEntry->logEntry->header.altitude_max >= -1000 && logEntry->logEntry->header.altitude_max <= 10000) {
         content.insert("HighAltitude", (double)logEntry->logEntry->header.altitude_max);
+    }
+    else {
+        content.insert("HighAltitude", QVariant::Invalid);
+    }
     if (IBIContent.count() > 0) {
         uncompressedData = serializer.serialize(IBIContent);
         compressData(uncompressedData, compressedData);
@@ -304,7 +308,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("Longitude", (double)value->u.longitude/10000000);
             break;
         case ambit_log_sample_periodic_type_distance:
-            output.insert("Distance", value->u.distance);
+            if (value->u.distance != 0xffffffff) {
+                output.insert("Distance", value->u.distance);
+            }
             break;
         case ambit_log_sample_periodic_type_speed:
             if (value->u.speed != 0xffff) {
@@ -312,7 +318,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_hr:
-            output.insert("HeartRate", value->u.hr);
+            if (value->u.hr != 0xff) {
+                output.insert("HeartRate", value->u.hr);
+            }
             break;
         case ambit_log_sample_periodic_type_time:
             output.insert("Time", (double)value->u.time/1000.0);
@@ -339,36 +347,50 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("EVPE", value->u.evpe);
             break;
         case ambit_log_sample_periodic_type_altitude:
-            if (value->u.altitude >= -1000 && value->u.altitude <= 10000)
+            if (value->u.altitude >= -1000 && value->u.altitude <= 10000) {
                 output.insert("Altitude", (double)value->u.altitude);
+            }
             break;
         case ambit_log_sample_periodic_type_abspressure:
             output.insert("AbsPressure", (int)round((double)value->u.abspressure/10.0));
             break;
         case ambit_log_sample_periodic_type_energy:
-            output.insert("EnergyConsumption", (double)value->u.energy/10.0);
+            if (value->u.energy) {
+                output.insert("EnergyConsumption", (double)value->u.energy/10.0);
+            }
             break;
         case ambit_log_sample_periodic_type_temperature:
             output.insert("Temperature", (double)value->u.temperature/10.0);
             break;
         case ambit_log_sample_periodic_type_charge:
-            output.insert("BatteryCharge", (double)value->u.charge/100.0);
+            if (value->u.charge <= 100) {
+                output.insert("BatteryCharge", (double)value->u.charge/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_gpsaltitude:
-            if (value->u.gpsaltitude >= -1000 && value->u.gpsaltitude <= 10000)
+            if (value->u.gpsaltitude >= -1000 && value->u.gpsaltitude <= 10000) {
                 output.insert("GPSAltitude", value->u.gpsaltitude);
+            }
             break;
         case ambit_log_sample_periodic_type_gpsheading:
-            output.insert("GPSHeading", (double)value->u.gpsheading/10000000);
+            if (value->u.gpsheading != 0xffff) {
+                output.insert("GPSHeading", (double)value->u.gpsheading/10000000);
+            }
             break;
         case ambit_log_sample_periodic_type_gpshdop:
-            output.insert("GpsHDOP", value->u.gpshdop);
+            if (value->u.gpshdop != 0xff) {
+                output.insert("GpsHDOP", value->u.gpshdop);
+            }
             break;
         case ambit_log_sample_periodic_type_gpsvdop:
-            output.insert("GpsVDOP", value->u.gpsvdop);
+            if (value->u.gpsvdop != 0xff) {
+                output.insert("GpsVDOP", value->u.gpsvdop);
+            }
             break;
         case ambit_log_sample_periodic_type_wristcadence:
-            output.insert("WristCadence", value->u.wristcadence);
+            if (value->u.wristcadence != 0xffff) {
+                output.insert("WristCadence", value->u.wristcadence);
+            }
             break;
         case ambit_log_sample_periodic_type_snr:
         {
@@ -393,7 +415,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             break;
         }
         case ambit_log_sample_periodic_type_noofsatellites:
-            output.insert("NumberOfSatellites", value->u.noofsatellites);
+            if (value->u.noofsatellites != 0xff) {
+                output.insert("NumberOfSatellites", value->u.noofsatellites);
+            }
             break;
         case ambit_log_sample_periodic_type_sealevelpressure:
             output.insert("SeaLevelPressure", (int)round((double)value->u.sealevelpressure/10.0));
@@ -402,28 +426,42 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("VerticalSpeed", (double)value->u.verticalspeed/100.0);
             break;
         case ambit_log_sample_periodic_type_cadence:
-            output.insert("Cadence", value->u.cadence);
+            if (value->u.cadence != 0xff) {
+                output.insert("Cadence", value->u.cadence);
+            }
             break;
         case ambit_log_sample_periodic_type_bikepower:
-            output.insert("BikePower", value->u.bikepower);
+            if (value->u.bikepower != 0xffff) {
+                output.insert("BikePower", value->u.bikepower);
+            }
             break;
         case ambit_log_sample_periodic_type_swimingstrokecnt:
             output.insert("SwimmingStrokeCount", value->u.swimingstrokecnt);
             break;
         case ambit_log_sample_periodic_type_ruleoutput1:
-            output.insert("RuleOutput1", value->u.ruleoutput1);
+            if (value->u.ruleoutput1 != -2147483648) { /* 0xffffffff */
+                output.insert("RuleOutput1", value->u.ruleoutput1);
+            }
             break;
         case ambit_log_sample_periodic_type_ruleoutput2:
-            output.insert("RuleOutput2", value->u.ruleoutput2);
+            if (value->u.ruleoutput2 != -2147483648) { /* 0xffffffff */
+                output.insert("RuleOutput2", value->u.ruleoutput2);
+            }
             break;
         case ambit_log_sample_periodic_type_ruleoutput3:
-            output.insert("RuleOutput3", value->u.ruleoutput3);
+            if (value->u.ruleoutput3 != -2147483648) { /* 0xffffffff */
+                output.insert("RuleOutput3", value->u.ruleoutput3);
+            }
             break;
         case ambit_log_sample_periodic_type_ruleoutput4:
-            output.insert("RuleOutput4", value->u.ruleoutput4);
+            if (value->u.ruleoutput4 != -2147483648) { /* 0xffffffff */
+                output.insert("RuleOutput4", value->u.ruleoutput4);
+            }
             break;
         case ambit_log_sample_periodic_type_ruleoutput5:
-            output.insert("RuleOutput5", value->u.ruleoutput5);
+            if (value->u.ruleoutput5 != -2147483648) { /* 0xffffffff */
+                output.insert("RuleOutput5", value->u.ruleoutput5);
+            }
             break;
         }
     }
