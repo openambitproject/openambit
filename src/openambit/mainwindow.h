@@ -53,6 +53,8 @@ public slots:
 
 protected:
     void changeEvent(QEvent *event);
+    void showEvent(QShowEvent *event);
+    void hideEvent(QHideEvent *event);
     void closeEvent(QCloseEvent *event);
 
 private slots:

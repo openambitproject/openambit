@@ -83,10 +83,10 @@ MainWindow::MainWindow(QWidget *parent) :
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(trayIconMinimizeRestoreAction);
     trayIconMenu->addAction(ui->actionE_xit);
-    trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"));
+    trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"), this);
     trayIcon->setContextMenu(trayIconMenu);
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
-    trayIcon->show();
+    trayIcon->setVisible(true);
 
     // Setup device manager
     deviceManager = new DeviceManager();
@@ -119,6 +119,14 @@ MainWindow::~MainWindow()
 {
     deviceWorkerThread.quit();
     deviceWorkerThread.wait();
+
+    delete deviceManager;
+
+    delete trayIcon;
+    delete trayIconMinimizeRestoreAction;
+    delete trayIconSyncAction;
+    delete trayIconMenu;
+
     delete ui;
 }
 
@@ -126,7 +134,7 @@ void MainWindow::singleApplicationMsgRecv(QString msg)
 {
     if (msg == "focus") {
         // Another instance of application has asked use to gain focus, let's do so!
-        if (isMinimized()) {
+        if (isHidden()) {
             showHideWindow();
         }
         else {
@@ -140,19 +148,28 @@ void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange) {
         if (isMinimized()) {
-            trayIconMinimizeRestoreAction->setText(tr("Restore"));
             QTimer::singleShot(0, this, SLOT(hide()));
-        }
-        else {
-            trayIconMinimizeRestoreAction->setText(tr("Minimize"));
         }
     }
     QMainWindow::changeEvent(event);
 }
 
+void MainWindow::showEvent(QShowEvent *event)
+{
+    trayIconMinimizeRestoreAction->setText(tr("Minimize"));
+    event->accept();
+}
+
+void MainWindow::hideEvent(QHideEvent *event)
+{
+    trayIconMinimizeRestoreAction->setText(tr("Restore"));
+    event->accept();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (forceClose) {
+        trayIcon->setVisible(false);
         event->accept();
     }
     else {
@@ -169,7 +186,7 @@ void MainWindow::closeRequested()
 
 void MainWindow::showHideWindow()
 {
-    if (isMinimized()) {
+    if (isHidden()) {
         showNormal();
     }
     else {
@@ -298,7 +315,7 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setMessage(tr("Syncronization complete"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
-        if (isMinimized()) {
+        if (isHidden()) {
             trayIcon->showMessage(tr("openambit"), tr("Syncronisation finished"));
         }
     }
@@ -307,7 +324,7 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setMessage(tr("Syncronization failed"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
-        if (isMinimized()) {
+        if (isHidden()) {
             trayIcon->showMessage(tr("openambit"), tr("Syncronisation failed"), QSystemTrayIcon::Critical);
         }
     }
@@ -430,7 +447,7 @@ void MainWindow::startSync()
     settings.endGroup();
 
     trayIcon->setIcon(QIcon(":/icon_syncing"));
-    if (isMinimized()) {
+    if (isHidden()) {
         trayIcon->showMessage(tr("openambit"), tr("Syncronisation started"));
     }
 

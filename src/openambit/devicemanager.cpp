@@ -32,8 +32,10 @@ DeviceManager::DeviceManager(QObject *parent) :
 
 DeviceManager::~DeviceManager()
 {
+    mutex.lock();
     delete udevListener;
     chargeTimer.stop();
+    mutex.unlock();
 }
 
 void DeviceManager::start()
