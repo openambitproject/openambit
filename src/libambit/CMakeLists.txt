@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 project (LIBAMBIT)
 
 # Where to lookup modules
-set (CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
@@ -42,3 +42,6 @@ set_target_properties(ambit PROPERTIES VERSION 0.0.1 SOVERSION 1)
 include_directories(
   hidapi
 )
+
+install(TARGETS ambit DESTINATION lib)
+install(FILES libambit.h DESTINATION include)

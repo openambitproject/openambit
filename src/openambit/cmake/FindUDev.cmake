@@ -12,8 +12,13 @@
 
 find_path(UDEV_INCLUDE_DIR libudev.h)
 find_library(UDEV_LIBS udev)
+find_path(UDEV_RULES_PATH udev/rules.d
+          PATHS
+          /lib
+          /usr/lib
+)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(UDev DEFAULT_MSG UDEV_INCLUDE_DIR UDEV_LIBS)
+find_package_handle_standard_args(UDev DEFAULT_MSG UDEV_INCLUDE_DIR UDEV_LIBS UDEV_RULES_PATH)
 
-mark_as_advanced(UDEV_INCLUDE_DIR UDEV_LIBS)
+mark_as_advanced(UDEV_INCLUDE_DIR UDEV_LIBS UDEV_RULES_PATH)
