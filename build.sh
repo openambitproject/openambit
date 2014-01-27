@@ -15,5 +15,5 @@ cd $SOURCE_LOCATION
 echo "------building openambit------"
 mkdir -p openambit-build
 cd openambit-build
-qmake ../src/openambit
+cmake -DCMAKE_BUILD_TYPE=Debug ../src/openambit
 make -j$CORES
