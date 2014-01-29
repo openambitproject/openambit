@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
 
     // Set application settings
     QCoreApplication::setApplicationVersion(APP_VERSION);
-    QCoreApplication::setOrganizationName("openambit");
-    QCoreApplication::setApplicationName("openambit");
+    QCoreApplication::setOrganizationName("Openambit");
+    QCoreApplication::setApplicationName("Openambit");
 #ifdef Q_WS_X11
     QSettings::setPath(QSettings::NativeFormat, QSettings::UserScope, "~/.openambit/openambit.conf");
 #endif

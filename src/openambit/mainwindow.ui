@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>openambit</string>
+   <string>Openambit</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
@@ -365,13 +365,13 @@
     </iconset>
    </property>
    <property name="text">
-    <string>About openambit...</string>
+    <string>About Openambit...</string>
    </property>
    <property name="iconText">
-    <string>About openambit...</string>
+    <string>About Openambit...</string>
    </property>
    <property name="toolTip">
-    <string>About openambit...</string>
+    <string>About Openambit...</string>
    </property>
   </action>
   <action name="actionE_xit">

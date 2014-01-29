@@ -211,8 +211,8 @@ void MainWindow::showSettings()
 
 void MainWindow::showAbout()
 {
-    QMessageBox::about(this, tr("About openambit"),
-                       tr("<h2>openambit</h2><b>Version %1</b><br />Using Qt %2").arg(QCoreApplication::applicationVersion()).arg(QString(qVersion())) +
+    QMessageBox::about(this, tr("About %1").arg(QCoreApplication::applicationName()),
+                       tr("<h2>%1</h2><b>Version %2</b><br />Using Qt %3").arg(QCoreApplication::applicationName()).arg(QCoreApplication::applicationVersion()).arg(QString(qVersion())) +
                        "<br /><br /><a href=\"http://sourceforge.net/projects/openambit\">http://sourceforge.net/projects/openambit</a>");
 }
 
@@ -316,7 +316,7 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
         if (isHidden()) {
-            trayIcon->showMessage(tr("openambit"), tr("Syncronisation finished"));
+            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation finished"));
         }
     }
     else {
@@ -325,7 +325,7 @@ void MainWindow::syncFinished(bool success)
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
         if (isHidden()) {
-            trayIcon->showMessage(tr("openambit"), tr("Syncronisation failed"), QSystemTrayIcon::Critical);
+            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation failed"), QSystemTrayIcon::Critical);
         }
     }
     ui->checkBoxResyncAll->setChecked(false);
@@ -448,7 +448,7 @@ void MainWindow::startSync()
 
     trayIcon->setIcon(QIcon(":/icon_syncing"));
     if (isHidden()) {
-        trayIcon->showMessage(tr("openambit"), tr("Syncronisation started"));
+        trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation started"));
     }
 
     emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
