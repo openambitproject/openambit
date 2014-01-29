@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.5)
 project (LIBAMBIT)
 
 # Where to lookup modules
@@ -17,6 +17,7 @@ ENDIF()
 
 find_package(libusb REQUIRED)
 find_package(UDev REQUIRED)
+include(GNUInstallDirs)
 
 add_library (
   ambit
@@ -43,5 +44,5 @@ include_directories(
   hidapi
 )
 
-install(TARGETS ambit DESTINATION lib)
-install(FILES libambit.h DESTINATION include)
+install(TARGETS ambit DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES libambit.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

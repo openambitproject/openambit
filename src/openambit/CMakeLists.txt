@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 2.6 )
+cmake_minimum_required(VERSION 2.8.5)
 project (OPENAMBIT)
 
 set (OPENAMBIT_VERSION HEAD)
@@ -14,7 +14,8 @@ find_package(UDev REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(QJSON REQUIRED)
 
-include ( ${QT_USE_FILE} )
+include(${QT_USE_FILE})
+include(GNUInstallDirs)
 
 include_directories (
   ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
@@ -87,13 +88,13 @@ add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 
 target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${UDEV_LIBS} ${ZLIB_LIBRARY} ${QJSON_LIBRARIES} )
 
-install ( TARGETS openambit DESTINATION bin )
+install ( TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR} )
 install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/99-suunto-ambit.rules
           DESTINATION ${CMAKE_INSTALL_UDEVRULESDIR}
           COMPONENT system
 )
 install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
-          DESTINATION share/applications )
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications )
 install ( FILES ${APP_ICON}
-          DESTINATION share/icons/hicolor/64x64/apps
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
           RENAME openambit.png )
