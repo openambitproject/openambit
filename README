@@ -3,20 +3,38 @@ OPENAMBIT
 
 The openambit source repository contains of several parts.
 Each part is briefly described below.
-For now there is really no good reason for installing the
-application, running it from the build directory is quite
-sufficient. Thus, the building instructions below has left
-out the installation parts.
+Most people would like to use both the device communication
+library (libambit) and the GUI (openambit). The build / install
+scripts described below makes your life easier if you are
+like most people.
+You can choose to run the GUI from the build folder or install
+it to your system.
 
 BUILD SCRIPT
 ============
-cd YOUR/git/REPO/loaction
-./buils.sh
+Builds libambit and openambit in one command
+> cd YOUR/git/REPO/loaction
+> ./build.sh
+
+
+BUILD AND INSTALL SCRIPT
+========================
+Builds and install libambit and openambit in one command.
+Note that the script will try to run sudo to install things.
+> cd YOUR/git/REPO/loaction
+> ./install.sh
 
 
 DEPENDENCIES
 ============
-sudo apt-get install libudev-dev libusb-1.0-0-dev libqjson-dev
+To be able to build libambit and openambit the following libraries
+(and their header files) needs to be available:
+ - libudev
+ - libusb
+ - libqjson
+
+For debian-based systems:
+> sudo apt-get install libudev-dev libusb-1.0-0-dev libqjson-dev
 
 
 src/libambit
@@ -28,6 +46,8 @@ Build instructions:
 > cd libambit-build
 > cmake ../src/libambit
 > make
+Optionally:
+> sudo make install
 
 
 src/openambit
@@ -39,10 +59,12 @@ Build instructions:
 First build libambit as instructed above
 > mkdir openambit-build
 > cd openambit-build
-> qmake ../src/openambit
+> cmake ../src/openambit
 > make
+Optionally:
+> sudo make install
 
-Run the application:
+Run the application without installing:
 > cd openambit-build
 > LD_LIBRARY_PATH=../libambit-build ./openambit
 
