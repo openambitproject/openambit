@@ -53,7 +53,6 @@ Optionally:
 src/openambit
 =============
 The GUI application. Uses the libambit library.
-Built with qmake for now.
 
 Build instructions:
 First build libambit as instructed above
