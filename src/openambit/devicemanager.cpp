@@ -197,5 +197,5 @@ void DeviceManager::log_progress_cb(void *ref, uint16_t log_count, uint16_t log_
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
     progress_percent = 100*manager->currentSyncPart/manager->syncParts + progress_percent*1/manager->syncParts;
-    emit manager->syncProgressInform(QString(tr("Downloading message %1 of %2")).arg(log_current).arg(log_count), false, false, progress_percent);
+    emit manager->syncProgressInform(QString(tr("Downloading log %1 of %2")).arg(log_current).arg(log_count), false, false, progress_percent);
 }
