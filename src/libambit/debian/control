@@ -1,0 +1,26 @@
+Source: libambit
+Priority: extra
+Maintainer: Emil Ljungdahl <emil@kratern.se>
+Build-Depends: dpkg (>= 1.16.1~), debhelper (>= 9), cmake (>= 2.8.5), libudev-dev, libusb-1.0-0-dev
+Standards-Version: 3.9.4
+Section: libs
+Homepage: https://sourceforge.net/projects/openambit/
+#Vcs-Git: git://git.debian.org/collab-maint/libambit.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/libambit.git;a=summary
+
+Package: libambit-dev
+Section: libdevel
+Architecture: any
+Depends: libambit0 (= ${binary:Version})
+Description: Communication library for Suunto Ambit series 
+ Libambit is the driver library to communicate with the Suunto Ambit series
+ of sport watches. This is the -dev version of the package container
+ header files required for compiling against the library.
+
+Package: libambit0
+Section: libs
+Architecture: any
+Depends: libudev1, libusb-1.0-0, ${shlibs:Depends}, ${misc:Pre-Depends}, ${misc:Depends}
+Description: Communication library for Suunto Ambit series
+ Libambit is the driver library to communicate with the Suunto Ambit series
+ of sport watches.
