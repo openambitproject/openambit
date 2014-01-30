@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.5)
 project (OPENAMBIT)
 
-set (OPENAMBIT_VERSION 0.2)
+set (OPENAMBIT_VERSION HEAD)
 
 # Where to lookup modules
 set(CMAKE_MODULE_PATH "${OPENAMBIT_SOURCE_DIR}/cmake")
