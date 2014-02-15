@@ -134,7 +134,7 @@ void MainWindow::singleApplicationMsgRecv(QString msg)
 {
     if (msg == "focus") {
         // Another instance of application has asked use to gain focus, let's do so!
-        if (isHidden()) {
+        if (sysTraySupported() && isHidden()) {
             showHideWindow();
         }
         else {
@@ -147,7 +147,7 @@ void MainWindow::singleApplicationMsgRecv(QString msg)
 void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange) {
-        if (isMinimized()) {
+        if (sysTraySupported() && isMinimized()) {
             QTimer::singleShot(0, this, SLOT(hide()));
         }
     }
@@ -168,7 +168,7 @@ void MainWindow::hideEvent(QHideEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (forceClose) {
+    if (!sysTraySupported() || forceClose) {
         trayIcon->setVisible(false);
         event->accept();
     }
@@ -186,7 +186,7 @@ void MainWindow::closeRequested()
 
 void MainWindow::showHideWindow()
 {
-    if (isHidden()) {
+    if (!sysTraySupported() || isHidden()) {
         showNormal();
     }
     else {
@@ -483,6 +483,11 @@ void MainWindow::movesCountSetup()
         }
     }
     settings.endGroup();
+}
+
+bool MainWindow::sysTraySupported()
+{
+    return QSystemTrayIcon::isSystemTrayAvailable();
 }
 
 MainWindow::LogMessageRow::LogMessageRow(QWidget *parent) :

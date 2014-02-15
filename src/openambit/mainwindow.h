@@ -87,6 +87,8 @@ private:
 
     void movesCountSetup();
 
+    bool sysTraySupported();
+
     Ui::MainWindow *ui;
     bool forceClose;
 
