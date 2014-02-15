@@ -114,16 +114,16 @@ ambit_object_t *libambit_detect(void)
             if (device_info_get(ret_object, &ret_object->device_info) == 0) {
                 // Let's resolve the correct device
                 for (i=0; i<sizeof(supported_devices)/sizeof(supported_devices[0]); i++) {
-                    if (device->vid == supported_devices[i].vid &&
-                        device->pid == supported_devices[i].pid &&
-                        strncmp(device->model, ret_object->device_info.model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
-                        (ret_object->device_info.fw_version[0] > device->min_sw_version[0] ||
-                         (ret_object->device_info.fw_version[0] == device->min_sw_version[0] &&
-                          (ret_object->device_info.fw_version[1] > device->min_sw_version[1] ||
-                           (ret_object->device_info.fw_version[1] == device->min_sw_version[1] &&
-                            (ret_object->device_info.fw_version[2] > device->min_sw_version[2] ||
-                             (ret_object->device_info.fw_version[2] == device->min_sw_version[2] &&
-                              (ret_object->device_info.fw_version[3] >= device->min_sw_version[3])))))))) {
+                    if (ret_object->vendor_id == supported_devices[i].vid &&
+                        ret_object->product_id == supported_devices[i].pid &&
+                        strncmp(ret_object->device_info.model, supported_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
+                        (ret_object->device_info.fw_version[0] > supported_devices[i].min_sw_version[0] ||
+                         (ret_object->device_info.fw_version[0] == supported_devices[i].min_sw_version[0] &&
+                          (ret_object->device_info.fw_version[1] > supported_devices[i].min_sw_version[1] ||
+                           (ret_object->device_info.fw_version[1] == supported_devices[i].min_sw_version[1] &&
+                            (ret_object->device_info.fw_version[2] > supported_devices[i].min_sw_version[2] ||
+                             (ret_object->device_info.fw_version[2] == supported_devices[i].min_sw_version[2] &&
+                              (ret_object->device_info.fw_version[3] >= supported_devices[i].min_sw_version[3])))))))) {
                         // Found matching entry, reset to this one!
                         device = &supported_devices[i];
                         break;
