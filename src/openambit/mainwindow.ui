@@ -30,17 +30,11 @@
      </widget>
     </item>
     <item>
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="QTextBrowser" name="logDetail">
+      <property name="openExternalLinks">
+       <bool>true</bool>
       </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
+     </widget>
     </item>
     <item>
      <widget class="QWidget" name="deviceSyncWidget" native="true">
@@ -337,7 +331,7 @@
      <x>0</x>
      <y>0</y>
      <width>872</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOpenambit">

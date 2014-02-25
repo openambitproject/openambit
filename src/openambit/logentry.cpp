@@ -136,3 +136,44 @@ LogEntry::~LogEntry()
 
     logEntry = NULL;
 }
+
+bool LogEntry::isUploaded(){
+    if (this->movescountId == NULL){
+        return false;
+    }
+    return true;
+}
+
+QString LogEntry::toHtml(){
+    QString log_html;
+
+    log_html += "<h1>" + QString(this->logEntry->header.activity_name) + "</h1>";
+    if (this->isUploaded()){
+        log_html += "<a href='http://www.movescount.com/moves/move" + this->movescountId + "'>see on movescount.com</a>";
+    }
+    else {
+        log_html += "Not uploaded yet";
+    }
+    log_html += "<h2>Details</h2>";
+    log_html += "<h4>" + this->time.toString() + "</h4>";
+    log_html += "<h4>Duration: " + QTime(0, 0, 0,0 ).addMSecs(this->logEntry->header.duration).toString("HH:mm:ss") + "</h4>";
+    log_html += "<h4>Distance: " + QString::number(this->logEntry->header.distance) + " m</h4>";
+    log_html += "<h2>Training values</h2>";
+    log_html += "<h4>Avg HR: " + QString::number(this->logEntry->header.heartrate_avg) + " bpm</h4>";
+    log_html += "<h4>Max HR: " + QString::number(this->logEntry->header.heartrate_max) + " bpm</h4>";
+    log_html += "<h4>Min HR: " + QString::number(this->logEntry->header.heartrate_min) + " bpm</h4>";
+    log_html += "<h4>PTE: " + QString::number(this->logEntry->header.peak_training_effect/10.0) + "</h4>";
+    log_html += "<h2>Device</h2>";
+    log_html += "<h4>Name: " + QString(this->deviceInfo->name) + "</h4>";
+    log_html += "<h4>Variant: " + QString(this->deviceInfo->model) + "</h4>";
+    log_html += "<h4>Serial: " + QString(this->deviceInfo->serial) + "</h4>";
+    //log_string += "Device info: " + QString::number(this->deviceInfo->fw_version) + "\n";
+    //log_string += "Device info: " + QString::number(this->deviceInfo->hw_version) + "\n";
+
+    //log_string += "Personal Settings: " + this->personalSettings + "\n";
+
+
+    return log_html;
+}
+
+

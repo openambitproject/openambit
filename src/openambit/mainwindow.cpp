@@ -382,6 +382,7 @@ void MainWindow::logItemSelected(QListWidgetItem *current,QListWidgetItem *previ
 
     if (current != NULL) {
         logEntry = logStore.read(current->data(Qt::UserRole).toString());
+        ui->logDetail->setHtml(logEntry->toHtml());
 
         delete logEntry;
     }
