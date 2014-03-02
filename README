@@ -1,11 +1,11 @@
 OPENAMBIT
 =========
 
-The openambit source repository contains of several parts.
+The openambit source repository consists of several parts.
 Each part is briefly described below.
 Most people would like to use both the device communication
 library (libambit) and the GUI (openambit). The build / install
-scripts described below makes your life easier if you are
+scripts described below make your life easier if you are
 like most people.
 You can choose to run the GUI from the build folder or install
 it to your system.
@@ -13,7 +13,7 @@ it to your system.
 BUILD SCRIPT
 ============
 Builds libambit and openambit in one command
-> cd YOUR/git/REPO/loaction
+> cd YOUR/git/REPO/location
 > ./build.sh
 
 
@@ -21,14 +21,14 @@ BUILD AND INSTALL SCRIPT
 ========================
 Builds and install libambit and openambit in one command.
 Note that the script will try to run sudo to install things.
-> cd YOUR/git/REPO/loaction
+> cd YOUR/git/REPO/location
 > ./install.sh
 
 
 DEPENDENCIES
 ============
 To be able to build libambit and openambit the following libraries
-(and their header files) needs to be available:
+(and their header files) need to be available:
  - libudev
  - libusb
  - libqjson
