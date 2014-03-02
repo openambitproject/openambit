@@ -12,7 +12,7 @@ find_package(Qt4 REQUIRED)
 find_package(libambit REQUIRED)
 find_package(UDev REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(QJSON REQUIRED)
+find_package(QJSON 0.8.0 REQUIRED)
 
 include(${QT_USE_FILE})
 include(GNUInstallDirs)
