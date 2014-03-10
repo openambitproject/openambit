@@ -80,8 +80,8 @@ ambit_object_t *libambit_detect(void)
     devs = hid_enumerate(0x0, 0x0);
     cur_dev = devs;
     while (cur_dev) {
+        LOG_INFO("vendor_id=%04x, product_id=%04x", cur_dev->vendor_id, cur_dev->product_id);
         for (i=0; i<sizeof(supported_devices)/sizeof(supported_devices[0]); i++) {
-            LOG_INFO("vendor_id=%04x, product_id=%04x", cur_dev->vendor_id, cur_dev->product_id);
             if (cur_dev->vendor_id == supported_devices[i].vid && cur_dev->product_id == supported_devices[i].pid) {
                 LOG_INFO("match!");
                 // Found at least one supported row, lets remember that!
