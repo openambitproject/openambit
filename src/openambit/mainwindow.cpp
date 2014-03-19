@@ -213,7 +213,7 @@ void MainWindow::showAbout()
 {
     QMessageBox::about(this, tr("About %1").arg(QCoreApplication::applicationName()),
                        tr("<h2>%1</h2><b>Version %2</b><br />Using Qt %3").arg(QCoreApplication::applicationName()).arg(QCoreApplication::applicationVersion()).arg(QString(qVersion())) +
-                       "<br /><br /><a href=\"http://sourceforge.net/projects/openambit\">http://sourceforge.net/projects/openambit</a>");
+                       "<br /><br /><a href=\"https://github.com/openambitproject/openambit/\">https://github.com/openambitproject/openambit/</a>");
 }
 
 void MainWindow::settingsSaved()
