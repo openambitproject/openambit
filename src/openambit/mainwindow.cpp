@@ -419,7 +419,7 @@ void MainWindow::updateLogList()
         QListWidgetItem *item = new QListWidgetItem(entry.time.toString());
         item->setText(entry.time.toString());
         item->setData(Qt::UserRole, QVariant(entry.filename));
-        ui->logsList->addItem(item);
+        ui->logsList->insertItem(0, item);
     }
 }
 
