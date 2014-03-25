@@ -42,6 +42,7 @@ typedef struct ambit_device_info_s {
     char serial[LIBAMBIT_SERIAL_LENGTH+1];
     uint8_t fw_version[4];
     uint8_t hw_version[4];
+    bool is_supported;
 } ambit_device_info_t;
 
 typedef struct ambit_device_status_s {

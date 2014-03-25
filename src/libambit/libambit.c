@@ -36,6 +36,8 @@
  */
 #define SUUNTO_USB_VENDOR_ID 0x1493
 
+typedef struct ambit_known_device_s ambit_known_device_t;
+
 struct ambit_known_device_s {
     uint16_t vid;
     uint16_t pid;
@@ -132,8 +134,8 @@ ambit_object_t *libambit_detect(void)
                         break;
                     }
                 }
-                ret_object->device = device;
                 strncpy(ret_object->device_info.name, device->name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+                ret_object->device_info.is_supported = device->supported;
 
                 // Initialize pmem
                 libambit_pmem20_init(ret_object, device->pmem20_chunksize);
@@ -182,8 +184,8 @@ bool libambit_device_supported(ambit_object_t *object)
 {
     bool ret = false;
 
-    if (object != NULL && object->device != NULL) {
-        ret = object->device->supported;
+    if (object != NULL) {
+        ret = object->device_info.is_supported;
     }
 
     return ret;
@@ -193,7 +195,7 @@ int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 {
     int ret = -1;
 
-    if (object != NULL && object->device != NULL) {
+    if (object != NULL) {
         if (info != NULL) {
             memcpy(info, &object->device_info, sizeof(ambit_device_info_t));
         }
