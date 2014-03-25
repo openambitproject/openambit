@@ -22,8 +22,13 @@
 #include "libambit.h"
 #include "libambit_int.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /*
  * Local definitions
@@ -74,6 +79,7 @@ ambit_object_t *libambit_detect(void)
     ambit_object_t *ret_object = NULL;
     int i;
     ambit_supported_device_t *device = NULL;
+    char *path = NULL;
 
     LOG_INFO("Searching devices");
 
@@ -86,6 +92,7 @@ ambit_object_t *libambit_detect(void)
                 LOG_INFO("match!");
                 // Found at least one supported row, lets remember that!
                 device = &supported_devices[i];
+                path = strdup (cur_dev->path);
                 break;
             }
         }
@@ -144,10 +151,18 @@ ambit_object_t *libambit_detect(void)
             }
         }
         else {
+#ifdef DEBUG_PRINT_ERROR
+            int error = 0;
+            int fd = 0;
+            if (path) fd = open (path, O_RDWR);
+            if (-1 == fd) error = errno;
+#endif
             LOG_ERROR("Failed to open device \"%s (%s)\"", device->name, device->model);
+            LOG_ERROR("Reason: %s", (error ? strerror(error) : "Unknown"));
         }
     }
 
+    if (path) free (path);
     return ret_object;
 }
 
