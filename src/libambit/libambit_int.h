@@ -26,14 +26,14 @@
 #include "hidapi/hidapi.h"
 #include "libambit.h"
 
-typedef struct ambit_supported_device_s ambit_supported_device_t;
+typedef struct ambit_known_device_s ambit_known_device_t;
 
 struct ambit_object_s {
     hid_device *handle;
     uint16_t vendor_id;
     uint16_t product_id;
     uint16_t sequence_no;
-    ambit_supported_device_t *device;
+    ambit_known_device_t *device;
     ambit_device_info_t device_info;
 
     struct {

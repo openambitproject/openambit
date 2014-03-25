@@ -36,7 +36,7 @@
  */
 #define SUUNTO_USB_VENDOR_ID 0x1493
 
-struct ambit_supported_device_s {
+struct ambit_known_device_s {
     uint16_t vid;
     uint16_t pid;
     char *model;
@@ -56,7 +56,7 @@ static uint32_t version_number(const uint8_t version[4]);
 /*
  * Static variables
  */
-static ambit_supported_device_t supported_devices[] = {
+static ambit_known_device_t known_devices[] = {
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x01,0x01,0x02,0x00}, "Suunto Ambit2 S", true, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x01,0x01,0x02,0x00}, "Suunto Ambit2", true, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x03,0x00}, "Suunto Ambit2 S", false, 0x0400 },
@@ -80,7 +80,7 @@ ambit_object_t *libambit_detect(void)
     struct hid_device_info *devs, *cur_dev;
     ambit_object_t *ret_object = NULL;
     int i;
-    ambit_supported_device_t *device = NULL;
+    ambit_known_device_t *device = NULL;
     char *path = NULL;
 
     LOG_INFO("Searching devices");
@@ -89,11 +89,11 @@ ambit_object_t *libambit_detect(void)
     cur_dev = devs;
     while (cur_dev) {
         LOG_INFO("vendor_id=%04x, product_id=%04x", cur_dev->vendor_id, cur_dev->product_id);
-        for (i=0; i<sizeof(supported_devices)/sizeof(supported_devices[0]); i++) {
-            if (cur_dev->vendor_id == supported_devices[i].vid && cur_dev->product_id == supported_devices[i].pid) {
+        for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
+            if (cur_dev->vendor_id == known_devices[i].vid && cur_dev->product_id == known_devices[i].pid) {
                 LOG_INFO("match!");
                 // Found at least one supported row, lets remember that!
-                device = &supported_devices[i];
+                device = &known_devices[i];
                 path = strdup (cur_dev->path);
                 break;
             }
@@ -122,13 +122,13 @@ ambit_object_t *libambit_detect(void)
             // Get device info to resolve supported functionality
             if (device_info_get(ret_object, &ret_object->device_info) == 0) {
                 // Let's resolve the correct device
-                for (i=0; i<sizeof(supported_devices)/sizeof(supported_devices[0]); i++) {
-                    if (ret_object->vendor_id == supported_devices[i].vid &&
-                        ret_object->product_id == supported_devices[i].pid &&
-                        strncmp(ret_object->device_info.model, supported_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
-                        (version_number (ret_object->device_info.fw_version) >= version_number (supported_devices[i].min_sw_version))) {
+                for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
+                    if (ret_object->vendor_id == known_devices[i].vid &&
+                        ret_object->product_id == known_devices[i].pid &&
+                        strncmp(ret_object->device_info.model, known_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
+                        (version_number (ret_object->device_info.fw_version) >= version_number (known_devices[i].min_sw_version))) {
                         // Found matching entry, reset to this one!
-                        device = &supported_devices[i];
+                        device = &known_devices[i];
                         break;
                     }
                 }
