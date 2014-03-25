@@ -1,10 +1,10 @@
 Source: libambit
 Priority: extra
-Maintainer: Emil Ljungdahl <emil@kratern.se>
+Maintainer: Emil Ljungdahl <ppa@openambit.org>
 Build-Depends: dpkg (>= 1.16.1~), debhelper (>= 9), cmake (>= 2.8.5), libudev-dev, libusb-1.0-0-dev
 Standards-Version: 3.9.4
 Section: libs
-Homepage: https://sourceforge.net/projects/openambit/
+Homepage: http://openambit.org/
 #Vcs-Git: git://git.debian.org/collab-maint/libambit.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/libambit.git;a=summary
 

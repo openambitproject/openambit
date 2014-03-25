@@ -1,9 +1,9 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: libambit
-Source: https://sourceforge.net/projects/openambit/
+Source: http://openambit.org/
 
 Files: *
-Copyright: 2014 Emil Ljungdahl <emil@kratern.se>
+Copyright: 2014 Emil Ljungdahl <emil@openambit.org>
 License: GPL-3
  libambit is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ License: GPL-3
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Files: debian/*
-Copyright: 2014 Emil Ljungdahl <emil@kratern.se>
+Copyright: 2014 Emil Ljungdahl <emil@openambit.org>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
