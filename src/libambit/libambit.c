@@ -51,6 +51,7 @@ struct ambit_supported_device_s {
  */
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static int lock_log(ambit_object_t *object, bool lock);
+static uint32_t version_number(const uint8_t version[4]);
 
 /*
  * Static variables
@@ -125,13 +126,7 @@ ambit_object_t *libambit_detect(void)
                     if (ret_object->vendor_id == supported_devices[i].vid &&
                         ret_object->product_id == supported_devices[i].pid &&
                         strncmp(ret_object->device_info.model, supported_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
-                        (ret_object->device_info.fw_version[0] > supported_devices[i].min_sw_version[0] ||
-                         (ret_object->device_info.fw_version[0] == supported_devices[i].min_sw_version[0] &&
-                          (ret_object->device_info.fw_version[1] > supported_devices[i].min_sw_version[1] ||
-                           (ret_object->device_info.fw_version[1] == supported_devices[i].min_sw_version[1] &&
-                            (ret_object->device_info.fw_version[2] > supported_devices[i].min_sw_version[2] ||
-                             (ret_object->device_info.fw_version[2] == supported_devices[i].min_sw_version[2] &&
-                              (ret_object->device_info.fw_version[3] >= supported_devices[i].min_sw_version[3])))))))) {
+                        (version_number (ret_object->device_info.fw_version) >= version_number (supported_devices[i].min_sw_version))) {
                         // Found matching entry, reset to this one!
                         device = &supported_devices[i];
                         break;
@@ -566,3 +561,10 @@ static int lock_log(ambit_object_t *object, bool lock)
     return ret;
 }
 
+static uint32_t version_number(const uint8_t version[4])
+{
+    return (  (version[0] << 24)
+            | (version[1] << 16)
+            | (version[2] <<  0)
+            | (version[3] <<  8));
+}
