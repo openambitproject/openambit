@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 /*
  * Local definitions
@@ -156,6 +157,7 @@ ambit_object_t *libambit_detect(void)
             int fd = 0;
             if (path) fd = open (path, O_RDWR);
             if (-1 == fd) error = errno;
+            else close (fd);
 #endif
             LOG_ERROR("Failed to open device \"%s (%s)\"", device->name, device->model);
             LOG_ERROR("Reason: %s", (error ? strerror(error) : "Unknown"));
