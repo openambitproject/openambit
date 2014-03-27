@@ -43,6 +43,8 @@ typedef struct ambit_device_info_s {
     uint8_t fw_version[4];
     uint8_t hw_version[4];
     bool is_supported;
+
+    struct ambit_device_info_s *next;
 } ambit_device_info_t;
 
 typedef struct ambit_device_status_s {
@@ -337,12 +339,47 @@ typedef struct ambit_log_entry_s {
     ambit_log_sample_t *samples;
 } ambit_log_entry_t;
 
+/** \brief Create a list of all known Ambit clocks on the system
+ *
+ *  The list may include clocks that are not supported or cannot be
+ *  accessed.
+ */
+ambit_device_info_t * libambit_enumerate(void);
+
+/** \brief Release resources acquired by libambit_enumerate()
+ */
+void libambit_free_enumeration(ambit_device_info_t *devices);
+
 /**
  * Try to detect clock
  * If clock detected, object handle is returned
  * \return object handle if clock found, else NULL
  */
 ambit_object_t *libambit_detect(void);
+
+/** \brief Create an Ambit object for a clock
+ *
+ *  The pointer returned corresponds to a known, accessible and
+ *  supported clock.  In case no such clock is found \c NULL is
+ *  returned.
+ */
+ambit_object_t * libambit_new(const ambit_device_info_t *device);
+
+/** \brief Create an Ambit object from a \a devname
+ *
+ *  Convenience function for when the path name for a clock's device
+ *  node is known.  These paths are normally located below \c /dev/
+ *  but this depends on the system's udev(7) configuration and rules.
+ */
+ambit_object_t * libambit_new_from_devname(const char *devname);
+
+/** \brief Create an Ambit object from a \a syspath
+ *
+ *  Convenience function for when a clock's sysfs path name is known.
+ *  These paths are located below \c /sys/ and can be used in custom
+ *  udev(7) rules.
+ */
+ambit_object_t * libambit_new_from_syspath(const char *syspath);
 
 /**
  * Close open Ambit object

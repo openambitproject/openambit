@@ -76,6 +76,22 @@ static ambit_known_device_t known_devices[] = {
 /*
  * Public functions
  */
+ambit_device_info_t * libambit_enumerate(void)
+{
+    ambit_device_info_t *devices = NULL;
+
+    return devices;
+}
+
+void libambit_free_enumeration(ambit_device_info_t *devices)
+{
+    while (devices) {
+        ambit_device_info_t *next = devices->next;
+        free(devices);
+        devices = next;
+    }
+}
+
 ambit_object_t *libambit_detect(void)
 {
     hid_device *handle;
@@ -163,6 +179,27 @@ ambit_object_t *libambit_detect(void)
 
     if (path) free (path);
     return ret_object;
+}
+
+ambit_object_t * libambit_new(const ambit_device_info_t *device)
+{
+    ambit_object_t *object = NULL;
+
+    return object;
+}
+
+ambit_object_t * libambit_new_from_devname(const char *devname)
+{
+    ambit_object_t *object = NULL;
+
+    return object;
+}
+
+ambit_object_t * libambit_new_from_syspath(const char *syspath)
+{
+    ambit_object_t *object = NULL;
+
+    return object;
 }
 
 void libambit_close(ambit_object_t *object)
