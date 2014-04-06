@@ -22,6 +22,8 @@
 #include "libambit.h"
 #include "libambit_int.h"
 
+#include <libudev.h>
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +56,7 @@ struct ambit_known_device_s {
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static int lock_log(ambit_object_t *object, bool lock);
 static uint32_t version_number(const uint8_t version[4]);
+static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev);
 
 /*
  * Static variables
@@ -79,6 +82,44 @@ static ambit_known_device_t known_devices[] = {
 ambit_device_info_t * libambit_enumerate(void)
 {
     ambit_device_info_t *devices = NULL;
+
+    struct udev *ctx;
+    struct udev_list_entry *ent;
+    struct udev_enumerate  *loc;
+
+    ctx = udev_new ();
+    if (!ctx) {
+        LOG_ERROR("Failed to obtain udev context");
+        return NULL;
+    }
+
+    loc = udev_enumerate_new(ctx);
+    if (!loc) {
+        LOG_ERROR("Failed to obtain udev enumeration context");
+        udev_unref(ctx);
+        return NULL;
+    }
+
+    udev_enumerate_add_match_subsystem(loc, "hidraw");
+    udev_enumerate_scan_devices(loc);
+
+    udev_list_entry_foreach(ent, udev_enumerate_get_list_entry(loc)) {
+        const char          *sys = udev_list_entry_get_name(ent);
+        struct udev_device  *dev = udev_device_new_from_syspath(ctx, sys);
+        ambit_device_info_t *tmp = ambit_device_info_new(dev);
+
+        if (tmp) {
+            if (devices) {
+                tmp->next = devices;
+            }
+            else {
+                devices = tmp;
+            }
+        }
+        udev_device_unref(dev);
+    }
+    udev_enumerate_unref(loc);
+    udev_unref(ctx);
 
     return devices;
 }
@@ -606,4 +647,13 @@ static uint32_t version_number(const uint8_t version[4])
             | (version[1] << 16)
             | (version[2] <<  0)
             | (version[3] <<  8));
+}
+
+static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
+{
+    ambit_device_info_t *device = NULL;
+
+    if (!dev) return NULL;
+
+    return device;
 }
