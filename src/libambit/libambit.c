@@ -525,7 +525,7 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
         ret = 0;
     }
     else {
-        LOG_WARNING("Failed to read log info");
+        LOG_WARNING("Failed to device info");
     }
 
     libambit_protocol_free(reply_data);
