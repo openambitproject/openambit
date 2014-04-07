@@ -25,6 +25,7 @@
 #include <libudev.h>
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -128,6 +129,7 @@ void libambit_free_enumeration(ambit_device_info_t *devices)
 {
     while (devices) {
         ambit_device_info_t *next = devices->next;
+        free((char *) devices->path);
         free(devices);
         devices = next;
     }
@@ -649,11 +651,100 @@ static uint32_t version_number(const uint8_t version[4])
             | (version[3] <<  8));
 }
 
+static inline bool is_hidraw(struct udev_device *dev)
+{
+  return (   dev
+          && udev_device_get_subsystem(dev)
+          && 0 == strcmp("hidraw", udev_device_get_subsystem(dev)));
+}
+
+static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
+{
+    bool found = false;
+    size_t i;
+    size_t count = sizeof(known_devices) / sizeof(*known_devices);
+
+    for (i = 0; !found && i < count; ++i) {
+        found = (   known_devices[i].vid == vid
+                 && known_devices[i].pid == pid);
+    }
+
+    return found;
+}
+
 static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
 {
     ambit_device_info_t *device = NULL;
+    struct udev_device  *ancestor;
 
-    if (!dev) return NULL;
+    const char *dev_path;
+    const char *id;
+    const char *name;
+    const char *uniq;
+
+    uint16_t bus;
+    uint16_t vid;
+    uint16_t pid;
+
+    if (!is_hidraw(dev)) {
+        LOG_ERROR("internal error: expecting hidraw device");
+        return NULL;
+    }
+
+    ancestor = udev_device_get_parent_with_subsystem_devtype(dev, "hid", NULL);
+    if (!ancestor) {
+        LOG_ERROR("hidraw device w/o hid parent device");
+        return NULL;
+    }
+
+    dev_path = udev_device_get_devnode(dev);
+    if (!dev_path) {
+        LOG_ERROR("hidraw device w/o device path");
+        return NULL;
+    }
+
+    id = udev_device_get_property_value(ancestor, "HID_ID");
+    if (!id) {
+        LOG_ERROR("cannot get HID ID");
+        return NULL;
+    }
+
+    if (3 != sscanf(id, "%hx:%hx:%hx", &bus, &vid, &pid)) {
+        LOG_ERROR("cannot parse HID ID (%s): %s", id, strerror(errno));
+        return NULL;
+    }
+
+    if (!is_known_vid_pid(vid, pid)) {
+        LOG_WARNING("unknown device (VID/PID: %04x/%04x)", vid, pid);
+        return NULL;
+    }
+
+    dev_path = strdup(dev_path);
+    if (!dev_path) return NULL;
+
+    device = calloc(1, sizeof(*device));
+    if (!device) {
+        free ((char *) dev_path);
+        return NULL;
+    }
+
+    device->path = dev_path;
+    device->vendor_id  = vid;
+    device->product_id = pid;
+
+    name = udev_device_get_property_value(ancestor, "HID_NAME");
+    if (name) {
+        strncpy(device->name, name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+    }
+
+    uniq = udev_device_get_property_value(ancestor, "HID_UNIQ");
+    if (uniq) {
+        strncpy(device->serial, uniq, LIBAMBIT_SERIAL_LENGTH);
+    }
+
+    LOG_INFO("%s: '%s' (serial: %s, VID/PID: %04x/%04x)",
+             device->path, device->name, device->serial,
+             device->vendor_id, device->product_id);
 
     return device;
 }
