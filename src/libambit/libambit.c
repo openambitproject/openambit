@@ -651,6 +651,17 @@ static uint32_t version_number(const uint8_t version[4])
             | (version[3] <<  8));
 }
 
+const size_t LIBAMBIT_VERSION_LENGTH = 13;      /* max: 255.255.65535 */
+
+static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
+                                  const uint8_t version[4])
+{
+  if (!string || !version) return;
+
+  snprintf(string, LIBAMBIT_VERSION_LENGTH+1, "%d.%d.%d",
+           version[0], version[1], (version[2] << 0) | (version[3] << 8));
+}
+
 static inline bool is_hidraw(struct udev_device *dev)
 {
   return (   dev
@@ -672,6 +683,29 @@ static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
     return found;
 }
 
+/* Tacitly assumes that minimally required software versions are
+ * listed in decreasing order in the known_devices array!
+ */
+static int find_known_device(const ambit_device_info_t *info)
+{
+    bool found = false;
+    int i;
+    int count = sizeof(known_devices) / sizeof(*known_devices);
+
+    if (!info) return -1;
+
+    for (i = 0; !found && i < count; ++i) {
+        found = (   known_devices[i].vid == info->vendor_id
+                 && known_devices[i].pid == info->product_id
+                 && 0 == strcmp(known_devices[i].name, info->name)
+                 && 0 == strcmp(known_devices[i].model, info->model)
+                 && (   version_number(known_devices[i].min_sw_version)
+                     <= version_number(info->fw_version)));
+    }
+
+    return (i < count ? i : -1);
+}
+
 static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
 {
     ambit_device_info_t *device = NULL;
@@ -685,6 +719,8 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
     uint16_t bus;
     uint16_t vid;
     uint16_t pid;
+
+    hid_device *hid;
 
     if (!is_hidraw(dev)) {
         LOG_ERROR("internal error: expecting hidraw device");
@@ -742,9 +778,68 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
         strncpy(device->serial, uniq, LIBAMBIT_SERIAL_LENGTH);
     }
 
-    LOG_INFO("%s: '%s' (serial: %s, VID/PID: %04x/%04x)",
+    LOG_INFO("udev : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
              device->path, device->name, device->serial,
              device->vendor_id, device->product_id);
+
+    hid = hid_open_path(device->path);
+    if (hid) {
+        /* HACK ALERT: minimally initialize an ambit object so we can
+         * call device_info_get() */
+        ambit_object_t obj;
+        obj.handle = hid;
+        obj.sequence_no = 0;
+        if (0 == device_info_get(&obj, device)) {
+            int index;
+            char fw_version[LIBAMBIT_VERSION_LENGTH+1];
+            char hw_version[LIBAMBIT_VERSION_LENGTH+1];
+
+            if (name && 0 != strcmp(name, device->name)) {
+                LOG_INFO("preferring F/W name over '%s'", name);
+            }
+            if (uniq && 0 != strcmp(uniq, device->serial)) {
+                LOG_INFO("preferring F/W serial number over '%s'", uniq);
+            }
+
+            index = find_known_device(device);
+            if (0 <= index) {
+                device->is_supported = known_devices[index].supported;
+                device->chunk_size = known_devices[index].pmem20_chunksize;
+            }
+
+            version_string(fw_version, device->fw_version);
+            version_string(hw_version, device->hw_version);
+
+            LOG_INFO("ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
+                     "nick: %s, F/W: %s, H/W: %s, supported: %s)",
+                     device->path, device->name, device->serial,
+                     device->vendor_id, device->product_id,
+                     device->model, fw_version, hw_version,
+                     (device->is_supported ? "YES" : "NO"));
+        }
+        else {
+            LOG_ERROR("cannot get device info from %s", device->path);
+        }
+        hid_close(hid);
+    }
+    else {
+        /* Store an educated guess as to why we cannot open the HID
+         * device.  Without read/write access we cannot communicate
+         * to begin with but there may be other reasons.
+         */
+        int fd = open(device->path, O_RDWR);
+
+        if (-1 == fd) {
+            device->access_status = errno;
+            LOG_ERROR("cannot open HID device (%s): %s", device->path,
+                      strerror (device->access_status));
+        }
+        else {
+            LOG_WARNING("have read/write access to %s but cannot open HID "
+                        "device", device->path);
+            close(fd);
+        }
+    }
 
     return device;
 }
