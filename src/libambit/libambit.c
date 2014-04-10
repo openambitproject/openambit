@@ -259,6 +259,50 @@ ambit_object_t * libambit_new_from_devname(const char *devname)
 {
     ambit_object_t *object = NULL;
 
+    struct udev *ctx;
+    struct udev_list_entry *ent;
+    struct udev_enumerate  *loc;
+
+    if (!devname) {
+        LOG_ERROR("%s", strerror(EINVAL));
+        return NULL;
+    }
+
+    ctx = udev_new ();
+    if (!ctx) {
+        LOG_ERROR("Failed to obtain udev context");
+        return NULL;
+    }
+
+    loc = udev_enumerate_new(ctx);
+    if (!loc) {
+        LOG_ERROR("Failed to obtain udev enumeration context");
+        udev_unref(ctx);
+        return NULL;
+    }
+
+    udev_enumerate_add_match_subsystem(loc, "hidraw");
+    udev_enumerate_add_match_property(loc, "DEVNAME", devname);
+    udev_enumerate_scan_devices(loc);
+
+    ent = udev_enumerate_get_list_entry(loc);
+    if (ent) {
+        const char          *sys = udev_list_entry_get_name(ent);
+        struct udev_device  *dev = udev_device_new_from_syspath(ctx, sys);
+        ambit_device_info_t *tmp = ambit_device_info_new(dev);
+
+        object = libambit_new(tmp);
+
+        free((char *) tmp->path);
+        free(tmp);
+        udev_device_unref(dev);
+    }
+    else {
+        LOG_ERROR("%s: not a hidraw device", devname);
+    }
+    udev_enumerate_unref(loc);
+    udev_unref(ctx);
+
     return object;
 }
 
@@ -280,6 +324,7 @@ void libambit_close(ambit_object_t *object)
         }
 
         libambit_pmem20_deinit(object);
+        free((char *) object->device_info.path);
         free(object);
     }
 }
