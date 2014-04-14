@@ -227,7 +227,31 @@ ambit_object_t *libambit_detect(void)
 ambit_object_t * libambit_new(const ambit_device_info_t *device)
 {
     ambit_object_t *object = NULL;
+    const char *path = NULL;
 
+    if (!device || !device->path) {
+        LOG_ERROR("%s", strerror(EINVAL));
+        return NULL;
+    }
+
+    path = strdup (device->path);
+    if (!path) return NULL;
+
+    if (0 == device->access_status && device->is_supported) {
+        object = calloc(1, sizeof(*object));
+        if (object) {
+            object->handle = hid_open_path(path);
+            object->vendor_id = device->vendor_id;
+            object->product_id = device->product_id;
+            memcpy(&object->device_info, device, sizeof(*device));
+            object->device_info.path = path;
+            libambit_pmem20_init(object, device->chunk_size);
+
+            if (object->handle) {
+                hid_set_nonblocking(object->handle, true);
+            }
+        }
+    }
     return object;
 }
 
