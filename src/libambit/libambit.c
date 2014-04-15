@@ -152,8 +152,6 @@ ambit_object_t * libambit_new(const ambit_device_info_t *device)
         object = calloc(1, sizeof(*object));
         if (object) {
             object->handle = hid_open_path(path);
-            object->vendor_id = device->vendor_id;
-            object->product_id = device->product_id;
             memcpy(&object->device_info, device, sizeof(*device));
             object->device_info.path = path;
             libambit_pmem20_init(object, device->chunk_size);
