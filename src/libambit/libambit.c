@@ -287,31 +287,6 @@ void libambit_close(ambit_object_t *object)
     }
 }
 
-bool libambit_device_supported(ambit_object_t *object)
-{
-    bool ret = false;
-
-    if (object != NULL) {
-        ret = object->device_info.is_supported;
-    }
-
-    return ret;
-}
-
-int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *info)
-{
-    int ret = -1;
-
-    if (object != NULL) {
-        if (info != NULL) {
-            memcpy(info, &object->device_info, sizeof(ambit_device_info_t));
-        }
-        ret = 0;
-    }
-
-    return ret;
-}
-
 void libambit_sync_display_show(ambit_object_t *object)
 {
     lock_log(object, true);

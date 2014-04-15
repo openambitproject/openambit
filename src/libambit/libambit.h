@@ -387,21 +387,6 @@ ambit_object_t * libambit_new_from_syspath(const char *syspath);
 void libambit_close(ambit_object_t *object);
 
 /**
- * Check if detected device is currently supported
- * \param object Object to check
- * \return true if device supported, else false
- */
-bool libambit_device_supported(ambit_object_t *object);
-
-/**
- * Get device info on connected dev
- * \param object Object to get info from
- * \param status Status object to be filled
- * \return 0 on success, else -1
- */
-int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *status);
-
-/**
  * Set sync message to device display
  * \param object Object to set display on
  */
