@@ -356,13 +356,6 @@ ambit_device_info_t * libambit_enumerate(void);
  */
 void libambit_free_enumeration(ambit_device_info_t *devices);
 
-/**
- * Try to detect clock
- * If clock detected, object handle is returned
- * \return object handle if clock found, else NULL
- */
-ambit_object_t *libambit_detect(void);
-
 /** \brief Create an Ambit object for a clock
  *
  *  The pointer returned corresponds to a known, accessible and
