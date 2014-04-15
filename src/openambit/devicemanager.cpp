@@ -59,15 +59,15 @@ void DeviceManager::detect()
     mutex.lock();
     if (this->deviceObject != NULL) {
         libambit_close(this->deviceObject);
-    }
-    this->deviceObject = libambit_detect();
-
-    if (this->deviceObject != NULL && (res = libambit_device_info_get(this->deviceObject, &this->currentDeviceInfo)) == 0) {
-        emit deviceDetected(this->currentDeviceInfo, libambit_device_supported(this->deviceObject));
-    }
-    else {
         emit deviceRemoved();
     }
+
+    ambit_device_info_t *devinfo = libambit_enumerate();
+    if (devinfo) {
+        emit deviceDetected(*devinfo, devinfo->is_supported);
+        this->deviceObject = libambit_new(devinfo);
+    }
+    libambit_free_enumeration(devinfo);
     mutex.unlock();
 
     if (res == 0) {
