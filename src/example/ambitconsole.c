@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <libambit.h>
 
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
@@ -7,18 +8,27 @@ static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
 int main(int argc, char *argv[])
 {
+    ambit_device_info_t *info = libambit_enumerate();
     ambit_object_t *ambit_object;
-    ambit_device_info_t info;
     ambit_device_status_t status;
     ambit_personal_settings_t settings;
     time_t current_time;
     struct tm *local_time;
 
-    if ((ambit_object = libambit_detect()) != NULL) {
-        libambit_device_info_get(ambit_object, &info);
+    if (info) {
+        printf("Device: %s, serial: %s\n", info->name, info->serial);
+        if (0 == info->access_status) {
+          printf("F/W version: %d.%d.%d\n", info->fw_version[0], info->fw_version[1], (info->fw_version[2] << 0) | (info->fw_version[3] << 8));
+            if (!info->is_supported) {
+                printf("Device is not supported yet!\n");
+            }
+        }
+        else {
+            printf("%s: %s\n", info->path, strerror(info->access_status));
+        }
 
-        if (libambit_device_supported(ambit_object)) {
-            printf("Device: %s, serial: %s, FW version: %d.%d.%d\n", info.name, info.serial, info.fw_version[0], info.fw_version[1], info.fw_version[2]);
+        ambit_object = libambit_new(info);
+        if (ambit_object) {
 
             if (libambit_device_status_get(ambit_object, &status) == 0) {
                 printf("Current charge: %d%%\n", status.charge);
@@ -42,16 +52,13 @@ int main(int argc, char *argv[])
             //}
 
             libambit_log_read(ambit_object, log_skip_cb, log_data_cb, NULL, ambit_object);
+            libambit_close(ambit_object);
         }
-        else {
-            printf("Device: %s (fw_version: %d.%d.%d) is not supported yet!\n", info.name, info.fw_version[0], info.fw_version[1], info.fw_version[2]);
-        }
-
-        libambit_close(ambit_object);
     }
     else {
         printf("No clock found, exiting\n");
     }
+    libambit_free_enumeration(info);
 
     return 0;
 }
