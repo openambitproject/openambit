@@ -6,4 +6,4 @@ Comment=Open source synchronization for Suunto Ambit series
 TryExec=openambit
 Exec=openambit
 Icon=openambit
-Categories=Utility;SyncUtility
+Categories=Utility;Sports
