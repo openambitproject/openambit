@@ -10,8 +10,8 @@
 typedef struct ambit_reassembly_entry {
     guint8 valid;
     guint32 command;
-    guint32 start_frame;
-    guint32 frame_count;
+    guint32 frame_index;
+    guint32 frame_total;
     guint32 size;
     unsigned char *data;
     guint32 log_entry_size;
@@ -1453,8 +1453,8 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (msg_part == 0x5d && msg_count > 1) {
                 reassembly_entries[pinfo->fd->num].valid = 2;
                 reassembly_entries[pinfo->fd->num].command = command;
-                reassembly_entries[pinfo->fd->num].start_frame = pinfo->fd->num;
-                reassembly_entries[pinfo->fd->num].frame_count = msg_count;
+                reassembly_entries[pinfo->fd->num].frame_index = 0;
+                reassembly_entries[pinfo->fd->num].frame_total = msg_count;
                 reassembly_entries[pinfo->fd->num].size = pkt_len;
                 reassembly_entries[pinfo->fd->num].data = (unsigned char*)g_malloc(pkt_len);
                 fragments_start_frame = pinfo->fd->num;
@@ -1468,8 +1468,8 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                     //fragments_start_frame = pinfo->fd->num-msg_count;
                     reassembly_entries[pinfo->fd->num].valid = 2;
                     reassembly_entries[pinfo->fd->num].command = reassembly_entries[fragments_start_frame].command;
-                    reassembly_entries[pinfo->fd->num].start_frame = fragments_start_frame;
-                    reassembly_entries[pinfo->fd->num].frame_count = reassembly_entries[fragments_start_frame].frame_count;
+                    reassembly_entries[pinfo->fd->num].frame_index = msg_count;
+                    reassembly_entries[pinfo->fd->num].frame_total = reassembly_entries[fragments_start_frame].frame_total;
                     reassembly_entries[pinfo->fd->num].size = fragments_data_len;
                     reassembly_entries[pinfo->fd->num].data = reassembly_entries[fragments_start_frame].data;
                     tvb_memcpy(tvb, &(reassembly_entries[fragments_start_frame].data[fragments_offset]), data_offset, data_len);
@@ -1587,13 +1587,13 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                 pkt_len = data_len;
                 col_set_str(pinfo->cinfo, COL_INFO, "");
             }
-            else if (reassembly_entries[pinfo->fd->num].start_frame + reassembly_entries[pinfo->fd->num].frame_count - 1 == pinfo->fd->num) {
+            else if (reassembly_entries[pinfo->fd->num].frame_index + 1 == reassembly_entries[pinfo->fd->num].frame_total) {
                 new_tvb = tvb_new_real_data(reassembly_entries[pinfo->fd->num].data, reassembly_entries[pinfo->fd->num].size, reassembly_entries[pinfo->fd->num].size);
                 //tvb_set_child_real_data_tvbuff(tvb, new_tvb);
                 add_new_data_source(pinfo, new_tvb, "Reassembled");
                 pkt_len = reassembly_entries[pinfo->fd->num].size;
 
-                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u) Reassembled", pinfo->fd->num-reassembly_entries[pinfo->fd->num].start_frame + 1, reassembly_entries[pinfo->fd->num].frame_count);
+                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u) Reassembled", reassembly_entries[pinfo->fd->num].frame_index + 1, reassembly_entries[pinfo->fd->num].frame_total);
 
                 if (reassembly_entries[pinfo->fd->num].log_start_frame != 0xffffffff &&
                     reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry != NULL) {
@@ -1602,7 +1602,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                 }
             }
             else {
-                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u)", pinfo->fd->num-reassembly_entries[pinfo->fd->num].start_frame + 1, reassembly_entries[pinfo->fd->num].frame_count);
+                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u)", reassembly_entries[pinfo->fd->num].frame_index + 1, reassembly_entries[pinfo->fd->num].frame_total);
             }
 
             subdissector = find_subdissector(reassembly_entries[pinfo->fd->num].command);
