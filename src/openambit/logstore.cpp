@@ -562,6 +562,22 @@ void LogStore::XMLReader::readLogHeader()
                 }
             }
         }
+        else if (xml.name() == "Cadence") {
+            while (xml.readNextStartElement()) {
+                if (xml.name() == "Avg") {
+                    logEntry->logEntry->header.cadence_avg = xml.readElementText().toUInt();
+                }
+                else if (xml.name() == "Max") {
+                    logEntry->logEntry->header.cadence_max = xml.readElementText().toUInt();
+                }
+                else if (xml.name() == "MaxTime") {
+                    logEntry->logEntry->header.cadence_max_time = xml.readElementText().toUInt();
+                }
+                else {
+                    xml.skipCurrentElement();
+                }
+            }
+        }
         else if (xml.name() == "Altitude") {
             while (xml.readNextStartElement()) {
                 if (xml.name() == "Max") {
@@ -670,7 +686,14 @@ void LogStore::XMLReader::readLogHeader()
         else if (xml.name() == "Unknown3") {
             QByteArray val = xml.readElementText().toLocal8Bit();
             const char *c_str = val.data();
-            for (int i=0; i<6 && i<val.length()/2; i++) {
+            // Handle previously unknown cadence data
+            if (val.length() == 12) {
+                sscanf(c_str, "%2hhx", &logEntry->logEntry->header.cadence_max);
+                c_str += 2 * sizeof(char);
+                sscanf(c_str, "%2hhx", &logEntry->logEntry->header.cadence_avg);
+                c_str += 2 * sizeof(char);
+            }
+            for (int i=0; i<4 && i<val.length()/2; i++) {
                 sscanf(c_str, "%2hhx", &logEntry->logEntry->header.unknown3[i]);
                 c_str += 2 * sizeof(char);
             }
@@ -678,7 +701,18 @@ void LogStore::XMLReader::readLogHeader()
         else if (xml.name() == "Unknown4") {
             QByteArray val = xml.readElementText().toLocal8Bit();
             const char *c_str = val.data();
-            for (int i=0; i<8 && i<val.length()/2; i++) {
+            // Handle previously unknown cadence data
+            if (val.length() == 16) {
+                uint32_t cadence_max_time = 0;
+                uint8_t tmpval;
+                for (int i=0; i<4; i++) {
+                    sscanf(c_str, "%2hhx", &tmpval);
+                    cadence_max_time |= (tmpval << (8*(3-i)));
+                    c_str += 2 * sizeof(char);
+                }
+                logEntry->logEntry->header.cadence_max_time = cadence_max_time;
+            }
+            for (int i=0; i<4 && i<val.length()/2; i++) {
                 sscanf(c_str, "%2hhx", &logEntry->logEntry->header.unknown4[i]);
                 c_str += 2 * sizeof(char);
             }
@@ -1316,6 +1350,11 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeTextElement("Max", QString("%1").arg(logEntry->header.speed_max));
     xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.speed_max_time));
     xml.writeEndElement();
+    xml.writeStartElement("Cadence");
+    xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.cadence_avg));
+    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.cadence_max));
+    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.cadence_max_time));
+    xml.writeEndElement();
     xml.writeStartElement("Altitude");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->header.altitude_max));
     xml.writeTextElement("Min", QString("%1").arg(logEntry->header.altitude_min));
@@ -1355,21 +1394,15 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeTextElement("Unknown1", hexstring);
     hexstring = hexstring.sprintf("%02x", logEntry->header.unknown2);
     xml.writeTextElement("Unknown2", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x%02x", logEntry->header.unknown3[0],
-                                                              logEntry->header.unknown3[1],
-                                                              logEntry->header.unknown3[2],
-                                                              logEntry->header.unknown3[3],
-                                                              logEntry->header.unknown3[4],
-                                                              logEntry->header.unknown3[5]);
+    hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown3[0],
+                                                      logEntry->header.unknown3[1],
+                                                      logEntry->header.unknown3[2],
+                                                      logEntry->header.unknown3[3]);
     xml.writeTextElement("Unknown3", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x%02x%02x%02x", logEntry->header.unknown4[0],
-                                                                      logEntry->header.unknown4[1],
-                                                                      logEntry->header.unknown4[2],
-                                                                      logEntry->header.unknown4[3],
-                                                                      logEntry->header.unknown4[4],
-                                                                      logEntry->header.unknown4[5],
-                                                                      logEntry->header.unknown4[6],
-                                                                      logEntry->header.unknown4[7]);
+    hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown4[0],
+                                                      logEntry->header.unknown4[1],
+                                                      logEntry->header.unknown4[2],
+                                                      logEntry->header.unknown4[3]);
     xml.writeTextElement("Unknown4", hexstring);
     hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown5[0],
                                                       logEntry->header.unknown5[1],

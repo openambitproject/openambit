@@ -217,9 +217,10 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
     xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.speed_max/3600.0, 'g', 16));
     xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.speed_max_time/1000.0, 'g', 16));
     xml.writeEndElement();
-    // We have no idea about cadence yet, but we better include an empty tag!
     xml.writeStartElement("Cadence");
-    xml.writeTextElement("MaxTime", QString::number(0));
+    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.cadence_avg/60.0, 'g', 16));
+    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.cadence_max/60.0, 'g', 16));
+    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.cadence_max_time/1000.0, 'g', 16));
     xml.writeEndElement();
     xml.writeStartElement("Altitude");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
