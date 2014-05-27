@@ -325,8 +325,11 @@ typedef struct ambit_log_header_s {
 
     uint8_t  unknown1[5];
     uint8_t  unknown2;
-    uint8_t  unknown3[6];
-    uint8_t  unknown4[8];
+    uint8_t  cadence_max;           /* rpm */
+    uint8_t  cadence_avg;           /* rpm */
+    uint8_t  unknown3[4];
+    uint32_t cadence_max_time;      /* ms */
+    uint8_t  unknown4[4];
     uint8_t  unknown5[4];
     uint8_t  unknown6[24];
 } ambit_log_header_t;
