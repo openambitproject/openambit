@@ -74,6 +74,8 @@ static ambit_known_device_t known_devices[] = {
     { 0x0000, 0x0000, NULL, {0x00,0x00,0x00,0x00}, NULL, false }
 };
 
+static uint8_t komposti_version[] = { 0x01, 0x08, 0x01, 0x00 };
+
 /*
  * Public functions
  */
@@ -295,7 +297,7 @@ int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8])
     size_t replylen = 0;
     int ret = -1;
 
-    if (libambit_protocol_command(object, ambit_command_gps_orbit_head, NULL, 0, &reply_data, &replylen, 0) == 0 && replylen == 9) {
+    if (libambit_protocol_command(object, ambit_command_gps_orbit_head, NULL, 0, &reply_data, &replylen, 0) == 0 && replylen >= 9) {
         memcpy(data, &reply_data[1], 8);
         libambit_protocol_free(reply_data);
 
@@ -507,14 +509,13 @@ void libambit_log_entry_free(ambit_log_entry_t *log_entry)
 
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 {
-    uint8_t send_data[] = { 0x01, 0x06, 0x14, 0x00 };
     uint8_t *reply_data = NULL;
     size_t replylen;
     int ret = -1;
 
     LOG_INFO("Reading device info");
 
-    if (libambit_protocol_command(object, ambit_command_device_info, send_data, sizeof(send_data), &reply_data, &replylen, 1) == 0) {
+    if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(komposti_version), &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
             memcpy(info->model, reply_data, 16);
             info->model[16] = 0;
