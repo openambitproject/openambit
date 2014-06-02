@@ -393,10 +393,9 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     offset += 16;
     fw1 = tvb_get_guint8(tvb, offset);
     fw2 = tvb_get_guint8(tvb, offset+1);
-    fw3 = tvb_get_guint8(tvb, offset+2);
-    proto_tree_add_string_format_value(tree, hf_ambit_fw_version, tvb, offset, 3, "FW version", "%d.%d.%d", fw1, fw2, fw3);
-    offset += 3;
-    offset += 1;
+    fw3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_fw_version, tvb, offset, 4, "FW version", "%d.%d.%d", fw1, fw2, fw3);
+    offset += 4;
     hw1 = tvb_get_guint8(tvb, offset);
     hw2 = tvb_get_guint8(tvb, offset+1);
     hw3 = tvb_get_letohs(tvb, offset+2);

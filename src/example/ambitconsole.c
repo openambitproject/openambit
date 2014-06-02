@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         libambit_device_info_get(ambit_object, &info);
 
         if (libambit_device_supported(ambit_object)) {
-            printf("Device: %s, serial: %s, FW version: %d.%d.%d\n", info.name, info.serial, info.fw_version[0], info.fw_version[1], info.fw_version[2]);
+            printf("Device: %s, serial: %s, FW version: %d.%d.%d\n", info.name, info.serial, info.fw_version[0], info.fw_version[1], info.fw_version[2] | (info.fw_version[3] << 8));
 
             if (libambit_device_status_get(ambit_object, &status) == 0) {
                 printf("Current charge: %d%%\n", status.charge);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             libambit_log_read(ambit_object, log_skip_cb, log_data_cb, NULL, ambit_object);
         }
         else {
-            printf("Device: %s (fw_version: %d.%d.%d) is not supported yet!\n", info.name, info.fw_version[0], info.fw_version[1], info.fw_version[2]);
+            printf("Device: %s (fw_version: %d.%d.%d) is not supported yet!\n", info.name, info.fw_version[0], info.fw_version[1], info.fw_version[2] | (info.fw_version[3] << 8));
         }
 
         libambit_close(ambit_object);
