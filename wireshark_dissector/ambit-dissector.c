@@ -76,6 +76,7 @@ static int hf_ambit_model = -1;
 static int hf_ambit_serial = -1;
 static int hf_ambit_fw_version = -1;
 static int hf_ambit_hw_version = -1;
+static int hf_ambit_bsl_version = -1;
 static int hf_ambit_personal_compass_declination = -1;
 static int hf_ambit_personal_map_orientation = -1;
 static int hf_ambit_personal_date_format = -1;
@@ -400,6 +401,8 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     guint16 fw3;
     guint8 hw1,hw2;
     guint16 hw3;
+    guint8 bv1,bv2;
+    guint16 bv3;
     gint offset = 0;
     proto_tree_add_item(tree, hf_ambit_model, tvb, offset, 16, ENC_LITTLE_ENDIAN);
     offset += 16;
@@ -415,8 +418,13 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     hw3 = tvb_get_letohs(tvb, offset+2);
     proto_tree_add_string_format_value(tree, hf_ambit_hw_version, tvb, offset, 4, "HW version", "%d.%d.%d", hw1, hw2, hw3);
     offset += 4;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-    offset += 8;
+    bv1 = tvb_get_guint8(tvb, offset);
+    bv2 = tvb_get_guint8(tvb, offset+1);
+    bv3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_bsl_version, tvb, offset, 4, "BSL version", "%d.%d.%d", bv1, bv2, bv3);
+    offset += 4;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
 }
 
 static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1752,6 +1760,8 @@ proto_register_ambit(void)
           { "FW version", "ambit.fwversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_hw_version,
           { "HW version", "ambit.hwversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_bsl_version,
+          { "BSL version", "ambit.bslversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_compass_declination,
           { "Compass declination", "ambit.personal.compass_declination", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_map_orientation,
