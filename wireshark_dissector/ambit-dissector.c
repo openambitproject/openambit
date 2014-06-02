@@ -383,7 +383,8 @@ static gint dissect_ambit_device_info_get(tvbuff_t *tvb, packet_info *pinfo, pro
 
 static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    guint8 fw1,fw2,fw3;
+    guint8 fw1,fw2;
+    guint16 fw3;
     guint8 hw1,hw2;
     guint16 hw3;
     gint offset = 0;
