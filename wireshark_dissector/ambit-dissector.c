@@ -71,6 +71,7 @@ static int hf_ambit_unknown = -1;
 static int hf_ambit_date = -1;
 static int hf_ambit_time = -1;
 static int hf_ambit_charge = -1;
+static int hf_ambit_komposti_version = -1;
 static int hf_ambit_model = -1;
 static int hf_ambit_serial = -1;
 static int hf_ambit_fw_version = -1;
@@ -379,6 +380,14 @@ static gint dissect_ambit_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_
 
 static gint dissect_ambit_device_info_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    guint8 kv1, kv2;
+    guint16 kv3;
+    gint offset = 0;
+    kv1 = tvb_get_guint8(tvb, offset);
+    kv2 = tvb_get_guint8(tvb, offset+1);
+    kv3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_komposti_version, tvb, offset, 4, "Komposti version", "%d.%d.%d", kv1, kv2, kv3);
+    offset +=4;
 }
 
 static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1675,6 +1684,8 @@ proto_register_ambit(void)
           { "Time", "ambit.time", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_charge,
           { "Charge", "ambit.charge", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_komposti_version,
+          { "Komposti version", "ambit.komposti", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_model,
           { "Model", "ambit.model", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_serial,
