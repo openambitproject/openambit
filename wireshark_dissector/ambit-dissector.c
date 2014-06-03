@@ -1642,6 +1642,10 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             offset += data_len;
             proto_tree_add_item(ambit_tree, hf_ambit_payloadchksum, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
+
+            if (offset < 64) {
+                proto_tree_add_text(ambit_tree, tvb, offset, 64 - offset, "Padding");
+            }
         }
 
         return len;
