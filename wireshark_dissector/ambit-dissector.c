@@ -678,8 +678,11 @@ static gint dissect_ambit_log_count_get(tvbuff_t *tvb, packet_info *pinfo, proto
 
 static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 2);
-    proto_tree_add_item(tree, hf_ambit_log_count, tvb, 2, 2, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
+    proto_tree_add_item(tree, hf_ambit_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+    offset += 2;
 }
 
 static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -688,7 +691,9 @@ static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinf
 
 static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -697,7 +702,9 @@ static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo,
 
 static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -706,7 +713,9 @@ static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo,
 
 static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
