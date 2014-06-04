@@ -421,11 +421,15 @@ static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinf
 
 static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    gint offset = 1;
+    gint offset = 0;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_lock_sports_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 2;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_lock_time_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 4;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     guint8 declination_direction = tvb_get_guint8(tvb, offset);
     guint8 declination_deg = tvb_get_guint8(tvb, offset + 1);
     if (declination_direction == 0) {
@@ -434,58 +438,77 @@ static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pi
     else {
         proto_tree_add_string_format_value(tree, hf_ambit_personal_compass_declination, tvb, offset, 2, "Compass declination", "%s %f", declination_direction == 1 ? "E" : "W", 0.5*declination_deg);
     }
-    offset = 8;
+    offset += 2;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_unit_system, tvb, offset, 8, ENC_LITTLE_ENDIAN);
-    offset = 19;
+    offset += 8;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_coordinate_system, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 21;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_map_orientation, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 24;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_gps_sync_time, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 25;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_time_format, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 26;
+    offset += 1;
     guint8 alarm_hour = tvb_get_guint8(tvb, offset);
     guint8 alarm_minute = tvb_get_guint8(tvb, offset + 1);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_alarm_time, tvb, offset, 2, "Alarm time", "%d:%d", alarm_hour, alarm_minute);
-    offset = 28;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_alarm_enable, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 31;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
     guint8 dual_hour = tvb_get_guint8(tvb, offset);
     guint8 dual_minute = tvb_get_guint8(tvb, offset + 1);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_dual_time, tvb, offset, 2, "Dual time", "%d:%d", dual_hour, dual_minute);
-    offset = 36;
+    offset += 2;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_date_format, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 40;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_tones, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 44;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_backlight_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 45;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_backlight_brightness, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 46;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_display_contrast, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 47;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_invert_display, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 48;
+    offset += 1;
     guint16 weight = tvb_get_letohs(tvb, offset);
     proto_tree_add_float(tree, hf_ambit_personal_weight, tvb, offset, 2, ((float)weight)/100);
-    offset = 50;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_birthyear, tvb, offset, 2, ENC_LITTLE_ENDIAN); 
-    offset = 52;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_max_hb, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 53;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_rest_hb, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 54;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_fitness_level, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 55;
+    offset += 1;
     guint8 sex = tvb_get_guint8(tvb, offset);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_sex, tvb, offset, 1, "Is male", "%s", sex == 1 ? "true" : "false");
-    offset = 56;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_length, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 60;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_alti_baro_profile, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 62;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_alti_baro_fused_alti, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
 }
 
 static gint dissect_ambit_log_header_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1588,6 +1611,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (msg_part == 0x5d) {
                 proto_tree_add_item(ambit_tree, hf_ambit_requestcmd, tvb, offset, 4, ENC_BIG_ENDIAN);
                 offset += 4;
+                dissect_ambit_add_unknown (tvb, pinfo, ambit_tree, offset, 2);
                 offset += 2;
                 proto_tree_add_item(ambit_tree, hf_ambit_pktseqno, tvb, offset, 2, ENC_LITTLE_ENDIAN);
                 offset += 2;
