@@ -379,7 +379,7 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->peak_training_effect = read8inc(data, &offset);
     log_header->activity_type = read8inc(data, &offset);
     memcpy(log_header->activity_name, data + offset, 16);
-    log_header->activity_name[15] = 0;
+    log_header->activity_name[16] = 0;
     offset += 16;
     log_header->heartrate_min = read8inc(data, &offset);
 

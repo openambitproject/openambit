@@ -629,6 +629,7 @@ void LogStore::XMLReader::readLogHeader()
             QByteArray ba = xml.readElementText().toLocal8Bit();
             const char *c_str = ba.data();
             strncpy(logEntry->logEntry->header.activity_name, c_str, 16);
+            logEntry->logEntry->header.activity_name[16] = 0;
         }
         else if (xml.name() == "Temperature") {
             while (xml.readNextStartElement()) {
