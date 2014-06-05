@@ -80,8 +80,9 @@ static int hf_ambit_personal_compass_declination = -1;
 static int hf_ambit_personal_map_orientation = -1;
 static int hf_ambit_personal_date_format = -1;
 static int hf_ambit_personal_time_format = -1;
-static int hf_ambit_personal_coordinate_system = -1;
 static int hf_ambit_personal_unit_system = -1;
+static int hf_ambit_personal_coordinate_system = -1;
+static int hf_ambit_personal_language = -1;
 static int hf_ambit_personal_alarm_enable = -1;
 static int hf_ambit_personal_alarm_time = -1;
 static int hf_ambit_personal_dual_time = -1;
@@ -129,6 +130,8 @@ static int hf_ambit_log_header_temp_min = -1;
 static int hf_ambit_log_header_distance = -1;
 static int hf_ambit_log_header_sample_count = -1;
 static int hf_ambit_log_header_energy = -1;
+static int hf_ambit_log_header_cadence_max = -1;
+static int hf_ambit_log_header_cadence_avg = -1;
 static int hf_ambit_log_header_speed_max_time = -1;
 static int hf_ambit_log_header_alt_max_time = -1;
 static int hf_ambit_log_header_alt_min_time = -1;
@@ -136,6 +139,7 @@ static int hf_ambit_log_header_hr_max_time = -1;
 static int hf_ambit_log_header_hr_min_time = -1;
 static int hf_ambit_log_header_temp_max_time = -1;
 static int hf_ambit_log_header_temp_min_time = -1;
+static int hf_ambit_log_header_cadence_max_time = -1;
 static int hf_ambit_log_header_time_first_fix = -1;
 static int hf_ambit_log_header_battery_start = -1;
 static int hf_ambit_log_header_battery_stop = -1;
@@ -441,13 +445,11 @@ static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pi
     offset += 2;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
     offset += 2;
-    proto_tree_add_item(tree, hf_ambit_personal_unit_system, tvb, offset, 8, ENC_LITTLE_ENDIAN);
-    offset += 8;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
-    offset += 3;
+    proto_tree_add_item(tree, hf_ambit_personal_unit_system, tvb, offset, 11, ENC_LITTLE_ENDIAN);
+    offset += 11;
     proto_tree_add_item(tree, hf_ambit_personal_coordinate_system, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    proto_tree_add_item(tree, hf_ambit_personal_language, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_map_orientation, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
@@ -591,8 +593,12 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 6);
-        offset += 6;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_alt_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
@@ -607,8 +613,10 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_temp_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-        offset += 8;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+        offset += 4;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
         proto_tree_add_item(tree, hf_ambit_log_header_battery_start, tvb, offset, 1, ENC_LITTLE_ENDIAN);
@@ -901,9 +909,15 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
-    if (offset + 6 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 6);
-    offset += 6;
+    if (offset + 1 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+    if (offset + 1 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+    if (offset + 4 >= length) return offset;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
@@ -925,9 +939,12 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_temp_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
-    if (offset + 8 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-    offset += 8;
+    if (offset + 4 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
+    if (offset + 4 >= length) return offset;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
@@ -1745,10 +1762,12 @@ proto_register_ambit(void)
           { "Date format", "ambit.personal.date_format", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_time_format,
           { "Time format", "ambit.personal.time_format", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
-        { &hf_ambit_personal_coordinate_system,
-          { "Coordinate system", "ambit.personal.coordinate_system", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_unit_system,
           { "Units", "ambit.personal.units", FT_BYTES, BASE_NONE, NULL, 0x0, NULL, HFILL } },
+        { &hf_ambit_personal_coordinate_system,
+          { "Coordinate system", "ambit.personal.coordinate_system", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_personal_language,
+          { "Language", "ambit.personal.language", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alarm_enable,
           { "Alarm enable", "ambit.personal.alarm_enable", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alarm_time,
@@ -1840,6 +1859,10 @@ proto_register_ambit(void)
           { "Sample count", "ambit.log_header.sample_count", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_energy,
           { "Energy consumption (kcal)", "ambit.log_header.energy_consumption", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_max,
+          { "Cadence max (rpm)", "ambit.log_header.cadence_max", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_avg,
+          { "Cadence avg (rpm)", "ambit.log_header.cadence_avg", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_speed_max_time,
           { "Time max speed (ms)", "ambit.log_header.speed_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_alt_max_time,
@@ -1854,6 +1877,8 @@ proto_register_ambit(void)
           { "Time max temperature (ms)", "ambit.log_header.temp_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_temp_min_time,
           { "Time min temperature (ms)", "ambit.log_header.temp_mintime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_max_time,
+          { "Time max cadence (ms)", "ambit.log_header.cadence_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_time_first_fix,
           { "Time of first fix", "ambit.log_header.time_first_fix", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_battery_start,
