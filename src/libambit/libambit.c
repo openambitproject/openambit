@@ -59,9 +59,11 @@ static uint32_t version_number(const uint8_t version[4]);
  * Static variables
  */
 static ambit_known_device_t known_devices[] = {
+    { SUUNTO_USB_VENDOR_ID, 0x001c, "Finch", {0x00,0x00,0x00,0x00}, "Suunto Ambit3 Sport", false, 0x0400 },
+    { SUUNTO_USB_VENDOR_ID, 0x001b, "Emu", {0x00,0x00,0x00,0x00}, "Suunto Ambit3 Peak", false, 0x0400 },
+    { SUUNTO_USB_VENDOR_ID, 0x001d, "Greentit", {0x00,0x00,0x00,0x00}, "Suunto Ambit2 R", true, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x01,0x01,0x02,0x00}, "Suunto Ambit2 S", true, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x01,0x01,0x02,0x00}, "Suunto Ambit2", true, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001d, "Greentit", {0x00,0x00,0x00,0x00}, "Suunto Ambit2 R", true, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x03,0x00}, "Suunto Ambit2 S", false, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x00,0x02,0x03,0x00}, "Suunto Ambit2", false, 0x0400 },
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x02,0x00}, "Suunto Ambit2 S (up to 0.2.2)", false, 0x0200 },

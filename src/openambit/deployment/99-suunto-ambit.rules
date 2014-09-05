@@ -12,5 +12,11 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="0019", MODE="0666
 # Colibri (a.k.a Suunto Ambit2 S)
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001a", MODE="0666"
 
+# Emu (a.k.a Suunto Ambit3 Peak)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001b", MODE="0666"
+
+# Finch (a.k.a Suunto Ambit3 Sport)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001c", MODE="0666"
+
 # Greentit (a.k.a Suunto Ambit2 R)
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001d", MODE="0666"
