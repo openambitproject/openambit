@@ -968,7 +968,7 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_distance_before_calib, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
-    if (header_1_len == 913) { /* Long header */
+    if (header_1_len >= 913) { /* Long header */
         if (offset + 24 >= length) return offset;
         dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
         offset += 24;
