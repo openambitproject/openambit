@@ -79,6 +79,7 @@ typedef struct sample_lap_event_type_s {
 } sample_lap_event_type_t;
 
 static sample_lap_event_type_t sampleLapEventTypeNames[] = {
+    { 0x00, "Autolap" },
     { 0x01, "Manual" },
     { 0x14, "High Interval" },
     { 0x15, "Low Interval" },

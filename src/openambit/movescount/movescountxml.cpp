@@ -42,6 +42,7 @@ static typename_lookup_entry_t sampleAltitudeSourceNames[] = {
 };
 
 static typename_lookup_entry_t sampleLapEventTypeNames[] = {
+    { 0x00, "Distance" },
     { 0x01, "Manual" },
     { 0x14, "High Interval" },
     { 0x15, "Low Interval" },

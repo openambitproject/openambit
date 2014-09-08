@@ -175,6 +175,14 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
         }
         case ambit_log_sample_type_lapinfo:
             switch (sample->u.lapinfo.event_type) {
+            case 0x00: /* autolap = 5 */
+            {
+                QVariantMap tmpMap;
+                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+                tmpMap.insert("Type", 5);
+                marksContent.append(tmpMap);
+                break;
+            }
             case 0x01: /* manual = 0 */
             case 0x16: /* interval = 0 */
             {
