@@ -208,7 +208,7 @@ LogEntry *LogStore::readInternal(QString path)
         XMLReader reader(retEntry);
         if (!reader.read(&logfile)) {
             QString error = reader.errorString();
-            qDebug() << error;
+            qDebug() << "Failed to read " << path << ": " << error;
             delete retEntry;
             retEntry = NULL;
         }

@@ -290,17 +290,19 @@ void MovesCount::checkUploadedLogs()
         QList<LogStore::LogDirEntry> entries = logStore.dir();
         foreach(LogStore::LogDirEntry entry, entries) {
             LogEntry *logEntry = logStore.read(entry);
-            if (logEntry->movescountId.length() == 0) {
-                missingEntries.append(logEntry);
-                if (logEntry->time < firstUnknown) {
-                    firstUnknown = logEntry->time;
+            if (logEntry != NULL) {
+                if (logEntry->movescountId.length() == 0) {
+                    missingEntries.append(logEntry);
+                    if (logEntry->time < firstUnknown) {
+                        firstUnknown = logEntry->time;
+                    }
+                    if (logEntry->time > lastUnknown) {
+                        lastUnknown = logEntry->time;
+                    }
                 }
-                if (logEntry->time > lastUnknown) {
-                    lastUnknown = logEntry->time;
+                else {
+                    delete logEntry;
                 }
-            }
-            else {
-                delete logEntry;
             }
         }
 
