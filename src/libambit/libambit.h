@@ -310,7 +310,7 @@ typedef struct ambit_log_header_s {
     uint32_t heartrate_min_time;    /* ms */
     uint8_t  peak_training_effect;  /* effect scale 0.1 */
     uint8_t  activity_type;
-    char     activity_name[16+1];
+    char     activity_name[16+1];   /* name of activity in ISO 8859-1 */
     int16_t  temperature_max;       /* degree celsius scale 0.1 */
     int16_t  temperature_min;       /* degree celsius scale 0.1 */
     uint32_t temperature_max_time;  /* ms */

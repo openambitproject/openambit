@@ -147,7 +147,7 @@ bool LogEntry::isUploaded(){
 QString LogEntry::toHtml(){
     QString log_html;
 
-    log_html += "<h1>" + QString(this->logEntry->header.activity_name) + "</h1>";
+    log_html += "<h1>" + QString::fromLatin1(this->logEntry->header.activity_name) + "</h1>";
     if (this->isUploaded()){
         log_html += "<a href='http://www.movescount.com/moves/move" + this->movescountId + "'>see on movescount.com</a>";
     }

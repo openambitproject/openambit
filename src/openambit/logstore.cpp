@@ -627,7 +627,7 @@ void LogStore::XMLReader::readLogHeader()
             logEntry->logEntry->header.activity_type = xml.readElementText().toUInt();
         }
         else if (xml.name() == "Activity") {
-            QByteArray ba = xml.readElementText().toLocal8Bit();
+            QByteArray ba = xml.readElementText().toLatin1();
             const char *c_str = ba.data();
             strncpy(logEntry->logEntry->header.activity_name, c_str, 16);
             logEntry->logEntry->header.activity_name[16] = 0;
@@ -1372,7 +1372,7 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeEndElement();
     xml.writeTextElement("PeakTrainingEffect", QString("%1").arg(logEntry->header.peak_training_effect));
     xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString(logEntry->header.activity_name));
+    xml.writeTextElement("Activity", QString::fromLatin1(logEntry->header.activity_name));
     xml.writeStartElement("Temperature");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->header.temperature_max));
     xml.writeTextElement("Min", QString("%1").arg(logEntry->header.temperature_min));
