@@ -222,8 +222,8 @@ void libambit_sync_display_clear(ambit_object_t *object)
 
 int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
 {
-    uint8_t date_data[8];
-    uint8_t time_data[8] = { 0x09, 0x00, 0x01, 0x00 };
+    uint8_t date_data[8] = { 0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00 };
+    uint8_t time_data[8];
     int ret = -1;
 
     LOG_INFO("Writing date and time to clock");
@@ -232,9 +232,12 @@ int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
     *(uint16_t*)(&date_data[0]) = htole16(1900 + tm->tm_year);
     date_data[2] = 1 + tm->tm_mon;
     date_data[3] = tm->tm_mday;
-    memset(&date_data[4], 0, 4); // ????? Unknown data
+    // byte[4-7] unknown (but set to 0x28000000 in moveslink)
 
-    // Set time
+    // Set time (+date)
+    *(uint16_t*)(&time_data[0]) = htole16(1900 + tm->tm_year);
+    time_data[2] = 1 + tm->tm_mon;
+    time_data[3] = tm->tm_mday;
     time_data[4] = tm->tm_hour;
     time_data[5] = tm->tm_min;
     *(uint16_t*)(&time_data[6]) = htole16(1000*tm->tm_sec);
