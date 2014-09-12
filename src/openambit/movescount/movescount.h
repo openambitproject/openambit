@@ -35,12 +35,14 @@
 #include "logstore.h"
 #include "movescountjson.h"
 #include "movescountlogdirentry.h"
+#include "movescountlogchecker.h"
 
 class MovesCount : public QObject
 {
     Q_OBJECT
 public:
     static MovesCount* instance();
+    void exit();
 
     void setBaseAddress(QString baseAddress);
     void setAppkey(QString appkey);
@@ -52,18 +54,18 @@ public:
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
     int getPersonalSettings(ambit_personal_settings_t *settings);
-    int getDeviceSettings();
+    void getDeviceSettings();
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
-signals:
-    void newerFirmwareExists(QByteArray fw_version);
-    void movesCountAuth(bool authorized);
-    void logMoveID(QString device, QDateTime time, QString moveID);
-    
-public slots:
+
     void checkAuthorization();
     void checkLatestFirmwareVersion();
     void writePersonalSettings(ambit_personal_settings_t *settings);
     void writeLog(LogEntry *logEntry);
+
+signals:
+    void newerFirmwareExists(QByteArray fw_version);
+    void movesCountAuth(bool authorized);
+    void logMoveID(QString device, QDateTime time, QString moveID);
 
 private slots:
     void authCheckFinished();
@@ -71,12 +73,21 @@ private slots:
     void recheckAuthorization();
     void handleAuthorizationSignal(bool authorized);
 
+    int getOrbitalDataInThread(u_int8_t **data);
+    int getPersonalSettingsInThread(ambit_personal_settings_t *settings);
+    void getDeviceSettingsInThread();
+    QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
+
+    void checkAuthorizationInThread();
+    void checkLatestFirmwareVersionInThread();
+    void writePersonalSettingsInThread(ambit_personal_settings_t *settings);
+    void writeLogInThread(LogEntry *logEntry);
+
 private:
     MovesCount();
     ~MovesCount();
 
     bool checkReplyAuthorization(QNetworkReply *reply);
-    void checkUploadedLogs();
 
     QNetworkReply *asyncGET(QString path, QString additionalHeaders, bool auth);
     QNetworkReply *syncGET(QString path, QString additionalHeaders, bool auth);
@@ -84,8 +95,8 @@ private:
     QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
     QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
 
+    bool exiting;
     bool authorized;
-    bool uploadedCheckRunning;
 
     QString baseAddress;
     QString appkey;
@@ -102,6 +113,8 @@ private:
     MovesCountJSON jsonParser;
 
     LogStore logStore;
+
+    MovesCountLogChecker *logChecker;
 
     QThread workerThread;
 };

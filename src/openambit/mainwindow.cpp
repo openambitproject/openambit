@@ -119,8 +119,11 @@ MainWindow::~MainWindow()
 {
     deviceWorkerThread.quit();
     deviceWorkerThread.wait();
-
     delete deviceManager;
+
+    if (movesCount != NULL) {
+        movesCount->exit();
+    }
 
     delete trayIcon;
     delete trayIconMinimizeRestoreAction;
