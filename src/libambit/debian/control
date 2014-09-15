@@ -11,7 +11,7 @@ Homepage: http://openambit.org/
 Package: libambit-dev
 Section: libdevel
 Architecture: any
-Depends: libambit0 (= ${binary:Version})
+Depends: libambit0 (= ${binary:Version}), ${misc:Depends}
 Description: Communication library for Suunto Ambit series 
  Libambit is the driver library to communicate with the Suunto Ambit series
  of sport watches. This is the -dev version of the package container
@@ -20,7 +20,7 @@ Description: Communication library for Suunto Ambit series
 Package: libambit0
 Section: libs
 Architecture: any
-Depends: libudev1, libusb-1.0-0, ${shlibs:Depends}, ${misc:Pre-Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Pre-Depends}, ${misc:Depends}
 Description: Communication library for Suunto Ambit series
  Libambit is the driver library to communicate with the Suunto Ambit series
  of sport watches.
