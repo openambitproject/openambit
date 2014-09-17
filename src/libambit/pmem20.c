@@ -379,7 +379,7 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->peak_training_effect = read8inc(data, &offset);
     log_header->activity_type = read8inc(data, &offset);
     memcpy(log_header->activity_name, data + offset, 16);
-    log_header->activity_name[15] = 0;
+    log_header->activity_name[16] = 0;
     offset += 16;
     log_header->heartrate_min = read8inc(data, &offset);
 
@@ -391,8 +391,11 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->samples_count = read32inc(data, &offset);
     log_header->energy_consumption = read16inc(data, &offset);
 
-    memcpy(log_header->unknown3, data+offset, 6);
-    offset += 6;
+    log_header->cadence_max = read8inc(data, &offset);
+    log_header->cadence_avg = read8inc(data, &offset);
+
+    memcpy(log_header->unknown3, data+offset, 4);
+    offset += 4;
 
     log_header->speed_max_time = read32inc(data, &offset);
     log_header->altitude_max_time = read32inc(data, &offset);
@@ -401,9 +404,10 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->heartrate_min_time = read32inc(data, &offset);
     log_header->temperature_max_time = read32inc(data, &offset);
     log_header->temperature_min_time = read32inc(data, &offset);
+    log_header->cadence_max_time = read32inc(data, &offset);
 
-    memcpy(log_header->unknown4, data+offset, 8);
-    offset += 8;
+    memcpy(log_header->unknown4, data+offset, 4);
+    offset += 4;
 
     log_header->first_fix_time = read16inc(data, &offset)*1000;
     log_header->battery_start = read8inc(data, &offset);

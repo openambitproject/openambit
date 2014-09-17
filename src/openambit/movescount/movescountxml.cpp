@@ -42,6 +42,7 @@ static typename_lookup_entry_t sampleAltitudeSourceNames[] = {
 };
 
 static typename_lookup_entry_t sampleLapEventTypeNames[] = {
+    { 0x00, "Distance" },
     { 0x01, "Manual" },
     { 0x14, "High Interval" },
     { 0x15, "Low Interval" },
@@ -217,9 +218,10 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
     xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.speed_max/3600.0, 'g', 16));
     xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.speed_max_time/1000.0, 'g', 16));
     xml.writeEndElement();
-    // We have no idea about cadence yet, but we better include an empty tag!
     xml.writeStartElement("Cadence");
-    xml.writeTextElement("MaxTime", QString::number(0));
+    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.cadence_avg/60.0, 'g', 16));
+    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.cadence_max/60.0, 'g', 16));
+    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.cadence_max_time/1000.0, 'g', 16));
     xml.writeEndElement();
     xml.writeStartElement("Altitude");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
@@ -239,7 +241,7 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
         xml.writeTextElement("PeakTrainingEffect", QString::number((double)logEntry->logEntry->header.peak_training_effect/10.0, 'g', 16));
     }
     xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString(logEntry->logEntry->header.activity_name));
+    xml.writeTextElement("Activity", QString::fromLatin1(logEntry->logEntry->header.activity_name));
     xml.writeStartElement("Temperature");
     xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.temperature_max/10.0 + 273.15, 'g', 16));
     xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.temperature_min/10.0 + 273.15, 'g', 16));

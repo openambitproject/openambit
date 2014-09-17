@@ -47,6 +47,24 @@ MovesCount* MovesCount::instance()
     return m_Instance;
 }
 
+void MovesCount::exit()
+{
+    static QMutex mutex;
+
+    exiting = true;
+
+    mutex.lock();
+    if (m_Instance) {
+        workerThread.quit();
+        workerThread.wait();
+
+        delete logChecker;
+
+        m_Instance = NULL;
+    }
+    mutex.unlock();
+}
+
 void MovesCount::setBaseAddress(QString baseAddress)
 {
     this->baseAddress = baseAddress;
@@ -97,62 +115,52 @@ bool MovesCount::isAuthorized()
 int MovesCount::getOrbitalData(u_int8_t **data)
 {
     int ret = -1;
-    QNetworkReply *reply;
 
-    reply = syncGET("/devices/gpsorbit/binary", "", false);
-
-    if(reply->error() == QNetworkReply::NoError) {
-        QByteArray _data = reply->readAll();
-
-        if (_data.length() >= GPS_ORBIT_DATA_MIN_SIZE) {
-            *data = (u_int8_t*)malloc(_data.length());
-
-            memcpy(*data, _data.data(), _data.length());
-
-            ret = _data.length();
-        }
+    if (&workerThread == QThread::currentThread()) {
+        ret = getOrbitalDataInThread(data);
     }
-
-    delete reply;
+    else {
+        QMetaObject::invokeMethod(this, "getOrbitalDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(u_int8_t **, data));
+    }
 
     return ret;
 }
 
 int MovesCount::getPersonalSettings(ambit_personal_settings_t *settings)
 {
-    Q_UNUSED(settings);
-    return 0;
-}
+    int ret = -1;
 
-int MovesCount::getDeviceSettings()
-{
-    QNetworkReply *reply;
-
-    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), "", true);
-
-    if (checkReplyAuthorization(reply)) {
-        QByteArray _data = reply->readAll();
-
-        return 0;
+    if (&workerThread == QThread::currentThread()) {
+        ret = getPersonalSettingsInThread(settings);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getPersonalSettingsInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_personal_settings_t *, settings));
     }
 
-    return -1;
+    return ret;
+}
+
+void MovesCount::getDeviceSettings()
+{
+    QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
 }
 
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, QDate endTime)
 {
-    QNetworkReply *reply;
     QList<MovesCountLogDirEntry> retList;
 
-    reply = syncGET("/moves/private", "startdate=" + startTime.toString("yyyy-MM-dd") + "&enddate=" + endTime.toString("yyyy-MM-dd"), true);
-
-    if (checkReplyAuthorization(reply)) {
-        QByteArray _data = reply->readAll();
-
-        if (jsonParser.parseLogDirReply(_data, retList) != 0) {
-            // empty list if parse failed
-            retList.clear();
-        }
+    if (&workerThread == QThread::currentThread()) {
+        retList = getMovescountEntriesInThread(startTime, endTime);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getMovescountEntriesInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(QList<MovesCountLogDirEntry>, retList),
+                                  Q_ARG(QDate, startTime),
+                                  Q_ARG(QDate, endTime));
     }
 
     return retList;
@@ -160,47 +168,33 @@ QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, Q
 
 void MovesCount::checkAuthorization()
 {
-    if (authCheckReply == NULL) {
-        authCheckReply = asyncGET("/members/private", "", true);
-        connect(authCheckReply, SIGNAL(finished()), this, SLOT(authCheckFinished()));
-    }
+    QMetaObject::invokeMethod(this, "checkAuthorizationInThread", Qt::AutoConnection);
 }
 
 void MovesCount::checkLatestFirmwareVersion()
 {
-    if (firmwareCheckReply == NULL) {
-        firmwareCheckReply = asyncGET("/devices/" + QString("%1/%2.%3.%4")
-                                      .arg(device_info.model)
-                                      .arg(device_info.hw_version[0])
-                                      .arg(device_info.hw_version[1])
-                                      .arg(device_info.hw_version[3] << 8 | device_info.hw_version[2]), "", false);
-        connect(firmwareCheckReply, SIGNAL(finished()), this, SLOT(firmwareReplyFinished()));
-    }
+    QMetaObject::invokeMethod(this, "checkLatestFirmwareVersionInThread", Qt::AutoConnection);
 }
 
 void MovesCount::writePersonalSettings(ambit_personal_settings_t *settings)
 {
-    Q_UNUSED(settings);
+    if (&workerThread == QThread::currentThread()) {
+        writePersonalSettingsInThread(settings);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "writePersonalSettingsInThread", Qt::BlockingQueuedConnection,
+                                  Q_ARG(ambit_personal_settings_t *, settings));
+    }
 }
 
 void MovesCount::writeLog(LogEntry *logEntry)
 {
-    QByteArray output;
-    QNetworkReply *reply;
-    QString moveId;
-
-    jsonParser.generateLogData(logEntry, output);
-
-    reply = syncPOST("/moves/", "", output, true);
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray data = reply->readAll();
-        if (jsonParser.parseLogReply(data, moveId) == 0) {
-            emit logMoveID(logEntry->device, logEntry->time, moveId);
-        }
+    if (&workerThread == QThread::currentThread()) {
+        writeLogInThread(logEntry);
     }
     else {
-        qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
+        QMetaObject::invokeMethod(this, "writeLogInThread", Qt::BlockingQueuedConnection,
+                                  Q_ARG(LogEntry *, logEntry));
     }
 }
 
@@ -242,14 +236,122 @@ void MovesCount::recheckAuthorization()
 void MovesCount::handleAuthorizationSignal(bool authorized)
 {
     if (authorized) {
-        checkUploadedLogs();
+        logChecker->run();
+    }
+}
+
+int MovesCount::getOrbitalDataInThread(u_int8_t **data)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/devices/gpsorbit/binary", "", false);
+
+    if(reply->error() == QNetworkReply::NoError) {
+        QByteArray _data = reply->readAll();
+
+        if (_data.length() >= GPS_ORBIT_DATA_MIN_SIZE) {
+            *data = (u_int8_t*)malloc(_data.length());
+
+            memcpy(*data, _data.data(), _data.length());
+
+            ret = _data.length();
+        }
+    }
+
+    delete reply;
+
+    return ret;
+}
+
+int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings)
+{
+    Q_UNUSED(settings);
+    return 0;
+}
+
+void MovesCount::getDeviceSettingsInThread()
+{
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+    }
+}
+
+QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate startTime, QDate endTime)
+{
+    QNetworkReply *reply;
+    QList<MovesCountLogDirEntry> retList;
+
+    reply = syncGET("/moves/private", "startdate=" + startTime.toString("yyyy-MM-dd") + "&enddate=" + endTime.toString("yyyy-MM-dd"), true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseLogDirReply(_data, retList) != 0) {
+            // empty list if parse failed
+            retList.clear();
+        }
+    }
+
+    return retList;
+}
+
+void MovesCount::checkAuthorizationInThread()
+{
+    if (authCheckReply == NULL) {
+        authCheckReply = asyncGET("/members/private", "", true);
+        connect(authCheckReply, SIGNAL(finished()), this, SLOT(authCheckFinished()));
+    }
+}
+
+void MovesCount::checkLatestFirmwareVersionInThread()
+{
+    if (firmwareCheckReply == NULL) {
+        firmwareCheckReply = asyncGET("/devices/" + QString("%1/%2.%3.%4")
+                                      .arg(device_info.model)
+                                      .arg(device_info.hw_version[0])
+                                      .arg(device_info.hw_version[1])
+                                      .arg(device_info.hw_version[3] << 8 | device_info.hw_version[2]), "", false);
+        connect(firmwareCheckReply, SIGNAL(finished()), this, SLOT(firmwareReplyFinished()));
+    }
+}
+
+void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settings)
+{
+    Q_UNUSED(settings);
+}
+
+void MovesCount::writeLogInThread(LogEntry *logEntry)
+{
+    QByteArray output;
+    QNetworkReply *reply;
+    QString moveId;
+
+    jsonParser.generateLogData(logEntry, output);
+
+    reply = syncPOST("/moves/", "", output, true);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray data = reply->readAll();
+        if (jsonParser.parseLogReply(data, moveId) == 0) {
+            emit logMoveID(logEntry->device, logEntry->time, moveId);
+        }
+    }
+    else {
+        qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
     }
 }
 
 MovesCount::MovesCount() :
-    authorized(false), uploadedCheckRunning(false), firmwareCheckReply(NULL), authCheckReply(NULL)
+    exiting(false), authorized(false), firmwareCheckReply(NULL), authCheckReply(NULL)
 {
     this->manager = new QNetworkAccessManager(this);
+
+    this->logChecker = new MovesCountLogChecker();
 
     this->moveToThread(&workerThread);
     workerThread.start();
@@ -276,58 +378,6 @@ bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
     }
 
     return authorized;
-}
-
-void MovesCount::checkUploadedLogs()
-{
-    QDateTime firstUnknown = QDateTime::currentDateTime();
-    QDateTime lastUnknown = QDateTime::fromTime_t(0);
-    QList<LogEntry*> missingEntries;
-
-    if (!uploadedCheckRunning) {
-        uploadedCheckRunning = true;
-
-        QList<LogStore::LogDirEntry> entries = logStore.dir();
-        foreach(LogStore::LogDirEntry entry, entries) {
-            LogEntry *logEntry = logStore.read(entry);
-            if (logEntry->movescountId.length() == 0) {
-                missingEntries.append(logEntry);
-                if (logEntry->time < firstUnknown) {
-                    firstUnknown = logEntry->time;
-                }
-                if (logEntry->time > lastUnknown) {
-                    lastUnknown = logEntry->time;
-                }
-            }
-            else {
-                delete logEntry;
-            }
-        }
-
-        if (missingEntries.count() > 0) {
-            QList<MovesCountLogDirEntry> movescountEntries = getMovescountEntries(firstUnknown.date(), lastUnknown.date());
-            foreach(MovesCountLogDirEntry entry, movescountEntries) {
-                foreach(LogEntry *logEntry, missingEntries) {
-                    if (entry.time == logEntry->time) {
-                        missingEntries.removeOne(logEntry);
-                        logStore.storeMovescountId(logEntry->device, logEntry->time, entry.moveId);
-                        delete logEntry;
-                        break;
-                    }
-                }
-            }
-
-            // Delete remaining entries
-            while (missingEntries.count() > 0) {
-                LogEntry *logEntry = missingEntries.first();
-                writeLog(logEntry);
-                missingEntries.removeOne(logEntry);
-                delete logEntry;
-            }
-        }
-
-        uploadedCheckRunning = false;
-    }
 }
 
 QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, bool auth)

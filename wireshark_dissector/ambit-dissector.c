@@ -10,13 +10,20 @@
 typedef struct ambit_reassembly_entry {
     guint8 valid;
     guint32 command;
-    guint32 start_frame;
-    guint32 frame_count;
+    guint32 frame_index;
+    guint32 frame_total;
     guint32 size;
     unsigned char *data;
-    guint32 log_entry_size;
-    unsigned char *log_entry;
-    guint32 log_start_frame;
+    struct {
+        guint32 entry_size;
+        unsigned char *entry;
+        guint32 start_frame;
+    } log;
+    struct {
+        guint32 entry_size;
+        unsigned char *entry;
+        guint32 start_frame;
+    } log_header;
 } ambit_reassembly_entry_t;
 
 typedef struct ambit_protocol_type {
@@ -50,6 +57,16 @@ static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_
 static gint dissect_ambit_log_data_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length);
 static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length, guint32 *sampleno, guint32 *periodic_sample_specifier);
+static gint dissect_ambit_lock_status_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_lock_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_lock_set(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_lock_set_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+
+static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_log_headers_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length);
 
 /* protocols and header fields */
 #define D_AMBIT_USBID 0x3f
@@ -62,6 +79,7 @@ static int hf_ambit_msgsegs = -1;
 static int hf_ambit_msgseg = -1;
 static int hf_ambit_msgheaderchksum = -1;
 static int hf_ambit_requestcmd = -1;
+static int hf_ambit_pktformat = -1;
 static int hf_ambit_pktseqno = -1;
 static int hf_ambit_pktlen = -1;
 static int hf_ambit_payloadchksum = -1;
@@ -71,16 +89,19 @@ static int hf_ambit_unknown = -1;
 static int hf_ambit_date = -1;
 static int hf_ambit_time = -1;
 static int hf_ambit_charge = -1;
+static int hf_ambit_komposti_version = -1;
 static int hf_ambit_model = -1;
 static int hf_ambit_serial = -1;
 static int hf_ambit_fw_version = -1;
 static int hf_ambit_hw_version = -1;
+static int hf_ambit_bsl_version = -1;
 static int hf_ambit_personal_compass_declination = -1;
 static int hf_ambit_personal_map_orientation = -1;
 static int hf_ambit_personal_date_format = -1;
 static int hf_ambit_personal_time_format = -1;
-static int hf_ambit_personal_coordinate_system = -1;
 static int hf_ambit_personal_unit_system = -1;
+static int hf_ambit_personal_coordinate_system = -1;
+static int hf_ambit_personal_language = -1;
 static int hf_ambit_personal_alarm_enable = -1;
 static int hf_ambit_personal_alarm_time = -1;
 static int hf_ambit_personal_dual_time = -1;
@@ -128,6 +149,8 @@ static int hf_ambit_log_header_temp_min = -1;
 static int hf_ambit_log_header_distance = -1;
 static int hf_ambit_log_header_sample_count = -1;
 static int hf_ambit_log_header_energy = -1;
+static int hf_ambit_log_header_cadence_max = -1;
+static int hf_ambit_log_header_cadence_avg = -1;
 static int hf_ambit_log_header_speed_max_time = -1;
 static int hf_ambit_log_header_alt_max_time = -1;
 static int hf_ambit_log_header_alt_min_time = -1;
@@ -135,14 +158,17 @@ static int hf_ambit_log_header_hr_max_time = -1;
 static int hf_ambit_log_header_hr_min_time = -1;
 static int hf_ambit_log_header_temp_max_time = -1;
 static int hf_ambit_log_header_temp_min_time = -1;
+static int hf_ambit_log_header_cadence_max_time = -1;
 static int hf_ambit_log_header_time_first_fix = -1;
 static int hf_ambit_log_header_battery_start = -1;
 static int hf_ambit_log_header_battery_stop = -1;
 static int hf_ambit_log_header_distance_before_calib = -1;
+static int hf_ambit_log_header_synced = -1;
 
 static int hf_ambit_log_header_more = -1;
 
 static int hf_ambit_log_count = -1;
+static int hf_ambit_unsynced_log_count = -1;
 
 static int hf_ambit_log_data_addr_frame_ref = -1;
 static int hf_ambit_log_data_address = -1;
@@ -168,7 +194,7 @@ static int hf_ambit_log_sample_periodic_time = -1;
 static int hf_ambit_log_sample_periodic_altitude = -1;
 static int hf_ambit_log_sample_periodic_energy = -1;
 static int hf_ambit_log_sample_periodic_temp = -1;
-static int hf_ambit_log_sample_periodic_preassure = -1;
+static int hf_ambit_log_sample_periodic_pressure = -1;
 static int hf_ambit_log_sample_periodic_vert_speed = -1;
 
 static int hf_ambit_log_other_time_offset = -1;
@@ -210,7 +236,7 @@ static int hf_ambit_log_distance_source_type = -1;
 
 static int hf_ambit_log_altitude_source_type = -1;
 static int hf_ambit_log_altitude_source_altitude_offset = -1;
-static int hf_ambit_log_altitude_source_preassure_offset = -1;
+static int hf_ambit_log_altitude_source_pressure_offset = -1;
 
 static int hf_ambit_log_ibi = -1;
 
@@ -219,6 +245,8 @@ static gint ett_ambit_data = -1;
 static gint ett_ambit_log_data = -1;
 static gint ett_ambit_log_samples = -1;
 static gint ett_ambit_log_sample = -1;
+static gint ett_ambit3_log_headers = -1;
+static gint ett_ambit3_log_header = -1;
 
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
@@ -252,7 +280,7 @@ static const value_string log_samples_spec_type_vals[] = {
     { 0x0c, "Altitude" },
     { 0x0e, "Energy consumption" },
     { 0x0f, "Temperature" },
-    { 0x18, "Preassure" },
+    { 0x18, "Pressure" },
     { 0x19, "Vertical speed" },
     { 0, NULL }
 };
@@ -274,7 +302,7 @@ static const value_string log_samples_distance_source_type_vals[] = {
 };
 
 static const value_string log_samples_altitude_source_type_vals[] = {
-    { 0x04, "Preassure" },
+    { 0x04, "Pressure" },
     { 0, NULL }
 };
 
@@ -303,6 +331,16 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x0b0b0a00, "Log header reply", dissect_ambit_log_header_reply },
     { 0x0b170500, "Get log data", dissect_ambit_log_data_get },
     { 0x0b170a00, "Log data reply", dissect_ambit_log_data_reply },
+    { 0x0b190500, "Get lock status", dissect_ambit_lock_status_get },
+    { 0x0b190a00, "Lock status reply", dissect_ambit_lock_status_reply },
+    { 0x0b1a0500, "Lock set", dissect_ambit_lock_set },
+    { 0x0b1a0a00, "Lock set reply", dissect_ambit_lock_set_reply },
+    { 0x11000500, "Ambit3 - Get settings", dissect_ambit3_settings_get },
+    { 0x11000a00, "Ambit3 - Settings reply", dissect_ambit3_settings_reply },
+    { 0x11010500, "Ambit3 - Write settings", dissect_ambit3_settings_reply },
+    { 0x11010a00, "Ambit3 - Settings write reply", dissect_ambit3_settings_get },
+    { 0x12000500, "Ambit3 - Get log headers", dissect_ambit3_log_headers_get },
+    { 0x12000a00, "Ambit3 - Log headers reply", dissect_ambit3_log_headers_reply },
     { 0, NULL, NULL }
 };
 
@@ -347,10 +385,13 @@ static gint dissect_ambit_date_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tr
 static gint dissect_ambit_time_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     gint offset = 0;
+    guint16 year = tvb_get_letohs(tvb, 0);
+    guint8 month = tvb_get_guint8(tvb, 2);
+    guint8 day = tvb_get_guint8(tvb, 3);
     guint8 hour = tvb_get_guint8(tvb, 4);
     guint8 minute = tvb_get_guint8(tvb, 5);
     guint16 seconds = tvb_get_letohs(tvb, 6) / 1000;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    proto_tree_add_string_format_value(tree, hf_ambit_date, tvb, offset, 4, "Date", "%04d-%02d-%02d", year, month, day);
     offset += 4;
     proto_tree_add_string_format_value(tree, hf_ambit_time, tvb, offset, 4, "Time", "%02d:%02d:%02d", hour, minute, seconds);
     offset += 4;
@@ -379,13 +420,24 @@ static gint dissect_ambit_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_
 
 static gint dissect_ambit_device_info_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    guint8 kv1, kv2;
+    guint16 kv3;
+    gint offset = 0;
+    kv1 = tvb_get_guint8(tvb, offset);
+    kv2 = tvb_get_guint8(tvb, offset+1);
+    kv3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_komposti_version, tvb, offset, 4, "Komposti version", "%d.%d.%d", kv1, kv2, kv3);
+    offset +=4;
 }
 
 static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    guint8 fw1,fw2,fw3;
+    guint8 fw1,fw2;
+    guint16 fw3;
     guint8 hw1,hw2;
     guint16 hw3;
+    guint8 bv1,bv2;
+    guint16 bv3;
     gint offset = 0;
     proto_tree_add_item(tree, hf_ambit_model, tvb, offset, 16, ENC_LITTLE_ENDIAN);
     offset += 16;
@@ -393,17 +445,21 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     offset += 16;
     fw1 = tvb_get_guint8(tvb, offset);
     fw2 = tvb_get_guint8(tvb, offset+1);
-    fw3 = tvb_get_guint8(tvb, offset+2);
-    proto_tree_add_string_format_value(tree, hf_ambit_fw_version, tvb, offset, 3, "FW version", "%d.%d.%d", fw1, fw2, fw3);
-    offset += 3;
-    offset += 1;
+    fw3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_fw_version, tvb, offset, 4, "FW version", "%d.%d.%d", fw1, fw2, fw3);
+    offset += 4;
     hw1 = tvb_get_guint8(tvb, offset);
     hw2 = tvb_get_guint8(tvb, offset+1);
     hw3 = tvb_get_letohs(tvb, offset+2);
     proto_tree_add_string_format_value(tree, hf_ambit_hw_version, tvb, offset, 4, "HW version", "%d.%d.%d", hw1, hw2, hw3);
     offset += 4;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-    offset += 8;
+    bv1 = tvb_get_guint8(tvb, offset);
+    bv2 = tvb_get_guint8(tvb, offset+1);
+    bv3 = tvb_get_letohs(tvb, offset+2);
+    proto_tree_add_string_format_value(tree, hf_ambit_bsl_version, tvb, offset, 4, "BSL version", "%d.%d.%d", bv1, bv2, bv3);
+    offset += 4;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
 }
 
 static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -412,11 +468,15 @@ static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinf
 
 static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    gint offset = 1;
+    gint offset = 0;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_lock_sports_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 2;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_lock_time_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 4;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     guint8 declination_direction = tvb_get_guint8(tvb, offset);
     guint8 declination_deg = tvb_get_guint8(tvb, offset + 1);
     if (declination_direction == 0) {
@@ -425,58 +485,75 @@ static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pi
     else {
         proto_tree_add_string_format_value(tree, hf_ambit_personal_compass_declination, tvb, offset, 2, "Compass declination", "%s %f", declination_direction == 1 ? "E" : "W", 0.5*declination_deg);
     }
-    offset = 8;
-    proto_tree_add_item(tree, hf_ambit_personal_unit_system, tvb, offset, 8, ENC_LITTLE_ENDIAN);
-    offset = 19;
+    offset += 2;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
+    proto_tree_add_item(tree, hf_ambit_personal_unit_system, tvb, offset, 11, ENC_LITTLE_ENDIAN);
+    offset += 11;
     proto_tree_add_item(tree, hf_ambit_personal_coordinate_system, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 21;
+    offset += 1;
+    proto_tree_add_item(tree, hf_ambit_personal_language, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_map_orientation, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 24;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_gps_sync_time, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 25;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_time_format, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 26;
+    offset += 1;
     guint8 alarm_hour = tvb_get_guint8(tvb, offset);
     guint8 alarm_minute = tvb_get_guint8(tvb, offset + 1);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_alarm_time, tvb, offset, 2, "Alarm time", "%d:%d", alarm_hour, alarm_minute);
-    offset = 28;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_alarm_enable, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 31;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
     guint8 dual_hour = tvb_get_guint8(tvb, offset);
     guint8 dual_minute = tvb_get_guint8(tvb, offset + 1);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_dual_time, tvb, offset, 2, "Dual time", "%d:%d", dual_hour, dual_minute);
-    offset = 36;
+    offset += 2;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_date_format, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 40;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_tones, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 44;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 3);
+    offset += 3;
     proto_tree_add_item(tree, hf_ambit_personal_backlight_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 45;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_backlight_brightness, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 46;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_display_contrast, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 47;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_invert_display, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 48;
+    offset += 1;
     guint16 weight = tvb_get_letohs(tvb, offset);
     proto_tree_add_float(tree, hf_ambit_personal_weight, tvb, offset, 2, ((float)weight)/100);
-    offset = 50;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_birthyear, tvb, offset, 2, ENC_LITTLE_ENDIAN); 
-    offset = 52;
+    offset += 2;
     proto_tree_add_item(tree, hf_ambit_personal_max_hb, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 53;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_rest_hb, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 54;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_fitness_level, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 55;
+    offset += 1;
     guint8 sex = tvb_get_guint8(tvb, offset);
     proto_tree_add_string_format_value(tree, hf_ambit_personal_sex, tvb, offset, 1, "Is male", "%s", sex == 1 ? "true" : "false");
-    offset = 56;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_length, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 60;
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_alti_baro_profile, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-    offset = 62;
+    offset += 1;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+    offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_alti_baro_fused_alti, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
 }
 
 static gint dissect_ambit_log_header_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -559,8 +636,12 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 6);
-        offset += 6;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_alt_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
@@ -575,8 +656,10 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_temp_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-        offset += 8;
+        proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+        offset += 4;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
         proto_tree_add_item(tree, hf_ambit_log_header_battery_start, tvb, offset, 1, ENC_LITTLE_ENDIAN);
@@ -646,8 +729,11 @@ static gint dissect_ambit_log_count_get(tvbuff_t *tvb, packet_info *pinfo, proto
 
 static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 2);
-    proto_tree_add_item(tree, hf_ambit_log_count, tvb, 2, 2, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
+    proto_tree_add_item(tree, hf_ambit_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+    offset += 2;
 }
 
 static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -656,7 +742,9 @@ static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinf
 
 static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -665,7 +753,9 @@ static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo,
 
 static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -674,7 +764,9 @@ static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo,
 
 static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
-    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    gint offset = 0;
+    proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
 }
 
 static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -860,9 +952,15 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
-    if (offset + 6 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 6);
-    offset += 6;
+    if (offset + 1 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+    if (offset + 1 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+    if (offset + 4 >= length) return offset;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
@@ -884,9 +982,12 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_temp_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
-    if (offset + 8 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 8);
-    offset += 8;
+    if (offset + 4 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    offset += 4;
+    if (offset + 4 >= length) return offset;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    offset += 4;
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
@@ -902,7 +1003,7 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_distance_before_calib, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
-    if (header_1_len == 913) { /* Long header */
+    if (header_1_len >= 913) { /* Long header */
         if (offset + 24 >= length) return offset;
         dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
         offset += 24;
@@ -1069,7 +1170,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_temp, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
                 break;
               case 0x18:
-                proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_preassure, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
+                proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_pressure, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
                 break;
               case 0x19:
                 proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_vert_speed, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
@@ -1198,7 +1299,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 1;
             proto_tree_add_item(sample_tree, hf_ambit_log_altitude_source_altitude_offset, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
-            proto_tree_add_item(sample_tree, hf_ambit_log_altitude_source_preassure_offset, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            proto_tree_add_item(sample_tree, hf_ambit_log_altitude_source_pressure_offset, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
             if (offset < sample_len - 2) {
                 dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 11);
@@ -1411,6 +1512,149 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
     return 0;
 }
 
+static gint dissect_ambit_lock_status_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_lock_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_lock_set(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_lock_set_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit3_log_headers_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 18);
+}
+
+static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 6);
+}
+
+static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length)
+{
+    gint namelen = 0;
+    guint16 log_count = 0;
+    guint16 log_cntr = 0;
+    gint header_len = 0;
+    proto_item *logs_ti = NULL;
+    proto_tree *logs_tree = NULL;
+    proto_item *log_ti = NULL;
+    proto_tree *log_tree = NULL;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 10);
+    offset += 10;
+    log_count = tvb_get_letohs(tvb, offset);
+    proto_tree_add_item(tree, hf_ambit_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+    offset += 2;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
+    proto_tree_add_item(tree, hf_ambit_unsynced_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+    offset += 2;
+    logs_ti = proto_tree_add_text(tree, tvb, 0, 0, "Logs");
+    logs_tree = proto_item_add_subtree(logs_ti, ett_ambit3_log_headers);
+    while (offset + 2 < length) {
+        header_len = tvb_get_guint8(tvb, offset+1);
+        log_cntr++;
+        log_ti = proto_tree_add_text(logs_tree, tvb, offset, header_len + 2, "Header #%u", log_cntr);
+        log_tree = proto_item_add_subtree(log_ti, ett_ambit3_log_header);
+        dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 1);
+        offset += 1;
+        proto_tree_add_item(log_tree, hf_ambit_log_header_length, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        if (offset + header_len <= length) {
+            proto_tree_add_item(log_tree, hf_ambit_time, tvb, offset, 20, ENC_LITTLE_ENDIAN);
+            offset += 20;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_synced, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_data_address, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_data_next_addr, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 8);
+            offset += 8;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_hr_min, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_hr_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_hr_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_hr_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_hr_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 2);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_temp_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_temp_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_altitude_min, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_altitude_max, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_alt_min_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_alt_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_cadence_max, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_avg_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_max_speed, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 4);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_duration, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_ascent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_descent, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_ascent_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_descent_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_recovery, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_peak_effect, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            namelen = 0;
+            while (tvb_get_guint8(tvb, offset+namelen) != 0) {
+                namelen++;
+            }
+            proto_tree_add_item(log_tree, hf_ambit_log_header_activity_name, tvb, offset, namelen+1, ENC_LITTLE_ENDIAN);
+            offset += namelen + 1;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(log_tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 26);
+            offset += 26;
+        }
+    }
+}
+
 static gint
 dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
@@ -1422,7 +1666,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
     guint16 msg_count = tvb_get_letohs(tvb, 4);
     guint32 command = tvb_get_ntohl(tvb, 8);
     guint32 pkt_len = tvb_get_letohl(tvb, 16);
-    tvbuff_t *new_tvb = NULL, *next_tvb = NULL, *log_tvb = NULL;
+    tvbuff_t *new_tvb = NULL, *next_tvb = NULL, *log_tvb = NULL, *log_header_tvb = NULL;
     static guint32 fragments_start_frame;
     static guint16 fragments_offset;
     static guint16 fragments_data_len;
@@ -1433,6 +1677,9 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
     static guint32 current_log_start_frame = 0xffffffff;
     static guint32 log_after_end_of_use = 0xffffffff;
     static guint32 log_last_known_address;
+
+    static guint32 current_log_header_start_frame = 0xffffffff;
+    static guint32 current_log_header_end_found = 0;
 
     if (usbid == D_AMBIT_USBID) {
         if (msg_part == 0x5d) {
@@ -1453,8 +1700,8 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (msg_part == 0x5d && msg_count > 1) {
                 reassembly_entries[pinfo->fd->num].valid = 2;
                 reassembly_entries[pinfo->fd->num].command = command;
-                reassembly_entries[pinfo->fd->num].start_frame = pinfo->fd->num;
-                reassembly_entries[pinfo->fd->num].frame_count = msg_count;
+                reassembly_entries[pinfo->fd->num].frame_index = 0;
+                reassembly_entries[pinfo->fd->num].frame_total = msg_count;
                 reassembly_entries[pinfo->fd->num].size = pkt_len;
                 reassembly_entries[pinfo->fd->num].data = (unsigned char*)g_malloc(pkt_len);
                 fragments_start_frame = pinfo->fd->num;
@@ -1468,8 +1715,8 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                     //fragments_start_frame = pinfo->fd->num-msg_count;
                     reassembly_entries[pinfo->fd->num].valid = 2;
                     reassembly_entries[pinfo->fd->num].command = reassembly_entries[fragments_start_frame].command;
-                    reassembly_entries[pinfo->fd->num].start_frame = fragments_start_frame;
-                    reassembly_entries[pinfo->fd->num].frame_count = reassembly_entries[fragments_start_frame].frame_count;
+                    reassembly_entries[pinfo->fd->num].frame_index = msg_count;
+                    reassembly_entries[pinfo->fd->num].frame_total = reassembly_entries[fragments_start_frame].frame_total;
                     reassembly_entries[pinfo->fd->num].size = fragments_data_len;
                     reassembly_entries[pinfo->fd->num].data = reassembly_entries[fragments_start_frame].data;
                     tvb_memcpy(tvb, &(reassembly_entries[fragments_start_frame].data[fragments_offset]), data_offset, data_len);
@@ -1515,13 +1762,13 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
 
                         if (b == 'M' && c == 'E' && d == 'M') {
                             if (current_log_start_frame != 0xffffffff) {
-                                reassembly_entries[current_log_start_frame].log_entry = g_realloc(reassembly_entries[current_log_start_frame].log_entry, reassembly_entries[current_log_start_frame].log_entry_size + i);
-                                tvb_memcpy(tvb, &reassembly_entries[current_log_start_frame].log_entry[reassembly_entries[current_log_start_frame].log_entry_size], data_offset, i);
-                                reassembly_entries[current_log_start_frame].log_entry_size += i;
+                                reassembly_entries[current_log_start_frame].log.entry = g_realloc(reassembly_entries[current_log_start_frame].log.entry, reassembly_entries[current_log_start_frame].log.entry_size + i);
+                                tvb_memcpy(tvb, &reassembly_entries[current_log_start_frame].log.entry[reassembly_entries[current_log_start_frame].log.entry_size], data_offset, i);
+                                reassembly_entries[current_log_start_frame].log.entry_size += i;
                             }
-                            reassembly_entries[pinfo->fd->num].log_entry = (unsigned char*)g_malloc(data_len-i);
-                            tvb_memcpy(tvb, reassembly_entries[pinfo->fd->num].log_entry, data_offset+i, data_len-i);
-                            reassembly_entries[pinfo->fd->num].log_entry_size = data_len-i;
+                            reassembly_entries[pinfo->fd->num].log.entry = (unsigned char*)g_malloc(data_len-i);
+                            tvb_memcpy(tvb, reassembly_entries[pinfo->fd->num].log.entry, data_offset+i, data_len-i);
+                            reassembly_entries[pinfo->fd->num].log.entry_size = data_len-i;
                             current_log_start_frame = pinfo->fd->num;
                             break;
                         }
@@ -1530,20 +1777,66 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
 
                 if (i == data_len && current_log_start_frame != 0xffffffff) {
                     // No new PMEM found
-                    reassembly_entries[current_log_start_frame].log_entry = g_realloc(reassembly_entries[current_log_start_frame].log_entry, reassembly_entries[current_log_start_frame].log_entry_size + data_len);
-                    tvb_memcpy(tvb, &reassembly_entries[current_log_start_frame].log_entry[reassembly_entries[current_log_start_frame].log_entry_size], data_offset, data_len);
+                    reassembly_entries[current_log_start_frame].log.entry = g_realloc(reassembly_entries[current_log_start_frame].log.entry, reassembly_entries[current_log_start_frame].log.entry_size + data_len);
+                    tvb_memcpy(tvb, &reassembly_entries[current_log_start_frame].log.entry[reassembly_entries[current_log_start_frame].log.entry_size], data_offset, data_len);
 
-                    reassembly_entries[current_log_start_frame].log_entry_size += data_len;
+                    reassembly_entries[current_log_start_frame].log.entry_size += data_len;
                 }
 
                 // Increment address
                 log_last_known_address += data_len;
 
-                reassembly_entries[pinfo->fd->num].log_start_frame = current_log_start_frame;
+                reassembly_entries[pinfo->fd->num].log.start_frame = current_log_start_frame;
 
                 if (log_last_known_address >= log_after_end_of_use) {
                     // If we are after end of file, reset log entry!
                     current_log_start_frame = 0xffffffff;
+                }
+            }
+
+            // Handle dissection of Ambit3 log headers
+            if (command == 0x12000a00) {
+                if (msg_part == 0x5d) {
+                    // Check if this is the first packet of the last header chunk
+                    if (tvb_get_guint8(tvb, data_offset) == 0x00 &&
+                        tvb_get_guint8(tvb, data_offset+1) == 0x00 &&
+                        tvb_get_guint8(tvb, data_offset+2) == 0x00 &&
+                        tvb_get_guint8(tvb, data_offset+3) == 0x00 &&
+                        tvb_get_guint8(tvb, data_offset+4) == 0x01 &&
+                        tvb_get_guint8(tvb, data_offset+5) == 0x00) {
+                        current_log_header_end_found = 1;
+                    }
+
+                    // Adjust data pointers for extra address and length fields
+                    data_offset += 6;
+                    data_len -= 6;
+                }
+
+                // Look for start of entry (at SBEM0102)
+                if (tvb_get_guint8(tvb, data_offset) == 'S' &&
+                    tvb_get_guint8(tvb, data_offset+1) == 'B' &&
+                    tvb_get_guint8(tvb, data_offset+2) == 'E' &&
+                    tvb_get_guint8(tvb, data_offset+3) == 'M') {
+                    reassembly_entries[pinfo->fd->num].log_header.entry = (unsigned char*)g_malloc(data_len);
+                    tvb_memcpy(tvb, reassembly_entries[pinfo->fd->num].log_header.entry, data_offset, data_len);
+                    reassembly_entries[pinfo->fd->num].log_header.entry_size = data_len;
+                    current_log_header_start_frame = pinfo->fd->num;
+                }
+                else if (current_log_header_start_frame != 0xffffffff) {
+                    // Append to current entry
+                    reassembly_entries[current_log_header_start_frame].log_header.entry = g_realloc(reassembly_entries[current_log_header_start_frame].log_header.entry, reassembly_entries[current_log_header_start_frame].log_header.entry_size + data_len);
+                    tvb_memcpy(tvb, &reassembly_entries[current_log_header_start_frame].log_header.entry[reassembly_entries[current_log_header_start_frame].log_header.entry_size], data_offset, data_len);
+
+                    reassembly_entries[current_log_header_start_frame].log_header.entry_size += data_len;
+                }
+
+                reassembly_entries[pinfo->fd->num].log_header.start_frame = current_log_header_start_frame;
+
+                // If we have reached last packet in last chunk, reset "pointers"
+                if (reassembly_entries[pinfo->fd->num].frame_index + 1 == reassembly_entries[pinfo->fd->num].frame_total &&
+                    current_log_header_end_found == 1) {
+                    current_log_header_start_frame = 0xffffffff;
+                    current_log_header_end_found = 0;
                 }
             }
         }
@@ -1558,7 +1851,11 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
 
             ti = proto_tree_add_item(tree, proto_ambit, tvb, 0, len, ENC_NA);
             ambit_tree = proto_item_add_subtree(ti, ett_ambit);
-            offset = 2;
+            offset = 0;
+            proto_tree_add_item(ambit_tree, hf_ambit_usbid, tvb, offset, 1, ENC_NA);
+            offset += 1;
+            proto_tree_add_item(ambit_tree, hf_ambit_usblength, tvb, offset, 1, ENC_NA);
+            offset += 1;
             proto_tree_add_item(ambit_tree, hf_ambit_msgpart, tvb, offset, 1, ENC_BIG_ENDIAN);
             offset += 1;
             proto_tree_add_item(ambit_tree, hf_ambit_msglength, tvb, offset, 1, ENC_BIG_ENDIAN);
@@ -1575,6 +1872,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (msg_part == 0x5d) {
                 proto_tree_add_item(ambit_tree, hf_ambit_requestcmd, tvb, offset, 4, ENC_BIG_ENDIAN);
                 offset += 4;
+                proto_tree_add_item(ambit_tree, hf_ambit_pktformat, tvb, offset, 2, ENC_LITTLE_ENDIAN);
                 offset += 2;
                 proto_tree_add_item(ambit_tree, hf_ambit_pktseqno, tvb, offset, 2, ENC_LITTLE_ENDIAN);
                 offset += 2;
@@ -1587,22 +1885,28 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                 pkt_len = data_len;
                 col_set_str(pinfo->cinfo, COL_INFO, "");
             }
-            else if (reassembly_entries[pinfo->fd->num].start_frame + reassembly_entries[pinfo->fd->num].frame_count - 1 == pinfo->fd->num) {
+            else if (reassembly_entries[pinfo->fd->num].frame_index + 1 == reassembly_entries[pinfo->fd->num].frame_total) {
                 new_tvb = tvb_new_real_data(reassembly_entries[pinfo->fd->num].data, reassembly_entries[pinfo->fd->num].size, reassembly_entries[pinfo->fd->num].size);
                 //tvb_set_child_real_data_tvbuff(tvb, new_tvb);
                 add_new_data_source(pinfo, new_tvb, "Reassembled");
                 pkt_len = reassembly_entries[pinfo->fd->num].size;
 
-                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u) Reassembled", pinfo->fd->num-reassembly_entries[pinfo->fd->num].start_frame + 1, reassembly_entries[pinfo->fd->num].frame_count);
+                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u) Reassembled", reassembly_entries[pinfo->fd->num].frame_index + 1, reassembly_entries[pinfo->fd->num].frame_total);
 
-                if (reassembly_entries[pinfo->fd->num].log_start_frame != 0xffffffff &&
-                    reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry != NULL) {
-                    log_tvb = tvb_new_real_data(reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry, reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry_size, reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry_size);
+                if (reassembly_entries[pinfo->fd->num].log.start_frame != 0xffffffff &&
+                    reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry != NULL) {
+                    log_tvb = tvb_new_real_data(reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry, reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry_size, reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry_size);
                     add_new_data_source(pinfo, log_tvb, "Log");
+                }
+
+                if (reassembly_entries[pinfo->fd->num].log_header.start_frame != 0xffffffff &&
+                    reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry != NULL) {
+                    log_header_tvb = tvb_new_real_data(reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry, reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry_size, reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry_size);
+                    add_new_data_source(pinfo, log_header_tvb, "Log header");
                 }
             }
             else {
-                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u)", pinfo->fd->num-reassembly_entries[pinfo->fd->num].start_frame + 1, reassembly_entries[pinfo->fd->num].frame_count);
+                col_add_fstr(pinfo->cinfo, COL_INFO, " (#%u of #%u)", reassembly_entries[pinfo->fd->num].frame_index + 1, reassembly_entries[pinfo->fd->num].frame_total);
             }
 
             subdissector = find_subdissector(reassembly_entries[pinfo->fd->num].command);
@@ -1627,12 +1931,22 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             if (log_tvb != NULL) {
                 data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "Full log entry");
                 data_tree = proto_item_add_subtree(data_ti, ett_ambit_log_data);
-                dissect_ambit_log_data_content(log_tvb, pinfo, data_tree, data, 0, reassembly_entries[reassembly_entries[pinfo->fd->num].log_start_frame].log_entry_size);
+                dissect_ambit_log_data_content(log_tvb, pinfo, data_tree, data, 0, reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry_size);
+            }
+
+            if (log_header_tvb != NULL) {
+                data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "Full log headers");
+                data_tree = proto_item_add_subtree(data_ti, ett_ambit_log_data);
+                dissect_ambit3_log_headers_content(log_header_tvb, pinfo, data_tree, data, 0, reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry_size);
             }
 
             offset += data_len;
             proto_tree_add_item(ambit_tree, hf_ambit_payloadchksum, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
+
+            if (offset < 64) {
+                proto_tree_add_text(ambit_tree, tvb, offset, 64 - offset, "Padding");
+            }
         }
 
         return len;
@@ -1663,18 +1977,22 @@ proto_register_ambit(void)
           { "msg header checksum", "ambit.msgheaderchksum", FT_UINT16, BASE_HEX, NULL, 0x0, NULL, HFILL } },
         { &hf_ambit_requestcmd,
           { "Command", "ambit.command", FT_UINT32, BASE_HEX, NULL, 0x0, NULL, HFILL } },
+        { &hf_ambit_pktformat,
+          { "Packet format", "ambit.pktformat", FT_UINT16, BASE_DEC, NULL, 0x0, NULL, HFILL } },
         { &hf_ambit_pktseqno,
           { "Packet sequence no", "ambit.pktseqno", FT_UINT16, BASE_DEC, NULL, 0x0, NULL, HFILL } },
         { &hf_ambit_pktlen,
           { "Packet length", "ambit.pktlen", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_payloadchksum,
-          { "Paypload checksum", "ambit.payloadchksum", FT_UINT16, BASE_HEX, NULL, 0x0,NULL, HFILL } },
+          { "Payload checksum", "ambit.payloadchksum", FT_UINT16, BASE_HEX, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_date,
           { "Date", "ambit.date", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_time,
           { "Time", "ambit.time", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_charge,
           { "Charge", "ambit.charge", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_komposti_version,
+          { "Komposti version", "ambit.komposti", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_model,
           { "Model", "ambit.model", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_serial,
@@ -1683,6 +2001,8 @@ proto_register_ambit(void)
           { "FW version", "ambit.fwversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_hw_version,
           { "HW version", "ambit.hwversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_bsl_version,
+          { "BSL version", "ambit.bslversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_compass_declination,
           { "Compass declination", "ambit.personal.compass_declination", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_map_orientation,
@@ -1693,10 +2013,12 @@ proto_register_ambit(void)
           { "Date format", "ambit.personal.date_format", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_time_format,
           { "Time format", "ambit.personal.time_format", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
-        { &hf_ambit_personal_coordinate_system,
-          { "Coordinate system", "ambit.personal.coordinate_system", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_unit_system,
           { "Units", "ambit.personal.units", FT_BYTES, BASE_NONE, NULL, 0x0, NULL, HFILL } },
+        { &hf_ambit_personal_coordinate_system,
+          { "Coordinate system", "ambit.personal.coordinate_system", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_personal_language,
+          { "Language", "ambit.personal.language", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alarm_enable,
           { "Alarm enable", "ambit.personal.alarm_enable", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alarm_time,
@@ -1704,7 +2026,7 @@ proto_register_ambit(void)
         { &hf_ambit_personal_dual_time,
           { "Dual time", "ambit.personal.dual_time", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_gps_sync_time,
-          { "Sync time w. GPS", "ambit.personal.gps_sync_time", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+          { "Sync time with GPS", "ambit.personal.gps_sync_time", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alti_baro_fused_alti,
           { "Fused altitude", "ambit.personal.fused_alti", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_personal_alti_baro_profile,
@@ -1788,6 +2110,10 @@ proto_register_ambit(void)
           { "Sample count", "ambit.log_header.sample_count", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_energy,
           { "Energy consumption (kcal)", "ambit.log_header.energy_consumption", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_max,
+          { "Cadence max (rpm)", "ambit.log_header.cadence_max", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_avg,
+          { "Cadence avg (rpm)", "ambit.log_header.cadence_avg", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_speed_max_time,
           { "Time max speed (ms)", "ambit.log_header.speed_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_alt_max_time,
@@ -1802,6 +2128,8 @@ proto_register_ambit(void)
           { "Time max temperature (ms)", "ambit.log_header.temp_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_temp_min_time,
           { "Time min temperature (ms)", "ambit.log_header.temp_mintime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_cadence_max_time,
+          { "Time max cadence (ms)", "ambit.log_header.cadence_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_time_first_fix,
           { "Time of first fix", "ambit.log_header.time_first_fix", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_battery_start,
@@ -1810,12 +2138,16 @@ proto_register_ambit(void)
           { "Battery at end", "ambit.log_header.battery_stop", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_distance_before_calib,
           { "Distance before calibration", "ambit.log_header.distance_before_calib", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_synced,
+          { "Syncronized", "ambit.log_header.synced", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_header_more,
           { "More values", "ambit.log_header.more", FT_UINT32, BASE_HEX, VALS(log_header_more_vals), 0, NULL, HFILL } },
 
         { &hf_ambit_log_count,
           { "Log count", "ambit.log.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_unsynced_log_count,
+          { "Not synced log count", "ambit.log.unsynced.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_data_addr_frame_ref,
           { "In frame", "ambit.log_data.inframe", FT_FRAMENUM, BASE_NONE, NULL, 0, NULL, HFILL } },
@@ -1865,8 +2197,8 @@ proto_register_ambit(void)
           { "Energy consumption", "ambit.log_sample.periodic.energy", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_temp,
           { "Temperature", "ambit.log_sample.periodic.temp", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
-        { &hf_ambit_log_sample_periodic_preassure,
-          { "Preassure", "ambit.log_sample.periodic.preassure", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_sample_periodic_pressure,
+          { "Pressure", "ambit.log_sample.periodic.pressure", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_vert_speed,
           { "Vertical speed", "ambit.log_sample.periodic.vert_speed", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
@@ -1943,8 +2275,8 @@ proto_register_ambit(void)
           { "Type", "ambit.log_sample.altitude_source.type", FT_UINT8, BASE_HEX, VALS(log_samples_altitude_source_type_vals), 0x0,NULL, HFILL } },
         { &hf_ambit_log_altitude_source_altitude_offset,
           { "Altitude offset", "ambit.log_sample.altitude_source.alt_offset", FT_INT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
-        { &hf_ambit_log_altitude_source_preassure_offset,
-          { "Preassure", "ambit.log_sample.altitude_source.preas_offset", FT_INT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_altitude_source_pressure_offset,
+          { "Pressure", "ambit.log_sample.altitude_source.pres_offset", FT_INT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_ibi,
           { "IBI entry", "ambit.log_sample.ibi", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
@@ -1956,6 +2288,8 @@ proto_register_ambit(void)
         &ett_ambit_log_data,
         &ett_ambit_log_samples,
         &ett_ambit_log_sample,
+        &ett_ambit3_log_headers,
+        &ett_ambit3_log_header
     };
 
     proto_ambit = proto_register_protocol (

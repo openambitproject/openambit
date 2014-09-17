@@ -175,6 +175,14 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
         }
         case ambit_log_sample_type_lapinfo:
             switch (sample->u.lapinfo.event_type) {
+            case 0x00: /* autolap = 5 */
+            {
+                QVariantMap tmpMap;
+                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+                tmpMap.insert("Type", 5);
+                marksContent.append(tmpMap);
+                break;
+            }
             case 0x01: /* manual = 0 */
             case 0x16: /* interval = 0 */
             {
@@ -233,7 +241,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("ActivityID", logEntry->logEntry->header.activity_type);
     content.insert("AscentAltitude", (double)logEntry->logEntry->header.ascent);
     content.insert("AscentTime", (double)logEntry->logEntry->header.ascent_time/1000.0);
-    content.insert("AvgCadence", QVariant::Invalid);
+    content.insert("AvgCadence", logEntry->logEntry->header.cadence_avg);
     content.insert("AvgHR", logEntry->logEntry->header.heartrate_avg);
     content.insert("AvgSpeed", (double)logEntry->logEntry->header.speed_avg/3600.0);
     content.insert("DescentAltitude", (double)logEntry->logEntry->header.descent);
@@ -261,11 +269,15 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     if (logEntry->logEntry->header.altitude_min >= -1000 && logEntry->logEntry->header.altitude_min <= 10000)
         content.insert("LowAltitude", (double)logEntry->logEntry->header.altitude_min);
     content.insert("Marks", marksContent);
-    content.insert("MaxCadence", QVariant::Invalid);
+    content.insert("MaxCadence", logEntry->logEntry->header.cadence_max);
     content.insert("MaxSpeed", (double)logEntry->logEntry->header.speed_max/3600.0);
-    content.insert("MaxTemp", (double)logEntry->logEntry->header.temperature_max/10.0);
+    if (logEntry->logEntry->header.temperature_max >= -1000 && logEntry->logEntry->header.temperature_max <= 1000) {
+        content.insert("MaxTemp", (double)logEntry->logEntry->header.temperature_max/10.0);
+    }
     content.insert("MinHR", logEntry->logEntry->header.heartrate_min);
-    content.insert("MinTemp", (double)logEntry->logEntry->header.temperature_min/10.0);
+    if (logEntry->logEntry->header.temperature_min >= -1000 && logEntry->logEntry->header.temperature_min <= 1000) {
+        content.insert("MinTemp", (double)logEntry->logEntry->header.temperature_min/10.0);
+    }
     content.insert("PeakHR", logEntry->logEntry->header.heartrate_max);
     content.insert("PeakTrainingEffect", (double)logEntry->logEntry->header.peak_training_effect/10.0);
     content.insert("RecoveryTime", (double)logEntry->logEntry->header.recovery_time/1000.0);
@@ -360,7 +372,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_temperature:
-            output.insert("Temperature", (double)value->u.temperature/10.0);
+            if (value->u.temperature >= -1000 && value->u.temperature <= 1000) {
+                output.insert("Temperature", (double)value->u.temperature/10.0);
+            }
             break;
         case ambit_log_sample_periodic_type_charge:
             if (value->u.charge <= 100) {
