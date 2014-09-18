@@ -696,12 +696,12 @@ static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
 static int find_known_device(const ambit_device_info_t *info)
 {
     bool found = false;
-    int i;
+    int i = -1;
     int count = sizeof(known_devices) / sizeof(*known_devices);
 
     if (!info) return -1;
 
-    for (i = 0; !found && i < count; ++i) {
+    while (!found && ++i < count) {
         found = (   known_devices[i].vid == info->vendor_id
                  && known_devices[i].pid == info->product_id
                  && 0 == strcmp(known_devices[i].name, info->name)
@@ -710,7 +710,7 @@ static int find_known_device(const ambit_device_info_t *info)
                      <= version_number(info->fw_version)));
     }
 
-    return (i < count ? i : -1);
+    return (found ? i : -1);
 }
 
 static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
