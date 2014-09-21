@@ -363,7 +363,11 @@ static void dissect_ambit_add_unknown(tvbuff_t *tvb, packet_info *pinfo, proto_t
 {
     proto_item *unknown_item = NULL;
     unknown_item = proto_tree_add_item(tree, hf_ambit_unknown, tvb, offset, len, ENC_LITTLE_ENDIAN);
+#if VERSION_MAJOR >= 1 && VERSION_MINOR >= 11
+    /* TODO port to new expert info API */
+#else
     expert_add_info_format(pinfo, unknown_item, PI_UNDECODED, PI_WARN, "Not dissected yet");
+#endif
 }
 
 static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
