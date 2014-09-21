@@ -171,7 +171,13 @@ void MainWindow::hideEvent(QHideEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (!sysTraySupported() || forceClose) {
+    //check if there is a settings for running in background
+    settings.beginGroup("generalSettings");
+    bool RunInBg;
+    RunInBg = settings.value("runningBackground", true).toBool();
+    settings.endGroup();
+
+    if (!sysTraySupported() || forceClose || !RunInBg) {
         trayIcon->setVisible(false);
         event->accept();
     }

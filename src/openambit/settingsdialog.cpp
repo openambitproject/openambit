@@ -69,6 +69,7 @@ void SettingsDialog::readSettings()
 {
     settings.beginGroup("generalSettings");
     ui->checkBoxSkipBetaCheck->setChecked(settings.value("skipBetaCheck", false).toBool());
+    ui->checkBoxRunningBackground->setChecked(settings.value("runningBackground", true).toBool());
     settings.endGroup();
 
     settings.beginGroup("syncSettings");
@@ -89,6 +90,7 @@ void SettingsDialog::writeSettings()
 {
     settings.beginGroup("generalSettings");
     settings.setValue("skipBetaCheck", ui->checkBoxSkipBetaCheck->isChecked());
+    settings.setValue("runningBackground", ui->checkBoxRunningBackground->isChecked());
     settings.endGroup();
 
     settings.beginGroup("syncSettings");
