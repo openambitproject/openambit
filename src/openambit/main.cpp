@@ -19,6 +19,7 @@
  * Contributors:
  *
  */
+#include <unistd.h>
 #include "mainwindow.h"
 #include <QSettings>
 
@@ -26,6 +27,13 @@
 
 int main(int argc, char *argv[])
 {
+    // Fork for background running
+    if ( fork() > 0 ) {
+	// Exit the parent process
+	return 0;
+    }
+    // Keep running the child
+
     SingleApplication a(argc, argv, "openambit_single_application_lock");
 
     if (a.isRunning()) {
