@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
 	// Exit the parent process
 	return 0;
     }
-    // Keep running the child
+    // Set the child to the new process group leader
+    setsid();
 
     SingleApplication a(argc, argv, "openambit_single_application_lock");
 
