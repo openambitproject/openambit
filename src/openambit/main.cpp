@@ -27,6 +27,9 @@
 
 int main(int argc, char *argv[])
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    // Windows
+#else
     // Fork for background running
     if ( fork() > 0 ) {
 	// Exit the parent process
@@ -34,6 +37,7 @@ int main(int argc, char *argv[])
     }
     // Set the child to the new process group leader
     setsid();
+#endif
 
     SingleApplication a(argc, argv, "openambit_single_application_lock");
 
