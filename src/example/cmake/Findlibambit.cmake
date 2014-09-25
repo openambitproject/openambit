@@ -1,0 +1,1 @@
+../../openambit/cmake/Findlibambit.cmake

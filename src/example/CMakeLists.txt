@@ -1,9 +1,19 @@
+cmake_minimum_required(VERSION 2.8.5)
+project (EXAMPLE)
+
+# Where to lookup modules
+set(CMAKE_MODULE_PATH "${EXAMPLE_SOURCE_DIR}/cmake")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+
+find_package(libambit REQUIRED)
+
 include_directories(
-  ${OPENAMBIT_SOURCE_DIR}/libambit
+  ${LIBAMBIT_INCLUDE_DIR}
 )
 
 link_directories(
-  ${OPENAMBIT_BINARY_DIR}/libambit
+  ${LIBAMBIT_LIBS_DIR}
 )
 
 add_executable(
@@ -11,5 +21,5 @@ add_executable(
 )
 
 target_link_libraries(
-  ambitconsole ambit
+  ambitconsole ${LIBAMBIT_LIBS}
 )
