@@ -25,3 +25,19 @@ if [ "$DO_INSTALL" == "1" ]; then
     echo "------installing openambit------"
     sudo make install
 fi
+
+if [ "$BUILD_EXTRAS" == "1" ]; then
+    cd $SOURCE_LOCATION
+    echo "------building example------"
+    mkdir -p example-build
+    cd example-build
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../src/example
+    make -j$CORES
+
+    cd $SOURCE_LOCATION
+    echo "------building wireshark dissector------"
+    mkdir -p dissector-build
+    cd dissector-build
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../wireshark_dissector
+    make -j$CORES
+fi
