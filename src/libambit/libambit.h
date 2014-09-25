@@ -367,6 +367,7 @@ void libambit_free_enumeration(ambit_device_info_t *devices);
  */
 ambit_object_t * libambit_new(const ambit_device_info_t *device);
 
+#ifdef ENABLE_LIBUDEV
 /** \brief Create an Ambit object from a \a devname
  *
  *  Convenience function for when the path name for a clock's device
@@ -382,6 +383,14 @@ ambit_object_t * libambit_new_from_devname(const char *devname);
  *  udev(7) rules.
  */
 ambit_object_t * libambit_new_from_syspath(const char *syspath);
+#else  /* !defined (ENABLE_LIBUDEV) */
+/** \brief Create an Ambit object from a \a pathname
+ *
+ *  Convenience function for when the path name for a clock is known.
+ *  These path names are platform dependent.
+ */
+ambit_object_t * libambit_new_from_pathname(const char *pathname);
+#endif  /* ENABLE_LIBUDEV */
 
 /**
  * Close open Ambit object

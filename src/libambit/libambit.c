@@ -22,12 +22,15 @@
 #include "libambit.h"
 #include "libambit_int.h"
 
+#ifdef ENABLE_LIBUDEV
 #include <libudev.h>
+#endif
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,7 +60,11 @@ struct ambit_known_device_s {
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static int lock_log(ambit_object_t *object, bool lock);
 static uint32_t version_number(const uint8_t version[4]);
+#ifdef ENABLE_LIBUDEV
 static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev);
+#else
+static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
+#endif
 
 /*
  * Static variables
@@ -89,6 +96,7 @@ ambit_device_info_t * libambit_enumerate(void)
 {
     ambit_device_info_t *devices = NULL;
 
+#ifdef ENABLE_LIBUDEV
     struct udev *ctx;
     struct udev_list_entry *ent;
     struct udev_enumerate  *loc;
@@ -126,6 +134,31 @@ ambit_device_info_t * libambit_enumerate(void)
     }
     udev_enumerate_unref(loc);
     udev_unref(ctx);
+#else   /* !defined (ENABLE_LIBUDEV) */
+    struct hid_device_info *devs = hid_enumerate(0, 0);
+    struct hid_device_info *current;
+
+    if (!devs) {
+      LOG_ERROR("HID: something went wrong");
+      return NULL;
+    }
+
+    current = devs;
+    while (current) {
+        ambit_device_info_t *tmp = ambit_device_info_new(current);
+
+        if (tmp) {
+            if (devices) {
+                tmp->next = devices;
+            }
+            else {
+                devices = tmp;
+            }
+        }
+        current = current->next;
+    }
+    hid_free_enumeration(devs);
+#endif  /* ENABLE_LIBUDEV */
 
     return devices;
 }
@@ -169,6 +202,7 @@ ambit_object_t * libambit_new(const ambit_device_info_t *device)
     return object;
 }
 
+#ifdef ENABLE_LIBUDEV
 ambit_object_t * libambit_new_from_devname(const char *devname)
 {
     ambit_object_t *object = NULL;
@@ -273,6 +307,31 @@ ambit_object_t * libambit_new_from_syspath(const char *syspath)
 
     return object;
 }
+#else   /* !defined (ENABLE_LIBUDEV) */
+ambit_object_t * libambit_new_from_pathname(const char* pathname)
+{
+    ambit_object_t *object = NULL;
+    ambit_device_info_t *info;
+    ambit_device_info_t *current;
+
+    if (!pathname) {
+        LOG_ERROR("%s", strerror(EINVAL));
+        return NULL;
+    }
+
+    info = libambit_enumerate();
+    current = info;
+    while (!object && current) {
+        if (0 == strcmp(pathname, current->path)) {
+            object = libambit_new(current);
+        }
+        current = current->next;
+    }
+    libambit_free_enumeration(info);
+
+    return object;
+}
+#endif  /* ENABLE_LIBUDEV */
 
 void libambit_close(ambit_object_t *object)
 {
@@ -669,11 +728,19 @@ static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
            version[0], version[1], (version[2] << 0) | (version[3] << 8));
 }
 
+#ifdef ENABLE_LIBUDEV
 static inline bool is_hidraw(struct udev_device *dev)
+#else
+static inline bool is_hidraw(const struct hid_device_info *dev)
+#endif
 {
   return (   dev
+#ifdef ENABLE_LIBUDEV
           && udev_device_get_subsystem(dev)
           && 0 == strcmp("hidraw", udev_device_get_subsystem(dev)));
+#else
+          && dev->path);
+#endif
 }
 
 static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
@@ -713,17 +780,27 @@ static int find_known_device(const ambit_device_info_t *info)
     return (found ? i : -1);
 }
 
+#ifdef ENABLE_LIBUDEV
 static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
+#else   /* !defined (ENABLE_LIBUDEV) */
+static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev)
+#endif
 {
     ambit_device_info_t *device = NULL;
+#ifdef ENABLE_LIBUDEV
     struct udev_device  *ancestor;
+#endif
 
     const char *dev_path;
+#ifdef ENABLE_LIBUDEV
     const char *id;
-    const char *name;
-    const char *uniq;
+#endif
+    const char *name = NULL;
+    const char *uniq = NULL;
 
+#ifdef ENABLE_LIB_UDEV
     uint16_t bus;
+#endif
     uint16_t vid;
     uint16_t pid;
 
@@ -734,6 +811,7 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
         return NULL;
     }
 
+#ifdef ENABLE_LIBUDEV
     ancestor = udev_device_get_parent_with_subsystem_devtype(dev, "hid", NULL);
     if (!ancestor) {
         LOG_ERROR("hidraw device w/o hid parent device");
@@ -756,6 +834,11 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
         LOG_ERROR("cannot parse HID ID (%s): %s", id, strerror(errno));
         return NULL;
     }
+#else   /* !defined (ENABLE_LIBUDEV) */
+    dev_path = dev->path;
+    vid = dev->vendor_id;
+    pid = dev->product_id;
+#endif  /* ENABLE_LIBUDEV */
 
     if (!is_known_vid_pid(vid, pid)) {
         LOG_WARNING("unknown device (VID/PID: %04x/%04x)", vid, pid);
@@ -775,6 +858,7 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
     device->vendor_id  = vid;
     device->product_id = pid;
 
+#ifdef ENABLE_LIBUDEV
     name = udev_device_get_property_value(ancestor, "HID_NAME");
     if (name) {
         strncpy(device->name, name, LIBAMBIT_PRODUCT_NAME_LENGTH);
@@ -788,6 +872,47 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
     LOG_INFO("udev : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
              device->path, device->name, device->serial,
              device->vendor_id, device->product_id);
+#else   /* !defined (ENABLE_LIBUDEV) */
+    if (dev->product_string) {
+        size_t len = wcstombs(NULL, dev->product_string, 0);
+
+        if ((size_t) -1 != len) {
+            char  *s = (char *) malloc((len + 1) * sizeof(char));
+            size_t n = wcslen(dev->product_string) + 1;
+
+            if (s) {
+                do {
+                    len = wcstombs(s, dev->product_string, --n);
+                    s[len] = '\0';
+                } while (len > LIBAMBIT_PRODUCT_NAME_LENGTH && 0 < n);
+            }
+            name = s;
+            strncpy(device->name, name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+        }
+    }
+
+    if (dev->serial_number) {
+        size_t len = wcstombs(NULL, dev->serial_number, 0);
+
+        if ((size_t) -1 != len) {
+            char  *s = (char *) malloc((len + 1) * sizeof(char));
+            size_t n = wcslen(dev->serial_number) + 1;
+
+            if (s) {
+                do {
+                    len = wcstombs(s, dev->serial_number, --n);
+                    s[len] = '\0';
+                } while (len > LIBAMBIT_SERIAL_LENGTH && 0 < n);
+            }
+            uniq = s;
+            strncpy(device->serial, uniq, LIBAMBIT_SERIAL_LENGTH);
+        }
+    }
+
+    LOG_INFO("hid  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
+             device->path, device->name, device->serial,
+             device->vendor_id, device->product_id);
+#endif  /* ENABLE_LIBUDEV */
 
     hid = hid_open_path(device->path);
     if (hid) {
@@ -847,6 +972,13 @@ static ambit_device_info_t * ambit_device_info_new(struct udev_device *dev)
             close(fd);
         }
     }
+
+#ifdef ENABLE_LIBUDEV
+    /* nothing to do */
+#else
+    if (name) free((char *) name);
+    if (uniq) free((char *) uniq);
+#endif
 
     return device;
 }
