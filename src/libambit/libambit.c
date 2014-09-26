@@ -151,6 +151,10 @@ ambit_object_t * libambit_new(const ambit_device_info_t *device)
             }
         }
     }
+    if (!object) {
+        free((char *) path);
+    }
+
     return object;
 }
 
