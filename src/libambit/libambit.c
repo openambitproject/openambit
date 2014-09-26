@@ -686,7 +686,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
         }
     }
 
-    LOG_INFO("hid  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
+    LOG_INFO("HID  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
              device->path, device->name, device->serial,
              device->vendor_id, device->product_id);
 
@@ -718,7 +718,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
             version_string(fw_version, device->fw_version);
             version_string(hw_version, device->hw_version);
 
-            LOG_INFO("ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
+            LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
                      "nick: %s, F/W: %s, H/W: %s, supported: %s)",
                      device->path, device->name, device->serial,
                      device->vendor_id, device->product_id,
