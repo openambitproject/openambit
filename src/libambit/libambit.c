@@ -573,12 +573,6 @@ static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
            version[0], version[1], (version[2] << 0) | (version[3] << 8));
 }
 
-static inline bool is_hidraw(const struct hid_device_info *dev)
-{
-  return (   dev
-          && dev->path);
-}
-
 static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
 {
     bool found = false;
@@ -629,7 +623,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 
     hid_device *hid;
 
-    if (!is_hidraw(dev)) {
+    if (!dev || !dev->path) {
         LOG_ERROR("internal error: expecting hidraw device");
         return NULL;
     }
