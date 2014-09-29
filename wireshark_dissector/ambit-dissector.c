@@ -61,6 +61,10 @@ static gint dissect_ambit_lock_status_get(tvbuff_t *tvb, packet_info *pinfo, pro
 static gint dissect_ambit_lock_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_lock_set(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_lock_set_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_gps_data_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_gps_data_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit_data_write_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 
 static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
@@ -240,6 +244,8 @@ static int hf_ambit_log_altitude_source_pressure_offset = -1;
 
 static int hf_ambit_log_ibi = -1;
 
+static int hf_ambit_gps_data_head = -1;
+
 static gint ett_ambit = -1;
 static gint ett_ambit_data = -1;
 static gint ett_ambit_log_data = -1;
@@ -329,6 +335,10 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x0b0a0a00, "Log header step reply", dissect_ambit_log_header_step_reply },
     { 0x0b0b0500, "Get log header", dissect_ambit_log_header_get },
     { 0x0b0b0a00, "Log header reply", dissect_ambit_log_header_reply },
+    { 0x0b150500, "GPS data peek request", dissect_ambit_gps_data_peek_get },
+    { 0x0b150a00, "GPS data peek reply", dissect_ambit_gps_data_peek_reply },
+    { 0x0b160500, "Data write", dissect_ambit_data_write },
+    { 0x0b160a00, "Data write reply", dissect_ambit_data_write_reply },
     { 0x0b170500, "Get log data", dissect_ambit_log_data_get },
     { 0x0b170a00, "Log data reply", dissect_ambit_log_data_reply },
     { 0x0b190500, "Get lock status", dissect_ambit_lock_status_get },
@@ -1532,6 +1542,29 @@ static gint dissect_ambit_lock_set_reply(tvbuff_t *tvb, packet_info *pinfo, prot
 {
 }
 
+static gint dissect_ambit_gps_data_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
+static gint dissect_ambit_gps_data_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    proto_tree_add_item(tree, hf_ambit_gps_data_head, tvb, 0, 9, ENC_LITTLE_ENDIAN);
+}
+
+static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    guint32 length = tvb_get_letohl(tvb, 4);
+
+    proto_tree_add_item(tree, hf_ambit_log_data_address, tvb, 0, 4, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ambit_log_data_length, tvb, 4, 4, ENC_LITTLE_ENDIAN);
+
+    proto_tree_add_text(tree, tvb, 8, length, "Payload");
+}
+
+static gint dissect_ambit_data_write_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+}
+
 static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
 }
@@ -2284,6 +2317,9 @@ proto_register_ambit(void)
 
         { &hf_ambit_log_ibi,
           { "IBI entry", "ambit.log_sample.ibi", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_gps_data_head,
+          { "Current GPS position data version", "ambit.gps.data.head", FT_BYTES, BASE_NONE, NULL, 0x0, NULL, HFILL } },
     };
 
     static gint *ett[] = {
