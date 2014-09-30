@@ -34,7 +34,6 @@ public:
 
     LogEntry& operator=(const LogEntry &rhs);
 
-    QString toHtml();
     bool isUploaded();
 
     QString device;

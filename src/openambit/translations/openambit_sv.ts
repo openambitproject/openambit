@@ -68,60 +68,67 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>LogEntry</name>
     <message>
+        <source>Device</source>
+        <translation type="obsolete">Enhet</translation>
+    </message>
+</context>
+<context>
+    <name>LogView</name>
+    <message>
         <source>see on movescount.com</source>
-        <translation type="unfinished"></translation>
+        <translation>se på movescount.com</translation>
     </message>
     <message>
         <source>Not uploaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Ej uppladdad</translation>
     </message>
     <message>
         <source>Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Detaljer</translation>
     </message>
     <message>
         <source>Duration: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Tid: %1</translation>
     </message>
     <message>
         <source>Distance: %1 m</source>
-        <translation type="unfinished"></translation>
+        <translation>Sträcka: %1 m</translation>
     </message>
     <message>
         <source>Training values</source>
-        <translation type="unfinished"></translation>
+        <translation>Träningsdetaljer</translation>
     </message>
     <message>
         <source>Avg HR: %1 bpm</source>
-        <translation type="unfinished"></translation>
+        <translation>Snittpuls: %1 slag/min</translation>
     </message>
     <message>
         <source>Max HR: %1 bpm</source>
-        <translation type="unfinished"></translation>
+        <translation>Maxpuls: %1 slag/min</translation>
     </message>
     <message>
         <source>Min HR: %1 bpm</source>
-        <translation type="unfinished"></translation>
+        <translation>Minpuls: %1 slag/min</translation>
     </message>
     <message>
         <source>PTE: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>PTE: %1</translation>
     </message>
     <message>
         <source>Device</source>
-        <translation type="unfinished">Enhet</translation>
+        <translation>Enhet</translation>
     </message>
     <message>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Modell: %1</translation>
     </message>
     <message>
         <source>Variant: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Variant: %1</translation>
     </message>
     <message>
         <source>Serial: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Serienummer: %1</translation>
     </message>
 </context>
 <context>

@@ -38,6 +38,7 @@ set ( openambit_SRCS
   devicemanager.cpp
   logentry.cpp
   logstore.cpp
+  logview.cpp
   main.cpp
   mainwindow.cpp
   settings.cpp
@@ -60,6 +61,7 @@ set ( openambit_MOCS
   confirmbetadialog.h
   devicemanager.h
   logstore.h
+  logview.h
   mainwindow.h
   settings.h
   settingsdialog.h

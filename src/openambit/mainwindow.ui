@@ -30,7 +30,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextBrowser" name="logDetail">
+     <widget class="LogView" name="logDetail">
       <property name="openExternalLinks">
        <bool>true</bool>
       </property>
