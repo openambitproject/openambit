@@ -22,8 +22,12 @@
 #include <unistd.h>
 #include "mainwindow.h"
 #include <QSettings>
+#include <QTranslator>
+#include <QLibraryInfo>
 
 #include "single_application.h"
+
+static void initTranslations(void);
 
 int main(int argc, char *argv[])
 {
@@ -51,6 +55,18 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Openambit");
     QCoreApplication::setApplicationName("Openambit");
 
+    // Handle forced localisation / translation
+    Q_FOREACH(QString argu, a.arguments()) {
+        const static QString localeParam = "-locale:";
+        if (argu.startsWith(localeParam)) {
+           QLocale::setDefault(QLocale(argu.mid(sizeof(localeParam))));
+           break;
+        }
+    }
+
+    // Initialize translations
+    initTranslations();
+
     MainWindow w;
 
     // Connect single application message bus
@@ -59,4 +75,26 @@ int main(int argc, char *argv[])
     w.show();
     
     return a.exec();
+}
+
+static void initTranslations(void)
+{
+    QLocale locale;
+    QTranslator *qtTranslator = new QTranslator();
+    qtTranslator->load("qt_" + locale.name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    if (qtTranslator->isEmpty()) {
+        delete qtTranslator;
+    }
+    else {
+        qApp->installTranslator(qtTranslator);
+    }
+
+    QTranslator *openambitTranslator = new QTranslator();
+    openambitTranslator->load(":/translations/openambit_" + locale.name());
+    if (openambitTranslator->isEmpty()) {
+        delete openambitTranslator;
+    }
+    else {
+        qApp->installTranslator(openambitTranslator);
+    }
 }

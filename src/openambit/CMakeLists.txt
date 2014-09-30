@@ -34,22 +34,22 @@ set ( openambit_HDRS
 )
 
 set ( openambit_SRCS
+  confirmbetadialog.cpp
+  devicemanager.cpp
+  logentry.cpp
+  logstore.cpp
   main.cpp
   mainwindow.cpp
-  devicemanager.cpp
-  settingsdialog.cpp
   settings.cpp
-  logstore.cpp
-  logentry.cpp
-  udevlistener.cpp
-  confirmbetadialog.cpp
+  settingsdialog.cpp
   single_application.cpp
+  udevlistener.cpp
 )
 
 set ( openambit_UIS
+  confirmbetadialog.ui
   mainwindow.ui
   settingsdialog.ui
-  confirmbetadialog.ui
 )
 
 set ( openambit_RSCS
@@ -57,15 +57,17 @@ set ( openambit_RSCS
 )
 
 set ( openambit_MOCS
-  mainwindow.h
-  devicemanager.h
-  settingsdialog.h
-  settings.h
-  logstore.h
-  udevlistener.h
   confirmbetadialog.h
+  devicemanager.h
+  logstore.h
+  mainwindow.h
+  settings.h
+  settingsdialog.h
   single_application.h
+  udevlistener.h
 )
+
+set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_HDRS} ${openambit_MOCS})
 
 set ( APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png )
 
@@ -76,13 +78,38 @@ mark_as_advanced ( CMAKE_INSTALL_UDEVRULESDIR )
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/movescount")
 
+######### Translations
+file (GLOB TRANSLATIONS_FILES translations/*.ts)
+
+option (UPDATE_TRANSLATIONS "Update source translation translations/*.ts")
+if (UPDATE_TRANSLATIONS)
+  qt4_create_translation(QM_FILES ${FILES_TO_TRANSLATE} ${TRANSLATIONS_FILES})
+else (UPDATE_TRANSLATIONS)
+  qt4_add_translation(QM_FILES ${TRANSLATIONS_FILES})
+endif (UPDATE_TRANSLATIONS)
+
+# Create translations QRC file - ts.qrc
+set(TRANSLATIONS_QRC "${CMAKE_CURRENT_BINARY_DIR}/ts.qrc")
+file(WRITE ${TRANSLATIONS_QRC} "<RCC>\n\t<qresource prefix=\"/translations\">")
+foreach(QM_FILE ${QM_FILES})
+    get_filename_component(QM_FILE_NAME ${QM_FILE} NAME)
+    file(APPEND ${TRANSLATIONS_QRC} "\n\t\t<file alias=\"${QM_FILE_NAME}\">${QM_FILE_NAME}</file>")
+endforeach()
+file(APPEND ${TRANSLATIONS_QRC} "\n\t</qresource>\n</RCC>")
+list(APPEND openambit_RSCS ${TRANSLATIONS_QRC})
+
+# prevent the generated files from being deleted during make clean
+set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM true)
+
+######### Translations
+
 QT4_WRAP_UI(UIS ${openambit_UIS})
 QT4_ADD_RESOURCES(RSCS ${openambit_RSCS})
 QT4_WRAP_CPP(MOCS ${openambit_MOCS})
 
 add_definitions( -DAPP_VERSION="${OPENAMBIT_VERSION}" )
 
-add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
+add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${MOCS} )
 
 target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${UDEV_LIBS} ${ZLIB_LIBRARY} ${QJSON_LIBRARIES} )
 
@@ -96,3 +123,4 @@ install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
 install ( FILES ${APP_ICON}
           DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
           RENAME openambit.png )
+
