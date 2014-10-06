@@ -5,11 +5,11 @@
     <name>ConfirmBetaDialog</name>
     <message>
         <source>Openambit: Disclaimer</source>
-        <translation type="unfinished">Openambit: Disclaimer</translation>
+        <translation>Openambit: Disclaimer</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again, I really want to use Openambit</source>
-        <translation type="unfinished">Nicht nochmal fragen, ich möchte Openambit wirklich benutzen</translation>
+        <translation>Nicht nochmal fragen, ich möchte Openambit wirklich benutzen</translation>
     </message>
     <message>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -31,7 +31,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Thanks &lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;Courier New,courier&apos;; color:#008000;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;Courier New,courier&apos;; color:#008000;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -56,205 +56,205 @@ p, li { white-space: pre-wrap; }
     <name>DeviceManager</name>
     <message>
         <source>Reading personal settings</source>
-        <translation type="unfinished">Lese persönliche Einstellungen</translation>
+        <translation>Lese persönliche Einstellungen</translation>
     </message>
     <message>
         <source>Setting date/time</source>
-        <translation type="unfinished">Setze Datum und Zeit</translation>
+        <translation>Setze Datum und Zeit</translation>
     </message>
     <message>
         <source>Reading log files</source>
-        <translation type="unfinished">Lese Log-Dateien</translation>
+        <translation>Lese Log-Dateien</translation>
     </message>
     <message>
         <source>Fetching orbital data</source>
-        <translation type="unfinished">Hole Bahndaten</translation>
+        <translation>Hole Bahndaten</translation>
     </message>
     <message>
         <source>Writing orbital data</source>
-        <translation type="unfinished">Schreibe Bahndaten</translation>
+        <translation>Schreibe Bahndaten</translation>
     </message>
     <message>
         <source>Failed to get orbital data</source>
-        <translation type="unfinished">Fehler beim Holen der Bahndaten</translation>
+        <translation>Fehler beim Holen der Bahndaten</translation>
     </message>
     <message>
         <source>Downloading log %1 of %2</source>
-        <translation type="unfinished">Lade log %1 von %2 herunter</translation>
+        <translation>Lade log %1 von %2 herunter</translation>
     </message>
 </context>
 <context>
     <name>LogView</name>
     <message>
         <source>see on movescount.com</source>
-        <translation type="unfinished">auf Movescount.com ansehen</translation>
+        <translation>auf Movescount.com ansehen</translation>
     </message>
     <message>
         <source>Not uploaded yet</source>
-        <translation type="unfinished">Noch nicht hochgeladen</translation>
+        <translation>Noch nicht hochgeladen</translation>
     </message>
     <message>
         <source>Details</source>
-        <translation type="unfinished">Details</translation>
+        <translation>Details</translation>
     </message>
     <message>
         <source>Duration: %1</source>
-        <translation type="unfinished">Dauer: %1</translation>
+        <translation>Dauer: %1</translation>
     </message>
     <message>
         <source>Distance: %1 m</source>
-        <translation type="unfinished">Distanz: %1 m</translation>
+        <translation>Distanz: %1 m</translation>
     </message>
     <message>
         <source>Training values</source>
-        <translation type="unfinished">Trainingswerte</translation>
+        <translation>Trainingswerte</translation>
     </message>
     <message>
         <source>Avg HR: %1 bpm</source>
-        <translation type="unfinished">Durchschn. HR: %1 bpm</translation>
+        <translation>Durchschn. HR: %1 bpm</translation>
     </message>
     <message>
         <source>Max HR: %1 bpm</source>
-        <translation type="unfinished">Max HR: %1 bpm</translation>
+        <translation>Max HR: %1 bpm</translation>
     </message>
     <message>
         <source>Min HR: %1 bpm</source>
-        <translation type="unfinished">Min HR: %1 bpm</translation>
+        <translation>Min HR: %1 bpm</translation>
     </message>
     <message>
         <source>PTE: %1</source>
-        <translation type="unfinished">PTE: %1</translation>
+        <translation>PTE: %1</translation>
     </message>
     <message>
         <source>Device</source>
-        <translation type="unfinished">Gerät</translation>
+        <translation>Gerät</translation>
     </message>
     <message>
         <source>Name: %1</source>
-        <translation type="unfinished">Name: %1</translation>
+        <translation>Name: %1</translation>
     </message>
     <message>
         <source>Variant: %1</source>
-        <translation type="unfinished">Variante: %1</translation>
+        <translation>Variante: %1</translation>
     </message>
     <message>
         <source>Serial: %1</source>
-        <translation type="unfinished">Seriennummer: %1</translation>
+        <translation>Seriennummer: %1</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <source>Openambit</source>
-        <translation type="unfinished">Openambit</translation>
+        <translation>Openambit</translation>
     </message>
     <message>
         <source>Device</source>
-        <translation type="unfinished">Gerät</translation>
+        <translation>Gerät</translation>
     </message>
     <message>
         <source>No device detected</source>
-        <translation type="unfinished">Kein Gerät gefunden</translation>
+        <translation>Kein Gerät gefunden</translation>
     </message>
     <message>
         <source>Device not supported yet!</source>
-        <translation type="unfinished">Gerät noch nicht unterstützt!</translation>
+        <translation>Gerät noch nicht unterstützt!</translation>
     </message>
     <message>
         <source>Auth on &lt;a href=&quot;http://www.movescount.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;movescount.com&lt;/span&gt;&lt;/a&gt;!</source>
-        <translation type="unfinished">Authorisieren bei &lt;a href=&quot;http://www.movescount.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;movescount.com&lt;/span&gt;&lt;/a&gt;!</translation>
+        <translation>Authorisieren bei &lt;a href=&quot;http://www.movescount.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;movescount.com&lt;/span&gt;&lt;/a&gt;!</translation>
     </message>
     <message>
         <source>Charge:</source>
-        <translation type="unfinished">Ladestand:</translation>
+        <translation>Ladestand:</translation>
     </message>
     <message>
         <source>Resync all</source>
-        <translation type="unfinished">Alle nochmal synchronisieren</translation>
+        <translation>Alle nochmal synchronisieren</translation>
     </message>
     <message>
         <source>Sync now</source>
-        <translation type="unfinished">Jetzt synchronisieren</translation>
+        <translation>Jetzt synchronisieren</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation type="unfinished">&amp;Datei</translation>
+        <translation>&amp;Datei</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Hilfe</translation>
+        <translation>&amp;Hilfe</translation>
     </message>
     <message>
         <source>About Openambit...</source>
-        <translation type="unfinished">Über Openambit...</translation>
+        <translation>Über Openambit...</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation type="unfinished">B&amp;enden</translation>
+        <translation>B&amp;enden</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;Einstellungen</translation>
+        <translation>&amp;Einstellungen</translation>
     </message>
     <message>
         <source>Minimize</source>
-        <translation type="unfinished">Minimieren</translation>
+        <translation>Minimieren</translation>
     </message>
     <message>
         <source>Restore</source>
-        <translation type="unfinished">Wiederherstellen</translation>
+        <translation>Wiederherstellen</translation>
     </message>
     <message>
         <source>About %1</source>
-        <translation type="unfinished">Über %1</translation>
+        <translation>Über %1</translation>
     </message>
     <message>
         <source>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Version %2&lt;/b&gt;&lt;br /&gt;Using Qt %3</source>
-        <translation type="unfinished">&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Version %2&lt;/b&gt;&lt;br /&gt;Unter Verwendung von Qt %3</translation>
+        <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Version %2&lt;/b&gt;&lt;br /&gt;Unter Verwendung von Qt %3</translation>
     </message>
     <message>
         <source>Syncronization complete</source>
-        <translation type="unfinished">Synchronisierung fertig</translation>
+        <translation>Synchronisierung fertig</translation>
     </message>
     <message>
         <source>Syncronisation finished</source>
-        <translation type="unfinished">Synchronisierung beendet</translation>
+        <translation>Synchronisierung beendet</translation>
     </message>
     <message>
         <source>Syncronization failed</source>
-        <translation type="unfinished">Synchronisierung fehlgeschlagen</translation>
+        <translation>Synchronisierung fehlgeschlagen</translation>
     </message>
     <message>
         <source>Syncronisation failed</source>
-        <translation type="unfinished">Synchronisierung fehlgeschlagen</translation>
+        <translation>Synchronisierung fehlgeschlagen</translation>
     </message>
     <message>
         <source>Newer firmware exists (%1.%2.%3)</source>
-        <translation type="unfinished">Neuere Firmware verfügbar (%1.%2.%3)</translation>
+        <translation>Neuere Firmware verfügbar (%1.%2.%3)</translation>
     </message>
     <message>
         <source>Context menu</source>
-        <translation type="unfinished">Kontextmenü</translation>
+        <translation>Kontextmenü</translation>
     </message>
     <message>
         <source>Write Movescount file</source>
-        <translation type="unfinished">Schreibe Movescount-Datei</translation>
+        <translation>Schreibe Movescount-Datei</translation>
     </message>
     <message>
         <source>Syncronisation started</source>
-        <translation type="unfinished">Synchronisierung gestartet</translation>
+        <translation>Synchronisierung gestartet</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation type="unfinished">Die Datei ist keine Openambit-Version-1.0-Datei.</translation>
+        <translation>Die Datei ist keine Openambit-Version-1.0-Datei.</translation>
     </message>
     <message>
         <source>%1
 Line %2, column %3</source>
-        <translation type="unfinished">%1
+        <translation>%1
 Zeile %2, Spalte %3</translation>
     </message>
 </context>
@@ -262,67 +262,67 @@ Zeile %2, Spalte %3</translation>
     <name>SettingsDialog</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">Dialog</translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished">Allgemein</translation>
+        <translation>Allgemein</translation>
     </message>
     <message>
         <source>Device sync</source>
-        <translation type="unfinished">Gerätesynchronisierung</translation>
+        <translation>Gerätesynchronisierung</translation>
     </message>
     <message>
         <source>Movescount</source>
-        <translation type="unfinished">Movescount</translation>
+        <translation>Movescount</translation>
     </message>
     <message>
         <source>General settings</source>
-        <translation type="unfinished">Allgemeine Einstellungen</translation>
+        <translation>Allgemeine Einstellungen</translation>
     </message>
     <message>
         <source>Skip Beta check at startup</source>
-        <translation type="unfinished">Beta-Warnung beim Startnicht anzeigen </translation>
+        <translation>Beta-Warnung beim Startnicht anzeigen </translation>
     </message>
     <message>
         <source>Continue running in background when OpenAmbit main window is closed</source>
-        <translation type="unfinished">Im Hintergrund weiter ausführen wenn das Hauptfenster geschlossen wird</translation>
+        <translation>Im Hintergrund weiter ausführen wenn das Hauptfenster geschlossen wird</translation>
     </message>
     <message>
         <source>Device syncronisation settings</source>
-        <translation type="unfinished">Einstellungen für Gerätesynchronisierung</translation>
+        <translation>Einstellungen für Gerätesynchronisierung</translation>
     </message>
     <message>
         <source>Sync time from computer</source>
-        <translation type="unfinished">Zeit vom Computer synchronisieren</translation>
+        <translation>Zeit vom Computer synchronisieren</translation>
     </message>
     <message>
         <source>Sync orbital data (from Movescount)</source>
-        <translation type="unfinished">Satellitenbahndaten (von Movescount) synchronisieren</translation>
+        <translation>Satellitenbahndaten (von Movescount) synchronisieren</translation>
     </message>
     <message>
         <source>Start sync automatically when device connected</source>
-        <translation type="unfinished">Synchronisierung automatisch starten, wenn ein Gerät angeschlossen ist</translation>
+        <translation>Synchronisierung automatisch starten, wenn ein Gerät angeschlossen ist</translation>
     </message>
     <message>
         <source>Movescount connectivity</source>
-        <translation type="unfinished">Verbindung zu Movescount</translation>
+        <translation>Verbindung zu Movescount</translation>
     </message>
     <message>
         <source>Check Movescount for new versions</source>
-        <translation type="unfinished">Auf Movescount nach neuen Versionen suchen</translation>
+        <translation>Auf Movescount nach neuen Versionen suchen</translation>
     </message>
     <message>
         <source>Generate debug files (XMLs stored in ~/.openambit/movescount)</source>
-        <translation type="unfinished">Debug-Dateien erzeugen (XML-Dateien in ~/.openambit/movescount)</translation>
+        <translation>Debug-Dateien erzeugen (XML-Dateien in ~/.openambit/movescount)</translation>
     </message>
     <message>
         <source>Sync logs with Movescount</source>
-        <translation type="unfinished">Logs zu Movescount synchronisieren</translation>
+        <translation>Logs zu Movescount synchronisieren</translation>
     </message>
     <message>
         <source>Email (Movescount account)</source>
-        <translation type="unfinished">Email des Movescount-Accounts</translation>
+        <translation>Email des Movescount-Accounts</translation>
     </message>
 </context>
 </TS>
