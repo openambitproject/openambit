@@ -23,6 +23,7 @@
 #include "libambit_int.h"
 
 #include <errno.h>
+#include <iconv.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -591,6 +592,58 @@ static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
     return found;
 }
 
+/* Converts a wide-character string to a limited length UTF-8 string.
+ * This produces the longest valid UTF-8 string that doesn't exceed n
+ * bytes.  If the converted string would be too long, it is shortened
+ * one wchar_t at a time until the result is short enough.  Invalid
+ * and incomplete multibyte sequences will result in an empty string.
+ */
+static const char * wcs2nutf8(char *dest, const wchar_t *src, size_t n)
+{
+    const char *rv = NULL;
+
+    iconv_t cd = iconv_open("UTF-8", "WCHAR_T");
+
+    if ((iconv_t) -1 == cd) {
+        LOG_ERROR("iconv_open: %s", strerror(errno));
+    }
+    else {
+        char  *s = (char *) malloc((n + 1) * sizeof(char));
+        size_t m = wcslen(src) + 1;
+
+        if (s) {
+            size_t sz;
+
+            do {
+                char  *ibuf = (char *) src;
+                char  *obuf = s;
+                size_t ilen = --m * sizeof(wchar_t);
+                size_t olen = n;
+
+                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
+
+                if ((size_t) -1 == sz) {
+                    s[0] = '\0';
+                }
+                else {          /* we're good, terminate string */
+                    s[n - olen] = '\0';
+                }
+            } while ((size_t) -1 == sz && E2BIG == errno && 0 < m);
+
+            if ((size_t) -1 == sz && E2BIG != errno) {
+                LOG_ERROR("iconv: %s", strerror(errno));
+            }
+
+            strncpy(dest, s, n);
+            rv = s;
+        }
+
+        iconv_close(cd);
+    }
+
+    return rv;
+}
+
 /* Tacitly assumes that minimally required software versions are
  * listed in decreasing order in the known_devices array!
  */
@@ -655,39 +708,13 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     device->product_id = pid;
 
     if (dev->product_string) {
-        size_t len = wcstombs(NULL, dev->product_string, 0);
-
-        if ((size_t) -1 != len) {
-            char  *s = (char *) malloc((len + 1) * sizeof(char));
-            size_t n = wcslen(dev->product_string) + 1;
-
-            if (s) {
-                do {
-                    len = wcstombs(s, dev->product_string, --n);
-                    s[len] = '\0';
-                } while (len > LIBAMBIT_PRODUCT_NAME_LENGTH && 0 < n);
-            }
-            name = s;
-            strncpy(device->name, name, LIBAMBIT_PRODUCT_NAME_LENGTH);
-        }
+        name = wcs2nutf8(device->name, dev->product_string,
+                         LIBAMBIT_PRODUCT_NAME_LENGTH);
     }
 
     if (dev->serial_number) {
-        size_t len = wcstombs(NULL, dev->serial_number, 0);
-
-        if ((size_t) -1 != len) {
-            char  *s = (char *) malloc((len + 1) * sizeof(char));
-            size_t n = wcslen(dev->serial_number) + 1;
-
-            if (s) {
-                do {
-                    len = wcstombs(s, dev->serial_number, --n);
-                    s[len] = '\0';
-                } while (len > LIBAMBIT_SERIAL_LENGTH && 0 < n);
-            }
-            uniq = s;
-            strncpy(device->serial, uniq, LIBAMBIT_SERIAL_LENGTH);
-        }
+        uniq = wcs2nutf8(device->serial, dev->serial_number,
+                         LIBAMBIT_SERIAL_LENGTH);
     }
 
     LOG_INFO("HID  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
