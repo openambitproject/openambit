@@ -68,19 +68,19 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Fetching orbital data</source>
-        <translation>Hole Bahndaten</translation>
+        <translation>Hole GPS-Bahndaten</translation>
     </message>
     <message>
         <source>Writing orbital data</source>
-        <translation>Schreibe Bahndaten</translation>
+        <translation>Schreibe GPS-Bahndaten</translation>
     </message>
     <message>
         <source>Failed to get orbital data</source>
-        <translation>Fehler beim Holen der Bahndaten</translation>
+        <translation>Fehler beim Holen der GPS-Bahndaten</translation>
     </message>
     <message>
         <source>Downloading log %1 of %2</source>
-        <translation>Lade log %1 von %2 herunter</translation>
+        <translation>Lade Log %1 von %2 herunter</translation>
     </message>
 </context>
 <context>
@@ -111,15 +111,15 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Avg HR: %1 bpm</source>
-        <translation>Durchschn. HR: %1 bpm</translation>
+        <translation>Durchschnittspuls: %1 bpm</translation>
     </message>
     <message>
         <source>Max HR: %1 bpm</source>
-        <translation>Max HR: %1 bpm</translation>
+        <translation>Maximalpuls: %1 bpm</translation>
     </message>
     <message>
         <source>Min HR: %1 bpm</source>
-        <translation>Min HR: %1 bpm</translation>
+        <translation>Mininmalpuls: %1 bpm</translation>
     </message>
     <message>
         <source>PTE: %1</source>
@@ -249,7 +249,7 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>Die Datei ist keine Openambit-Version-1.0-Datei.</translation>
+        <translation>Die Datei hat nicht die Openambit-Version 1.0.</translation>
     </message>
     <message>
         <source>%1
@@ -282,7 +282,7 @@ Zeile %2, Spalte %3</translation>
     </message>
     <message>
         <source>Skip Beta check at startup</source>
-        <translation>Beta-Warnung beim Startnicht anzeigen </translation>
+        <translation>Beta-Warnung beim Start nicht anzeigen </translation>
     </message>
     <message>
         <source>Continue running in background when OpenAmbit main window is closed</source>
@@ -290,7 +290,7 @@ Zeile %2, Spalte %3</translation>
     </message>
     <message>
         <source>Device syncronisation settings</source>
-        <translation>Einstellungen für Gerätesynchronisierung</translation>
+        <translation>Einstellungen für die Gerätesynchronisierung</translation>
     </message>
     <message>
         <source>Sync time from computer</source>
@@ -298,7 +298,7 @@ Zeile %2, Spalte %3</translation>
     </message>
     <message>
         <source>Sync orbital data (from Movescount)</source>
-        <translation>Satellitenbahndaten (von Movescount) synchronisieren</translation>
+        <translation>GPS-Satellitenbahndaten (von Movescount) synchronisieren</translation>
     </message>
     <message>
         <source>Start sync automatically when device connected</source>
