@@ -42,7 +42,15 @@ typedef struct ambit_device_info_s {
     char serial[LIBAMBIT_SERIAL_LENGTH+1];
     uint8_t fw_version[4];
     uint8_t hw_version[4];
-    bool is_supported;
+
+    const char *path;
+    uint16_t    vendor_id;
+    uint16_t    product_id;
+    bool        is_supported;
+    uint16_t    chunk_size;
+    int         access_status;
+
+    struct ambit_device_info_s *next;
 } ambit_device_info_t;
 
 typedef struct ambit_device_status_s {
@@ -340,33 +348,37 @@ typedef struct ambit_log_entry_s {
     ambit_log_sample_t *samples;
 } ambit_log_entry_t;
 
-/**
- * Try to detect clock
- * If clock detected, object handle is returned
- * \return object handle if clock found, else NULL
+/** \brief Create a list of all known Ambit clocks on the system
+ *
+ *  The list may include clocks that are not supported or cannot be
+ *  accessed.
  */
-ambit_object_t *libambit_detect(void);
+ambit_device_info_t * libambit_enumerate(void);
+
+/** \brief Release resources acquired by libambit_enumerate()
+ */
+void libambit_free_enumeration(ambit_device_info_t *devices);
+
+/** \brief Create an Ambit object for a clock
+ *
+ *  The pointer returned corresponds to a known, accessible and
+ *  supported clock.  In case no such clock is found \c NULL is
+ *  returned.
+ */
+ambit_object_t * libambit_new(const ambit_device_info_t *device);
+
+/** \brief Create an Ambit object from a \a pathname
+ *
+ *  Convenience function for when the path name for a clock is known.
+ *  These path names are platform dependent.
+ */
+ambit_object_t * libambit_new_from_pathname(const char *pathname);
 
 /**
  * Close open Ambit object
  * \param object Object to close
  */
 void libambit_close(ambit_object_t *object);
-
-/**
- * Check if detected device is currently supported
- * \param object Object to check
- * \return true if device supported, else false
- */
-bool libambit_device_supported(ambit_object_t *object);
-
-/**
- * Get device info on connected dev
- * \param object Object to get info from
- * \param status Status object to be filled
- * \return 0 on success, else -1
- */
-int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *status);
 
 /**
  * Set sync message to device display

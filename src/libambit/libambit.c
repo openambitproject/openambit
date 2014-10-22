@@ -23,8 +23,10 @@
 #include "libambit_int.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,6 +56,7 @@ struct ambit_known_device_s {
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static int lock_log(ambit_object_t *object, bool lock);
 static uint32_t version_number(const uint8_t version[4]);
+static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
 
 /*
  * Static variables
@@ -81,93 +84,102 @@ static uint8_t komposti_version[] = { 0x01, 0x08, 0x01, 0x00 };
 /*
  * Public functions
  */
-ambit_object_t *libambit_detect(void)
+ambit_device_info_t * libambit_enumerate(void)
 {
-    hid_device *handle;
-    struct hid_device_info *devs, *cur_dev;
-    ambit_object_t *ret_object = NULL;
-    int i;
-    ambit_known_device_t *device = NULL;
-    char *path = NULL;
+    ambit_device_info_t *devices = NULL;
 
-    LOG_INFO("Searching devices");
+    struct hid_device_info *devs = hid_enumerate(0, 0);
+    struct hid_device_info *current;
 
-    devs = hid_enumerate(0x0, 0x0);
-    cur_dev = devs;
-    while (cur_dev) {
-        LOG_INFO("vendor_id=%04x, product_id=%04x", cur_dev->vendor_id, cur_dev->product_id);
-        for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
-            if (cur_dev->vendor_id == known_devices[i].vid && cur_dev->product_id == known_devices[i].pid) {
-                LOG_INFO("match!");
-                // Found at least one supported row, lets remember that!
-                device = &known_devices[i];
-                path = strdup (cur_dev->path);
-                break;
+    if (!devs) {
+      LOG_ERROR("HID: something went wrong");
+      return NULL;
+    }
+
+    current = devs;
+    while (current) {
+        ambit_device_info_t *tmp = ambit_device_info_new(current);
+
+        if (tmp) {
+            if (devices) {
+                tmp->next = devices;
+            }
+            else {
+                devices = tmp;
             }
         }
-        if (device != NULL) {
-            // Devcice was found, we can stop looping through devices now...
-            break;
-        }
-        cur_dev = cur_dev->next;
+        current = current->next;
     }
     hid_free_enumeration(devs);
 
-    if (device != NULL) {
-        LOG_INFO("Trying to open device");
-        handle = hid_open(device->vid, device->pid, NULL);
-        if (handle != NULL) {
-            // Setup hid device correctly
-            hid_set_nonblocking(handle, 1);
+    return devices;
+}
 
-            ret_object = malloc(sizeof(ambit_object_t));
-            memset(ret_object, 0, sizeof(ambit_object_t));
-            ret_object->handle = handle;
-            ret_object->vendor_id = device->vid;
-            ret_object->product_id = device->pid;
+void libambit_free_enumeration(ambit_device_info_t *devices)
+{
+    while (devices) {
+        ambit_device_info_t *next = devices->next;
+        free((char *) devices->path);
+        free(devices);
+        devices = next;
+    }
+}
 
-            // Get device info to resolve supported functionality
-            if (device_info_get(ret_object, &ret_object->device_info) == 0) {
-                // Let's resolve the correct device
-                for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
-                    if (ret_object->vendor_id == known_devices[i].vid &&
-                        ret_object->product_id == known_devices[i].pid &&
-                        strncmp(ret_object->device_info.model, known_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
-                        (version_number (ret_object->device_info.fw_version) >= version_number (known_devices[i].min_sw_version))) {
-                        // Found matching entry, reset to this one!
-                        device = &known_devices[i];
-                        break;
-                    }
-                }
-                strncpy(ret_object->device_info.name, device->name, LIBAMBIT_PRODUCT_NAME_LENGTH);
-                ret_object->device_info.is_supported = device->supported;
+ambit_object_t * libambit_new(const ambit_device_info_t *device)
+{
+    ambit_object_t *object = NULL;
+    const char *path = NULL;
 
-                // Initialize pmem
-                libambit_pmem20_init(ret_object, device->pmem20_chunksize);
-
-                LOG_INFO("Successfully opened device \"%s (%s)\" SW: %d.%d.%d, Supported: %s", device->name, device->model, ret_object->device_info.fw_version[0], ret_object->device_info.fw_version[1], ret_object->device_info.fw_version[3] << 8 | ret_object->device_info.fw_version[2], device->supported ? "YES" : "NO");
-            }
-            else {
-                free(ret_object);
-                ret_object = NULL;
-                LOG_ERROR("Failed to get device info from \"%s (%s)\"", device->name, device->model);
-            }
-        }
-        else {
-#ifdef DEBUG_PRINT_ERROR
-            int error = 0;
-            int fd = 0;
-            if (path) fd = open (path, O_RDWR);
-            if (-1 == fd) error = errno;
-            else close (fd);
-#endif
-            LOG_ERROR("Failed to open device \"%s (%s)\"", device->name, device->model);
-            LOG_ERROR("Reason: %s", (error ? strerror(error) : "Unknown"));
-        }
+    if (!device || !device->path) {
+        LOG_ERROR("%s", strerror(EINVAL));
+        return NULL;
     }
 
-    if (path) free (path);
-    return ret_object;
+    path = strdup (device->path);
+    if (!path) return NULL;
+
+    if (0 == device->access_status && device->is_supported) {
+        object = calloc(1, sizeof(*object));
+        if (object) {
+            object->handle = hid_open_path(path);
+            memcpy(&object->device_info, device, sizeof(*device));
+            object->device_info.path = path;
+            libambit_pmem20_init(object, device->chunk_size);
+
+            if (object->handle) {
+                hid_set_nonblocking(object->handle, true);
+            }
+        }
+    }
+    if (!object) {
+        free((char *) path);
+    }
+
+    return object;
+}
+
+ambit_object_t * libambit_new_from_pathname(const char* pathname)
+{
+    ambit_object_t *object = NULL;
+    ambit_device_info_t *info;
+    ambit_device_info_t *current;
+
+    if (!pathname) {
+        LOG_ERROR("%s", strerror(EINVAL));
+        return NULL;
+    }
+
+    info = libambit_enumerate();
+    current = info;
+    while (!object && current) {
+        if (0 == strcmp(pathname, current->path)) {
+            object = libambit_new(current);
+        }
+        current = current->next;
+    }
+    libambit_free_enumeration(info);
+
+    return object;
 }
 
 void libambit_close(ambit_object_t *object)
@@ -181,33 +193,9 @@ void libambit_close(ambit_object_t *object)
         }
 
         libambit_pmem20_deinit(object);
+        free((char *) object->device_info.path);
         free(object);
     }
-}
-
-bool libambit_device_supported(ambit_object_t *object)
-{
-    bool ret = false;
-
-    if (object != NULL) {
-        ret = object->device_info.is_supported;
-    }
-
-    return ret;
-}
-
-int libambit_device_info_get(ambit_object_t *object, ambit_device_info_t *info)
-{
-    int ret = -1;
-
-    if (object != NULL) {
-        if (info != NULL) {
-            memcpy(info, &object->device_info, sizeof(ambit_device_info_t));
-        }
-        ret = 0;
-    }
-
-    return ret;
 }
 
 void libambit_sync_display_show(ambit_object_t *object)
@@ -576,4 +564,197 @@ static uint32_t version_number(const uint8_t version[4])
             | (version[1] << 16)
             | (version[2] <<  0)
             | (version[3] <<  8));
+}
+
+const size_t LIBAMBIT_VERSION_LENGTH = 13;      /* max: 255.255.65535 */
+
+static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
+                                  const uint8_t version[4])
+{
+  if (!string || !version) return;
+
+  snprintf(string, LIBAMBIT_VERSION_LENGTH+1, "%d.%d.%d",
+           version[0], version[1], (version[2] << 0) | (version[3] << 8));
+}
+
+static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
+{
+    bool found = false;
+    size_t i;
+    size_t count = sizeof(known_devices) / sizeof(*known_devices);
+
+    for (i = 0; !found && i < count; ++i) {
+        found = (   known_devices[i].vid == vid
+                 && known_devices[i].pid == pid);
+    }
+
+    return found;
+}
+
+/* Tacitly assumes that minimally required software versions are
+ * listed in decreasing order in the known_devices array!
+ */
+static int find_known_device(const ambit_device_info_t *info)
+{
+    bool found = false;
+    int i = -1;
+    int count = sizeof(known_devices) / sizeof(*known_devices);
+
+    if (!info) return -1;
+
+    while (!found && ++i < count) {
+        found = (   known_devices[i].vid == info->vendor_id
+                 && known_devices[i].pid == info->product_id
+                 && 0 == strcmp(known_devices[i].name, info->name)
+                 && 0 == strcmp(known_devices[i].model, info->model)
+                 && (   version_number(known_devices[i].min_sw_version)
+                     <= version_number(info->fw_version)));
+    }
+
+    return (found ? i : -1);
+}
+
+static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev)
+{
+    ambit_device_info_t *device = NULL;
+
+    const char *dev_path;
+    const char *name = NULL;
+    const char *uniq = NULL;
+
+    uint16_t vid;
+    uint16_t pid;
+
+    hid_device *hid;
+
+    if (!dev || !dev->path) {
+        LOG_ERROR("internal error: expecting hidraw device");
+        return NULL;
+    }
+
+    dev_path = dev->path;
+    vid = dev->vendor_id;
+    pid = dev->product_id;
+
+    if (!is_known_vid_pid(vid, pid)) {
+        LOG_WARNING("unknown device (VID/PID: %04x/%04x)", vid, pid);
+        return NULL;
+    }
+
+    dev_path = strdup(dev_path);
+    if (!dev_path) return NULL;
+
+    device = calloc(1, sizeof(*device));
+    if (!device) {
+        free ((char *) dev_path);
+        return NULL;
+    }
+
+    device->path = dev_path;
+    device->vendor_id  = vid;
+    device->product_id = pid;
+
+    if (dev->product_string) {
+        size_t len = wcstombs(NULL, dev->product_string, 0);
+
+        if ((size_t) -1 != len) {
+            char  *s = (char *) malloc((len + 1) * sizeof(char));
+            size_t n = wcslen(dev->product_string) + 1;
+
+            if (s) {
+                do {
+                    len = wcstombs(s, dev->product_string, --n);
+                    s[len] = '\0';
+                } while (len > LIBAMBIT_PRODUCT_NAME_LENGTH && 0 < n);
+            }
+            name = s;
+            strncpy(device->name, name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+        }
+    }
+
+    if (dev->serial_number) {
+        size_t len = wcstombs(NULL, dev->serial_number, 0);
+
+        if ((size_t) -1 != len) {
+            char  *s = (char *) malloc((len + 1) * sizeof(char));
+            size_t n = wcslen(dev->serial_number) + 1;
+
+            if (s) {
+                do {
+                    len = wcstombs(s, dev->serial_number, --n);
+                    s[len] = '\0';
+                } while (len > LIBAMBIT_SERIAL_LENGTH && 0 < n);
+            }
+            uniq = s;
+            strncpy(device->serial, uniq, LIBAMBIT_SERIAL_LENGTH);
+        }
+    }
+
+    LOG_INFO("HID  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
+             device->path, device->name, device->serial,
+             device->vendor_id, device->product_id);
+
+    hid = hid_open_path(device->path);
+    if (hid) {
+        /* HACK ALERT: minimally initialize an ambit object so we can
+         * call device_info_get() */
+        ambit_object_t obj;
+        obj.handle = hid;
+        obj.sequence_no = 0;
+        if (0 == device_info_get(&obj, device)) {
+            int index;
+            char fw_version[LIBAMBIT_VERSION_LENGTH+1];
+            char hw_version[LIBAMBIT_VERSION_LENGTH+1];
+
+            if (name && 0 != strcmp(name, device->name)) {
+                LOG_INFO("preferring F/W name over '%s'", name);
+            }
+            if (uniq && 0 != strcmp(uniq, device->serial)) {
+                LOG_INFO("preferring F/W serial number over '%s'", uniq);
+            }
+
+            index = find_known_device(device);
+            if (0 <= index) {
+                device->is_supported = known_devices[index].supported;
+                device->chunk_size = known_devices[index].pmem20_chunksize;
+            }
+
+            version_string(fw_version, device->fw_version);
+            version_string(hw_version, device->hw_version);
+
+            LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
+                     "nick: %s, F/W: %s, H/W: %s, supported: %s)",
+                     device->path, device->name, device->serial,
+                     device->vendor_id, device->product_id,
+                     device->model, fw_version, hw_version,
+                     (device->is_supported ? "YES" : "NO"));
+        }
+        else {
+            LOG_ERROR("cannot get device info from %s", device->path);
+        }
+        hid_close(hid);
+    }
+    else {
+        /* Store an educated guess as to why we cannot open the HID
+         * device.  Without read/write access we cannot communicate
+         * to begin with but there may be other reasons.
+         */
+        int fd = open(device->path, O_RDWR);
+
+        if (-1 == fd) {
+            device->access_status = errno;
+            LOG_ERROR("cannot open HID device (%s): %s", device->path,
+                      strerror (device->access_status));
+        }
+        else {
+            LOG_WARNING("have read/write access to %s but cannot open HID "
+                        "device", device->path);
+            close(fd);
+        }
+    }
+
+    if (name) free((char *) name);
+    if (uniq) free((char *) uniq);
+
+    return device;
 }

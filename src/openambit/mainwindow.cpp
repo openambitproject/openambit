@@ -238,10 +238,17 @@ void MainWindow::syncNowClicked()
 
 void MainWindow::deviceDetected(ambit_device_info_t deviceInfo, bool supported)
 {
+    if (0 != deviceInfo.access_status) {
+        ui->labelNotSupported->setText(strerror(deviceInfo.access_status));
+    }
+    else {
+        // FIXME Should be gotten from the UI file, really
+        ui->labelNotSupported->setText(tr("Device not supported yet!"));
+    }
     ui->labelDeviceDetected->setText(deviceInfo.name);
     ui->labelSerial->setText(deviceInfo.serial);
     trayIcon->setIcon(QIcon(":/icon_connected"));
-    if (!supported) {
+    if (0 != deviceInfo.access_status || !supported) {
         ui->labelNotSupportedIcon->setHidden(false);
         ui->labelNotSupported->setHidden(false);
         ui->labelMovescountAuthIcon->setHidden(true);
