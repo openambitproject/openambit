@@ -707,9 +707,18 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     device->vendor_id  = vid;
     device->product_id = pid;
 
-    if (dev->product_string) {
-        name = wcs2nutf8(device->name, dev->product_string,
+    if (dev->manufacturer_string && dev->product_string) {
+        name = wcs2nutf8(device->name, dev->manufacturer_string,
                          LIBAMBIT_PRODUCT_NAME_LENGTH);
+        if (name) {
+            size_t len = strlen (name);
+            if (len < LIBAMBIT_PRODUCT_NAME_LENGTH) {
+                strcat (device->name, " ");
+                ++len;
+                wcs2nutf8(device->name + len, dev->product_string,
+                          LIBAMBIT_PRODUCT_NAME_LENGTH - len);
+            }
+        }
     }
 
     if (dev->serial_number) {
