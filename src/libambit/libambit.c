@@ -46,7 +46,8 @@ struct ambit_known_device_s {
     uint16_t pid;
     char *model;
     uint8_t min_sw_version[4];
-    char *name;
+    char *name;                 /* not necessarily related to any
+                                   device provided information */
     bool supported;
     uint16_t pmem20_chunksize;
 };
@@ -658,7 +659,6 @@ static int find_known_device(const ambit_device_info_t *info)
     while (!found && ++i < count) {
         found = (   known_devices[i].vid == info->vendor_id
                  && known_devices[i].pid == info->product_id
-                 && 0 == strcmp(known_devices[i].name, info->name)
                  && 0 == strcmp(known_devices[i].model, info->model)
                  && (   version_number(known_devices[i].min_sw_version)
                      <= version_number(info->fw_version)));
