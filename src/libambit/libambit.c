@@ -535,14 +535,16 @@ static int lock_log(ambit_object_t *object, bool lock)
     int ret = -1;
     uint8_t send_data[] = { 0x00, 0x00, 0x00, 0x00 };
     uint8_t *reply_data = NULL;
-    size_t replylen;
+    size_t replylen = 0;
 
     uint32_t current_lock = 0xffffffff;
 
     if ((ret = libambit_protocol_command(object, ambit_command_lock_check, NULL, 0, &reply_data, &replylen, 0)) == 0) {
-        current_lock = le32toh(*(uint32_t*)reply_data);
-        libambit_protocol_free(reply_data);
+        if (sizeof(uint32_t)/sizeof(uint8_t) <= replylen)  {
+            current_lock = le32toh(*(uint32_t*)reply_data);
+        }
     }
+    libambit_protocol_free(reply_data);
 
     if (lock && current_lock == 0) {
         LOG_INFO("Setting Sync message to device display");
