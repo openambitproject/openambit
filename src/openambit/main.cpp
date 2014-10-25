@@ -31,17 +31,29 @@ static void initTranslations(void);
 
 int main(int argc, char *argv[])
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    // Windows
-#else
-    // Fork for background running
-    if ( fork() > 0 ) {
-	// Exit the parent process
-	return 0;
+    // Handle foreground arguments
+    // NOTE: It would be preferable to handle all arguments at the same place,
+    // but fork needs to be done before Qt initialize it seems
+    bool background = true;
+    for (int i=0; i<argc; i++) {
+        if (strcmp(argv[i], "-f") == 0) {
+            background = false;
+            break;
+        }
     }
-    // Set the child to the new process group leader
-    setsid();
+    if (background) {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+        // Windows
+#else
+        // Fork for background running
+        if ( fork() > 0 ) {
+            // Exit the parent process
+            return 0;
+        }
+        // Set the child to the new process group leader
+        setsid();
 #endif
+    }
 
     SingleApplication a(argc, argv, "openambit_single_application_lock");
 
