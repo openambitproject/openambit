@@ -746,6 +746,11 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
             if (0 <= index) {
                 device->is_supported = known_devices[index].supported;
                 device->chunk_size = known_devices[index].pmem20_chunksize;
+                if (0 != strcmp(device->name, known_devices[index].name)) {
+                    LOG_INFO("preferring know device name over '%s'", device->name);
+                    strncpy(device->name, known_devices[index].name, LIBAMBIT_PRODUCT_NAME_LENGTH);
+                    device->name[LIBAMBIT_PRODUCT_NAME_LENGTH] = 0;
+                }
             }
 
             version_string(fw_version, device->fw_version);
