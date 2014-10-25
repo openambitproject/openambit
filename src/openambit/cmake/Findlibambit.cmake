@@ -8,6 +8,7 @@
 find_path(LIBAMBIT_INCLUDE_DIR NAMES libambit.h
   PATHS
   ../libambit
+  ${CMAKE_SOURCE_DIR}/src/libambit
 )
 
 find_library(LIBAMBIT_LIBS_PATH NAMES libambit.so
@@ -26,6 +27,10 @@ if(LIBAMBIT_INCLUDE_DIR AND LIBAMBIT_LIBS)
 else(LIBAMBIT_INCLUDE_DIR AND LIBAMBIT_LIBS)
   set(LIBAMBIT_FOUND FALSE CACHE INTERNAL "libambit found")
   message(STATUS "libambit not found.")
+
+  set(LIBAMBIT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/libambit/)
+  set(LIBAMBIT_LIBS ${CMAKE_BINARY_DIR}/src/libambit/libambit.so.0)
+  set(LIBAMBIT_FOUND true)
 endif(LIBAMBIT_INCLUDE_DIR AND LIBAMBIT_LIBS)
 
 mark_as_advanced(LIBAMBIT_INCLUDE_DIR LIBAMBIT_LIBS)

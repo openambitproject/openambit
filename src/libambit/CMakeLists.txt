@@ -1,8 +1,8 @@
-cmake_minimum_required (VERSION 2.8.5)
-project (LIBAMBIT)
+cmake_minimum_required(VERSION 2.8.5)
+project(libAmbit)
 
 # Where to lookup modules
-set(CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${libAmbit_SOURCE_DIR}/cmake")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
@@ -19,7 +19,7 @@ find_package(libusb REQUIRED)
 find_package(UDev REQUIRED)
 include(GNUInstallDirs)
 
-add_library (
+add_library(
   ambit
   SHARED
   crc16.c
@@ -38,6 +38,7 @@ target_link_libraries(
   m
 )
 
+set(LIBAMBIT_LIBS ${CMAKE_CURRENT_BINARY_DIR})
 set_target_properties(ambit PROPERTIES VERSION 0.3.0 SOVERSION 0)
 
 include_directories(
