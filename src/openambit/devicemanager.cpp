@@ -59,6 +59,7 @@ void DeviceManager::detect()
     mutex.lock();
     if (this->deviceObject != NULL) {
         libambit_close(this->deviceObject);
+        this->deviceObject = NULL;
         emit deviceRemoved();
     }
 
