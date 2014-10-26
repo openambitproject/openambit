@@ -21,7 +21,7 @@ if (NOT HIDAPI_RESOLVED)
     else (HIDAPI_DRIVER STREQUAL "libusb")
         find_package(UDev REQUIRED)
         set (HIDAPI_INCLUDE_DIR "hidapi" ${UDEV_INCLUDE_DIR})
-        set (HIDAPI_SOURCE_FILES "hid.c")
+        set (HIDAPI_SOURCE_FILES "hid-linux.c")
         set (HIDAPI_LIBS ${UDEV_LIBS})
     endif (HIDAPI_DRIVER STREQUAL "libusb")
 
