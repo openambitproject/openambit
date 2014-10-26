@@ -47,7 +47,6 @@ typedef struct ambit_device_info_s {
     uint16_t    vendor_id;
     uint16_t    product_id;
     bool        is_supported;
-    uint16_t    chunk_size;
     int         access_status;
 
     struct ambit_device_info_s *next;

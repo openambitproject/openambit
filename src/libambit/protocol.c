@@ -104,8 +104,8 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
     msg->MP = 0x5d;
     msg->parts_seq = htole16(packet_count);
     msg->command = htobe16(command);
-    msg->send_recv = htole16(legacy_format ? 1 : 5);
-    msg->format = htole16(legacy_format ? 0 : 9); // TODO!!!
+    msg->send_recv = htole16(legacy_format == 1 ? 1 : legacy_format == 2 ? 0x15 : 5);
+    msg->format = htole16(legacy_format == 1 ? 0 : 9);
     msg->sequence = htole16(object->sequence_no);
     msg->payload_len = htole32(datalen);
     packet_payload_len = fmin(42, datalen);

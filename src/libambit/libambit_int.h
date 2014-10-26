@@ -31,23 +31,10 @@ struct ambit_object_s {
     uint16_t sequence_no;
     ambit_device_info_t device_info;
 
-    struct {
-        uint16_t chunk_size;
-        struct {
-            bool initialized;
-            uint32_t first_entry;
-            uint32_t last_entry;
-            uint32_t entries;
-            uint32_t next_free_address;
-            struct {
-                uint32_t current;
-                uint32_t next;
-                uint32_t prev;
-            } current;
-            uint8_t *buffer;
-            uint8_t *chunks_read;
-        } log;
-    } pmem20;
+    struct ambit_device_driver_s *driver;
+    struct ambit_device_driver_data_s *driver_data; // Driver specific struct,
+                                                    // should be defined
+                                                    // locally for each driver
 };
 
 enum ambit_commands_e {
@@ -75,20 +62,69 @@ enum ambit_commands_e {
 uint16_t crc16_ccitt_false(unsigned char *buf, size_t buflen);
 uint16_t crc16_ccitt_false_init(unsigned char *buf, size_t buflen, uint16_t crc);
 
+// device_support.c
+typedef struct ambit_known_device_s {
+    char *name;
+    bool supported;
+    struct ambit_device_driver_s *driver;
+    uint32_t driver_param;
+} ambit_known_device_t;
+bool libambit_device_support_known(uint16_t vendor_id, uint16_t product_id);
+const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uint16_t product_id, const char *model, const uint8_t *fw_version);
+
+// device_driver_*
+typedef struct ambit_device_driver_s {
+    void (*init)(ambit_object_t *object, uint32_t driver_param);
+    void (*deinit)(ambit_object_t *object);
+    int (*lock_log)(ambit_object_t *object, bool lock);
+    int (*date_time_set)(ambit_object_t *object, struct tm *tm);
+    int (*status_get)(ambit_object_t *object, ambit_device_status_t *status);
+    int (*personal_settings_get)(ambit_object_t *object, ambit_personal_settings_t *settings);
+    int (*log_read)(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
+    int (*gps_orbit_header_read)(ambit_object_t *object, uint8_t data[8]);
+    int (*gps_orbit_write)(ambit_object_t *object, uint8_t *data, size_t datalen);
+} ambit_device_driver_t;
+extern ambit_device_driver_t ambit_device_driver_ambit; // Ambit & Ambit2
+
 // personal.c
 int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_personal_settings_t *settings);
 
 // pmem20.c
-int libambit_pmem20_init(ambit_object_t *object, uint16_t chunk_size);
-int libambit_pmem20_deinit(ambit_object_t *object);
-int libambit_pmem20_log_init(ambit_object_t *object);
-int libambit_pmem20_log_deinit(ambit_object_t *object);
-int libambit_pmem20_log_next_header(ambit_object_t *object, ambit_log_header_t *log_header);
-ambit_log_entry_t *libambit_pmem20_log_read_entry(ambit_object_t *object);
+typedef struct libambit_pmem20_s {
+    uint16_t chunk_size;
+    struct {
+        bool initialized;
+        uint32_t mem_start;
+        uint32_t mem_size;
+        uint32_t first_entry;
+        uint32_t last_entry;
+        uint32_t entries;
+        uint32_t next_free_address;
+        struct {
+            uint32_t current;
+            uint32_t next;
+            uint32_t prev;
+        } current;
+        uint8_t *buffer;
+        uint8_t *chunks_read;
+    } log;
+    ambit_object_t *ambit_object;
+} libambit_pmem20_t;
+int libambit_pmem20_init(libambit_pmem20_t *object, ambit_object_t *ambit_object, uint16_t chunk_size);
+int libambit_pmem20_deinit(libambit_pmem20_t *object);
+int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint32_t mem_size);
+int libambit_pmem20_log_deinit(libambit_pmem20_t *object);
+int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_t *log_header);
+ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object);
+ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object, uint32_t address, uint32_t length);
 int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header);
-int libambit_pmem20_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
+int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash);
 
 // protocol.c
+/**
+ * Write command to device
+ * \param legacy_format 0=normal, 1=legacy, 2=version 2
+ */
 int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t *data, size_t datalen, uint8_t **reply_data, size_t *replylen, uint8_t legacy_format);
 void libambit_protocol_free(uint8_t *data);
 

@@ -15,8 +15,7 @@ IF (DEFINED DEBUG_PRINT_FILE_LINE)
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG_PRINT_FILE_LINE=${DEBUG_PRINT_FILE_LINE}")
 ENDIF()
 
-find_package(libusb REQUIRED)
-find_package(UDev REQUIRED)
+include(HidapiDriver)
 include(GNUInstallDirs)
 
 add_library (
@@ -24,24 +23,28 @@ add_library (
   SHARED
   crc16.c
   debug.c
-  hid.c
+  device_driver_ambit.c
+  device_driver_common.c
+  device_support.c
   libambit.c
   personal.c
   pmem20.c
   protocol.c
+  sha256.c
+  utils.c
+  ${HIDAPI_SOURCE_FILES}
 )
 
 target_link_libraries(
   ambit
-  ${UDEV_LIBS}
-  ${LIBUSB_LIBRARIES}
+  ${HIDAPI_LIBS}
   m
 )
 
 set_target_properties(ambit PROPERTIES VERSION 0.3.0 SOVERSION 0)
 
 include_directories(
-  hidapi
+  ${HIDAPI_INCLUDE_DIR}
 )
 
 install(TARGETS ambit DESTINATION ${CMAKE_INSTALL_LIBDIR})

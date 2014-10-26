@@ -37,50 +37,16 @@
 /*
  * Local definitions
  */
-#define SUUNTO_USB_VENDOR_ID 0x1493
-
-typedef struct ambit_known_device_s ambit_known_device_t;
-
-struct ambit_known_device_s {
-    uint16_t vid;
-    uint16_t pid;
-    char *model;
-    uint8_t min_sw_version[4];
-    char *name;                 /* not necessarily related to any
-                                   device provided information */
-    bool supported;
-    uint16_t pmem20_chunksize;
-};
 
 /*
  * Static functions
  */
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
-static int lock_log(ambit_object_t *object, bool lock);
-static uint32_t version_number(const uint8_t version[4]);
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
 
 /*
  * Static variables
  */
-static ambit_known_device_t known_devices[] = {
-    { SUUNTO_USB_VENDOR_ID, 0x001c, "Finch", {0x00,0x00,0x00,0x00}, "Suunto Ambit3 Sport", false, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001b, "Emu", {0x00,0x00,0x00,0x00}, "Suunto Ambit3 Peak", false, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001d, "Greentit", {0x00,0x00,0x00,0x00}, "Suunto Ambit2 R", true, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x01,0x01,0x02,0x00}, "Suunto Ambit2 S", true, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x01,0x01,0x02,0x00}, "Suunto Ambit2", true, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x03,0x00}, "Suunto Ambit2 S", false, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x00,0x02,0x03,0x00}, "Suunto Ambit2", false, 0x0400 },
-    { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x02,0x00}, "Suunto Ambit2 S (up to 0.2.2)", false, 0x0200 },
-    { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x00,0x02,0x02,0x00}, "Suunto Ambit2 (up to 0.2.2)", false, 0x0200 },
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x02,0x01,0x00,0x00}, "Suunto Ambit", true, 0x0200 },
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x09,0x00,0x00}, "Suunto Ambit", false, 0x0200 }, /* First with PMEM 2.0!? */
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x06,0x00,0x00}, "Suunto Ambit", false, 0 },
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x01,0x00,0x00}, "Suunto Ambit", false, 0 },
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x00,0x00,0x00,0x00}, "Suunto Ambit", false, 0 },
-    { 0x0000, 0x0000, NULL, {0x00,0x00,0x00,0x00}, NULL, false }
-};
-
 static uint8_t komposti_version[] = { 0x01, 0x08, 0x01, 0x00 };
 
 /*
@@ -130,6 +96,7 @@ void libambit_free_enumeration(ambit_device_info_t *devices)
 ambit_object_t * libambit_new(const ambit_device_info_t *device)
 {
     ambit_object_t *object = NULL;
+    const ambit_known_device_t *known_device = NULL;
     const char *path = NULL;
 
     if (!device || !device->path) {
@@ -141,15 +108,22 @@ ambit_object_t * libambit_new(const ambit_device_info_t *device)
     if (!path) return NULL;
 
     if (0 == device->access_status && device->is_supported) {
-        object = calloc(1, sizeof(*object));
-        if (object) {
-            object->handle = hid_open_path(path);
-            memcpy(&object->device_info, device, sizeof(*device));
-            object->device_info.path = path;
-            libambit_pmem20_init(object, device->chunk_size);
+        // Note, this should never fail if device was properly received with libambit_enumerate
+        known_device = libambit_device_support_find(device->vendor_id, device->product_id, device->model, device->fw_version);
+        if (known_device != NULL) {
+            object = calloc(1, sizeof(*object));
+            if (object) {
+                object->handle = hid_open_path(path);
+                memcpy(&object->device_info, device, sizeof(*device));
+                object->device_info.path = path;
+                object->driver = known_device->driver;
 
-            if (object->handle) {
-                hid_set_nonblocking(object->handle, true);
+                if (object->handle) {
+                    hid_set_nonblocking(object->handle, true);
+                }
+
+                // Initialize driver
+                object->driver->init(object, known_device->driver_param);
             }
         }
     }
@@ -188,13 +162,19 @@ void libambit_close(ambit_object_t *object)
 {
     LOG_INFO("Closing");
     if (object != NULL) {
-        if (object->handle != NULL) {
+        if (object->driver != NULL) {
             // Make sure to clear log lock (if possible)
-            lock_log(object, false);
+            if (object->driver->lock_log != NULL) {
+                object->driver->lock_log(object, false);
+            }
+            if (object->driver->deinit != NULL) {
+                object->driver->deinit(object);
+            }
+        }
+        if (object->handle != NULL) {
             hid_close(object->handle);
         }
 
-        libambit_pmem20_deinit(object);
         free((char *) object->device_info.path);
         free(object);
     }
@@ -202,43 +182,27 @@ void libambit_close(ambit_object_t *object)
 
 void libambit_sync_display_show(ambit_object_t *object)
 {
-    lock_log(object, true);
+    if (object->driver != NULL && object->driver->lock_log != NULL) {
+        object->driver->lock_log(object, true);
+    }
 }
 
 void libambit_sync_display_clear(ambit_object_t *object)
 {
-    lock_log(object, false);
+    if (object->driver != NULL && object->driver->lock_log != NULL) {
+        object->driver->lock_log(object, false);
+    }
 }
 
 int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
 {
-    uint8_t date_data[8] = { 0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00 };
-    uint8_t time_data[8];
     int ret = -1;
 
-    LOG_INFO("Writing date and time to clock");
-
-    // Set date
-    *(uint16_t*)(&date_data[0]) = htole16(1900 + tm->tm_year);
-    date_data[2] = 1 + tm->tm_mon;
-    date_data[3] = tm->tm_mday;
-    // byte[4-7] unknown (but set to 0x28000000 in moveslink)
-
-    // Set time (+date)
-    *(uint16_t*)(&time_data[0]) = htole16(1900 + tm->tm_year);
-    time_data[2] = 1 + tm->tm_mon;
-    time_data[3] = tm->tm_mday;
-    time_data[4] = tm->tm_hour;
-    time_data[5] = tm->tm_min;
-    *(uint16_t*)(&time_data[6]) = htole16(1000*tm->tm_sec);
-
-    if (libambit_protocol_command(object, ambit_command_date, date_data, sizeof(date_data), NULL, NULL, 0) == 0 &&
-        libambit_protocol_command(object, ambit_command_time, time_data, sizeof(time_data), NULL, NULL, 0) == 0) {
-
-        ret = 0;
+    if (object->driver != NULL && object->driver->date_time_set != NULL) {
+        ret = object->driver->date_time_set(object, tm);
     }
     else {
-        LOG_WARNING("Failed to write date and time");
+        LOG_WARNING("Driver does not support date_time_set");
     }
 
     return ret;
@@ -246,41 +210,27 @@ int libambit_date_time_set(ambit_object_t *object, struct tm *tm)
 
 int libambit_device_status_get(ambit_object_t *object, ambit_device_status_t *status)
 {
-    uint8_t *reply_data = NULL;
-    size_t replylen;
     int ret = -1;
 
-    LOG_INFO("Reading device status");
-
-    if (libambit_protocol_command(object, ambit_command_status, NULL, 0, &reply_data, &replylen, 0) == 0) {
-        if (status != NULL) {
-            status->charge = reply_data[1];
-        }
-        ret = 0;
+    if (object->driver != NULL && object->driver->status_get != NULL) {
+        ret = object->driver->status_get(object, status);
     }
     else {
-        LOG_WARNING("Failed to read device status");
+        LOG_WARNING("Driver does not support status_get");
     }
-
-    libambit_protocol_free(reply_data);
 
     return ret;
 }
 
 int libambit_personal_settings_get(ambit_object_t *object, ambit_personal_settings_t *settings)
 {
-    uint8_t *reply_data = NULL;
-    size_t replylen = 0;
     int ret = -1;
 
-    LOG_INFO("Reading personal settings");
-
-    if (libambit_protocol_command(object, ambit_command_personal_settings, NULL, 0, &reply_data, &replylen, 0) == 0) {
-        ret = libambit_personal_settings_parse(reply_data, replylen, settings);
-        libambit_protocol_free(reply_data);
+    if (object->driver != NULL && object->driver->personal_settings_get != NULL) {
+        ret = object->driver->personal_settings_get(object, settings);
     }
     else {
-        LOG_WARNING("Failed to read personal settings");
+        LOG_WARNING("Driver does not support personal_settings_get");
     }
 
     return ret;
@@ -288,18 +238,13 @@ int libambit_personal_settings_get(ambit_object_t *object, ambit_personal_settin
 
 int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8])
 {
-    uint8_t *reply_data = NULL;
-    size_t replylen = 0;
     int ret = -1;
 
-    if (libambit_protocol_command(object, ambit_command_gps_orbit_head, NULL, 0, &reply_data, &replylen, 0) == 0 && replylen >= 9) {
-        memcpy(data, &reply_data[1], 8);
-        libambit_protocol_free(reply_data);
-
-        ret = 0;
+    if (object->driver != NULL && object->driver->gps_orbit_header_read != NULL) {
+        ret = object->driver->gps_orbit_header_read(object, data);
     }
     else {
-        LOG_WARNING("Failed to read GPS orbit header");
+        LOG_WARNING("Driver does not support gps_orbit_header_read");
     }
 
     return ret;
@@ -307,31 +252,13 @@ int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8])
 
 int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen)
 {
-    uint8_t header[8], cmpheader[8];
     int ret = -1;
 
-    LOG_INFO("Writing GPS orbit data");
-
-    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
-
-    if (libambit_gps_orbit_header_read(object, header) == 0) {
-        cmpheader[0] = data[7]; // Year, swap bytes
-        cmpheader[1] = data[6];
-        cmpheader[2] = data[8];
-        cmpheader[3] = data[9];
-        cmpheader[4] = data[13]; // 4 byte swap
-        cmpheader[5] = data[12];
-        cmpheader[6] = data[11];
-        cmpheader[7] = data[10];
-
-        // Check if new data differs 
-        if (memcmp(header, cmpheader, 8) != 0) {
-            ret = libambit_pmem20_gps_orbit_write(object, data, datalen);
-        }
-        else {
-            LOG_INFO("Current GPS orbit data is already up to date, skipping");
-            ret = 0;
-        }
+    if (object->driver != NULL && object->driver->gps_orbit_write != NULL) {
+        ret = object->driver->gps_orbit_write(object, data, datalen);
+    }
+    else {
+        LOG_WARNING("Driver does not support gps_orbit_write");
     }
 
     return ret;
@@ -339,138 +266,16 @@ int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datal
 
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
 {
-    int entries_read = 0;
+    int ret = -1;
 
-    uint8_t *reply_data = NULL;
-    size_t replylen = 0;
-    uint16_t log_entries_total = 0;
-    uint16_t log_entries_walked = 0;
-
-    uint32_t more = 0x00000400;
-
-    bool read_pmem = false;
-
-    ambit_log_header_t log_header;
-    ambit_log_entry_t *log_entry;
-
-    LOG_INFO("Reading number of logs");
-
-    /*
-     * Read number of log entries
-     */
-    if (libambit_protocol_command(object, ambit_command_log_count, NULL, 0, &reply_data, &replylen, 0) != 0) {
-        LOG_WARNING("Failed to read number of log entries");
-        return -1;
-    }
-    log_entries_total = le16toh(*(uint16_t*)(reply_data + 2));
-    libambit_protocol_free(reply_data);
-
-    LOG_INFO("Number of logs=%d", log_entries_total);
-
-    /*
-     * First part walks through headers to check if there is any point in start
-     * reading the PMEM content. If no skip callback is defined, there is no
-     * point in checking the headers, because no one can tell us to not include
-     * the logs...
-     */
-
-    if (skip_cb != NULL) {
-        LOG_INFO("Look in headers for new logs");
-        // Rewind
-        if (libambit_protocol_command(object, ambit_command_log_head_first, NULL, 0, &reply_data, &replylen, 0) != 0) {
-            LOG_WARNING("Failed to rewind header pointer");
-            return -1;
-        }
-        more = le32toh(*(uint32_t*)reply_data);
-        libambit_protocol_free(reply_data);
-
-        // Loop through logs while more entries exists
-        while (more == 0x00000400) {
-            LOG_INFO("Reading next header");
-            // Go to next entry
-            if (libambit_protocol_command(object, ambit_command_log_head_step, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                LOG_WARNING("Failed to walk to next header");
-                return -1;
-            }
-            libambit_protocol_free(reply_data);
-
-            // Assume every header is composited by 2 parts, where only the
-            // second is of interrest right now
-            if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                LOG_WARNING("Failed to read first part of header");
-                return -1;
-            }
-            libambit_protocol_free(reply_data);
-
-            if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) == 0) {
-                if (replylen > 8 && libambit_pmem20_log_parse_header(reply_data + 8, replylen - 8, &log_header) == 0) {
-                    if (skip_cb(userref, &log_header) != 0) {
-                        // Header was NOT skipped, break out!
-                        read_pmem = true;
-                        LOG_INFO("Found new entry, start reading log data");
-                        break;
-                    }
-                }
-                else {
-                    LOG_ERROR("Failed to parse log header");
-                    return -1;
-                }
-                libambit_protocol_free(reply_data);
-            }
-            else {
-                LOG_WARNING("Failed to read second part of header");
-                return -1;
-            }
-
-            // Is there more entries to read?
-            if (libambit_protocol_command(object, ambit_command_log_head_peek, NULL, 0, &reply_data, &replylen, 0) != 0) {
-                LOG_WARNING("Failed to check for more headers");
-                return -1;
-            }
-            more = le32toh(*(uint32_t*)reply_data);
-            libambit_protocol_free(reply_data);
-        }
+    if (object->driver != NULL && object->driver->log_read != NULL) {
+        ret = object->driver->log_read(object, skip_cb, push_cb, progress_cb, userref);
     }
     else {
-        LOG_INFO("No skip callback defined, reading log data");
-        read_pmem = true;
+        LOG_WARNING("Driver does not support log_read");
     }
 
-    if (read_pmem) {
-        if (libambit_pmem20_log_init(object) != 0) {
-            return -1;
-        }
-
-        // Loop through all log entries, first check headers
-        while (log_entries_walked < log_entries_total && libambit_pmem20_log_next_header(object, &log_header) == 1) {
-            LOG_INFO("Reading header of log %d of %d", log_entries_walked + 1, log_entries_total);
-            if (progress_cb != NULL) {
-                progress_cb(userref, log_entries_total, log_entries_walked+1, 100*log_entries_walked/log_entries_total);
-            }
-            // Check if this entry needs to be read
-            if (skip_cb == NULL || skip_cb(userref, &log_header) != 0) {
-                LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
-                log_entry = libambit_pmem20_log_read_entry(object);
-                if (log_entry != NULL) {
-                    if (push_cb != NULL) {
-                        push_cb(userref, log_entry);
-                    }
-                    entries_read++;
-                }
-            }
-            else {
-                LOG_INFO("Log %d of %d already exists, skip reading data", log_entries_walked + 1, log_entries_total);
-            }
-            log_entries_walked++;
-            if (progress_cb != NULL) {
-                progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
-            }
-        }
-    }
-
-    LOG_INFO("%d entries read", entries_read);
-
-    return entries_read;
+    return ret;
 }
 
 void libambit_log_entry_free(ambit_log_entry_t *log_entry)
@@ -530,48 +335,7 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
     return ret;
 }
 
-static int lock_log(ambit_object_t *object, bool lock)
-{
-    int ret = -1;
-    uint8_t send_data[] = { 0x00, 0x00, 0x00, 0x00 };
-    uint8_t *reply_data = NULL;
-    size_t replylen = 0;
-
-    uint32_t current_lock = 0xffffffff;
-
-    if ((ret = libambit_protocol_command(object, ambit_command_lock_check, NULL, 0, &reply_data, &replylen, 0)) == 0) {
-        if (sizeof(uint32_t)/sizeof(uint8_t) <= replylen)  {
-            current_lock = le32toh(*(uint32_t*)reply_data);
-        }
-    }
-    libambit_protocol_free(reply_data);
-
-    if (lock && current_lock == 0) {
-        LOG_INFO("Setting Sync message to device display");
-        send_data[0] = 1;
-        ret = libambit_protocol_command(object, ambit_command_lock_set, send_data, sizeof(send_data), &reply_data, &replylen, 0);
-        libambit_protocol_free(reply_data);
-    }
-    else if (!lock && current_lock == 1) {
-        LOG_INFO("Clearing Sync message to device display");
-        send_data[0] = 0;
-        ret = libambit_protocol_command(object, ambit_command_lock_set, send_data, sizeof(send_data), &reply_data, &replylen, 0);
-        libambit_protocol_free(reply_data);
-    }
-
-    return ret;
-}
-
-static uint32_t version_number(const uint8_t version[4])
-{
-    return (  (version[0] << 24)
-            | (version[1] << 16)
-            | (version[2] <<  0)
-            | (version[3] <<  8));
-}
-
 const size_t LIBAMBIT_VERSION_LENGTH = 13;      /* max: 255.255.65535 */
-
 static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
                                   const uint8_t version[4])
 {
@@ -579,20 +343,6 @@ static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
 
   snprintf(string, LIBAMBIT_VERSION_LENGTH+1, "%d.%d.%d",
            version[0], version[1], (version[2] << 0) | (version[3] << 8));
-}
-
-static bool is_known_vid_pid(uint16_t vid, uint16_t pid)
-{
-    bool found = false;
-    size_t i;
-    size_t count = sizeof(known_devices) / sizeof(*known_devices);
-
-    for (i = 0; !found && i < count; ++i) {
-        found = (   known_devices[i].vid == vid
-                 && known_devices[i].pid == pid);
-    }
-
-    return found;
 }
 
 /* Converts a wide-character string to a limited length UTF-8 string.
@@ -647,31 +397,10 @@ static const char * wcs2nutf8(char *dest, const wchar_t *src, size_t n)
     return rv;
 }
 
-/* Tacitly assumes that minimally required software versions are
- * listed in decreasing order in the known_devices array!
- */
-static int find_known_device(const ambit_device_info_t *info)
-{
-    bool found = false;
-    int i = -1;
-    int count = sizeof(known_devices) / sizeof(*known_devices);
-
-    if (!info) return -1;
-
-    while (!found && ++i < count) {
-        found = (   known_devices[i].vid == info->vendor_id
-                 && known_devices[i].pid == info->product_id
-                 && 0 == strcmp(known_devices[i].model, info->model)
-                 && (   version_number(known_devices[i].min_sw_version)
-                     <= version_number(info->fw_version)));
-    }
-
-    return (found ? i : -1);
-}
-
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev)
 {
     ambit_device_info_t *device = NULL;
+    const ambit_known_device_t *known_device = NULL;
 
     const char *dev_path;
     const char *name = NULL;
@@ -691,7 +420,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     vid = dev->vendor_id;
     pid = dev->product_id;
 
-    if (!is_known_vid_pid(vid, pid)) {
+    if (!libambit_device_support_known(vid, pid)) {
         LOG_WARNING("unknown device (VID/PID: %04x/%04x)", vid, pid);
         return NULL;
     }
@@ -731,10 +460,6 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
         obj.handle = hid;
         obj.sequence_no = 0;
         if (0 == device_info_get(&obj, device)) {
-            int index;
-            char fw_version[LIBAMBIT_VERSION_LENGTH+1];
-            char hw_version[LIBAMBIT_VERSION_LENGTH+1];
-
             if (name && 0 != strcmp(name, device->name)) {
                 LOG_INFO("preferring F/W name over '%s'", name);
             }
@@ -742,20 +467,21 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
                 LOG_INFO("preferring F/W serial number over '%s'", uniq);
             }
 
-            index = find_known_device(device);
-            if (0 <= index) {
-                device->is_supported = known_devices[index].supported;
-                device->chunk_size = known_devices[index].pmem20_chunksize;
-                if (0 != strcmp(device->name, known_devices[index].name)) {
+            known_device = libambit_device_support_find(device->vendor_id, device->product_id, device->model, device->fw_version);
+            if (known_device != NULL) {
+                device->is_supported = known_device->supported;
+                if (0 != strcmp(device->name, known_device->name)) {
                     LOG_INFO("preferring know device name over '%s'", device->name);
-                    strncpy(device->name, known_devices[index].name, LIBAMBIT_PRODUCT_NAME_LENGTH);
-                    device->name[LIBAMBIT_PRODUCT_NAME_LENGTH] = 0;
+                    strcpy(device->name, known_device->name);
                 }
             }
 
+#ifdef DEBUG_PRINT_INFO
+            char fw_version[LIBAMBIT_VERSION_LENGTH+1];
+            char hw_version[LIBAMBIT_VERSION_LENGTH+1];
             version_string(fw_version, device->fw_version);
             version_string(hw_version, device->hw_version);
-
+#endif
             LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
                      "nick: %s, F/W: %s, H/W: %s, supported: %s)",
                      device->path, device->name, device->serial,
