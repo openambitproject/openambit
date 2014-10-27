@@ -47,7 +47,9 @@ static sample_type_names_t sampleTypeNames[] = {
     { ambit_log_sample_type_gps_tiny, "gps-tiny" },
     { ambit_log_sample_type_time, "time" },
     { ambit_log_sample_type_activity, "activity" },
+    { ambit_log_sample_type_cadence_source, "cadence-source" },
     { ambit_log_sample_type_position, "position" },
+    { ambit_log_sample_type_fwinfo, "fwinfo" },
     { ambit_log_sample_type_unknown, "unknown" },
     { (ambit_log_sample_type_t)0, "" }
 };
@@ -86,6 +88,16 @@ static sample_lap_event_type_t sampleLapEventTypeNames[] = {
     { 0x16, "Interval" },
     { 0x1e, "Pause" },
     { 0x1f, "Start" },
+    { 0, "" }
+};
+
+typedef struct sample_cadence_source_name_s {
+    u_int8_t source_id;
+    QString XMLName;
+} sample_cadence_source_name_t;
+
+static sample_cadence_source_name_t sampleCadenceSourceNames[] = {
+    { 0x40, "Wrist" },
     { 0, "" }
 };
 
@@ -1005,6 +1017,17 @@ void LogStore::XMLReader::readLogSamples()
                             xml.skipCurrentElement();
                         }
                         break;
+                    case ambit_log_sample_type_cadence_source:
+                        if (xml.name() == "CadenceSource") {
+                            int cadenceId = xml.attributes().value("id").toString().toUInt();
+                            logEntry->logEntry->samples[sampleCount].u.cadence_source = cadenceId;
+                            xml.skipCurrentElement();
+                        }
+                        else {
+                            /* Should not get here! */
+                            xml.skipCurrentElement();
+                        }
+                        break;
                     case ambit_log_sample_type_position:
                         if (xml.name() == "Latitude") {
                             logEntry->logEntry->samples[sampleCount].u.position.latitude = xml.readElementText().toInt();
@@ -1017,6 +1040,33 @@ void LogStore::XMLReader::readLogSamples()
                             xml.skipCurrentElement();
                         }
                         break;
+                    case ambit_log_sample_type_fwinfo:
+                    {
+                        QRegExp versionRX("([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+
+                        if (xml.name() == "Version") {
+                            if (versionRX.indexIn(xml.readElementText()) >= 0) {
+                                logEntry->logEntry->samples[sampleCount].u.fwinfo.version[0] = versionRX.cap(1).toInt();
+                                logEntry->logEntry->samples[sampleCount].u.fwinfo.version[1] = versionRX.cap(2).toInt();
+                                logEntry->logEntry->samples[sampleCount].u.fwinfo.version[2] = versionRX.cap(3).toInt() & 0xff;
+                                logEntry->logEntry->samples[sampleCount].u.fwinfo.version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+                            }
+                        }
+                        else if (xml.name() == "BuildDate") {
+                            QDateTime datetime = QDateTime::fromString(xml.readElementText(), Qt::ISODate);
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.year = datetime.date().year();
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.month = datetime.date().month();
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.day = datetime.date().day();
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.hour = datetime.time().hour();
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.minute = datetime.time().minute();
+                            logEntry->logEntry->samples[sampleCount].u.fwinfo.build_date.msec = datetime.time().second()*1000 + datetime.time().msec();
+                        }
+                        else {
+                            /* Should not get here! */
+                            xml.skipCurrentElement();
+                        }
+                        break;
+                    }
                     case ambit_log_sample_type_unknown:
                         if (xml.name() == "Data") {
                             QByteArray val = xml.readElementText().toLocal8Bit();
@@ -1455,6 +1505,7 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
     sample_distance_source_name_t *distance_source_name;
     sample_altitude_source_name_t *altitude_source_name;
     sample_lap_event_type_t *lap_type_name;
+    sample_cadence_source_name_t *cadence_source_name;
     int i;
 
     xml.writeStartElement("Sample");
@@ -1584,13 +1635,37 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
         break;
     }
     case ambit_log_sample_type_activity:
+    {
         xml.writeTextElement("ActivityType", QString("%1").arg(sample->u.activity.activitytype));
         xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.custommode));
         break;
+    }
+    case ambit_log_sample_type_cadence_source:
+    {
+        xml.writeStartElement("CadenceSource");
+        xml.writeAttribute("id", QString("%1").arg(sample->u.cadence_source));
+        for (cadence_source_name = &sampleCadenceSourceNames[0]; cadence_source_name->XMLName != ""; cadence_source_name++) {
+            if (cadence_source_name->source_id == sample->u.cadence_source) {
+                xml.writeCharacters(QString(cadence_source_name->XMLName));
+                break;
+            }
+        }
+        xml.writeEndElement();
+        break;
+    }
     case ambit_log_sample_type_position:
+    {
         xml.writeTextElement("Latitude", QString("%1").arg(sample->u.position.latitude));
         xml.writeTextElement("Longitude", QString("%1").arg(sample->u.position.longitude));
         break;
+    }
+    case ambit_log_sample_type_fwinfo:
+    {
+        xml.writeTextElement("Version", QString("%1.%2.%3").arg((int)sample->u.fwinfo.version[0]).arg((int)sample->u.fwinfo.version[1]).arg((int)sample->u.fwinfo.version[2] | ((int)sample->u.fwinfo.version[3] << 8)));
+        QDateTime dateTime(QDate(sample->u.fwinfo.build_date.year, sample->u.fwinfo.build_date.month, sample->u.fwinfo.build_date.day), QTime(sample->u.fwinfo.build_date.hour, sample->u.fwinfo.build_date.minute, 0).addMSecs(sample->u.fwinfo.build_date.msec));
+        xml.writeTextElement("BuildDate", dateTime.toString(Qt::ISODate));
+        break;
+    }
     case ambit_log_sample_type_unknown:
     {
         QString data = "";

@@ -773,10 +773,25 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             log_entry->samples[*sample_count].u.activity.activitytype = read16inc(buf, &int_offset);
             log_entry->samples[*sample_count].u.activity.custommode = read32inc(buf, &int_offset);
             break;
+          case 0x1a:
+            log_entry->samples[*sample_count].type = ambit_log_sample_type_cadence_source;
+            log_entry->samples[*sample_count].u.cadence_source = read8inc(buf, &int_offset);
+            break;
           case 0x1b:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_position;
             log_entry->samples[*sample_count].u.position.latitude = read32inc(buf, &int_offset);
             log_entry->samples[*sample_count].u.position.longitude = read32inc(buf, &int_offset);
+            break;
+          case 0x1c:
+            log_entry->samples[*sample_count].type = ambit_log_sample_type_fwinfo;
+            memcpy(log_entry->samples[*sample_count].u.fwinfo.version, buf + int_offset, 4);
+            int_offset += 4;
+            log_entry->samples[*sample_count].u.fwinfo.build_date.year = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.fwinfo.build_date.month = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.fwinfo.build_date.day = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.fwinfo.build_date.hour = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.fwinfo.build_date.minute = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.fwinfo.build_date.msec = read16inc(buf, &int_offset);
             break;
           default:
             LOG_WARNING("Found unknown episodic sample type (0x%02x)", episodic_type);

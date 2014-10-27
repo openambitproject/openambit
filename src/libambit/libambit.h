@@ -132,7 +132,9 @@ typedef enum ambit_log_sample_type_e {
     ambit_log_sample_type_gps_tiny = 0x0311,
     ambit_log_sample_type_time = 0x0312,
     ambit_log_sample_type_activity = 0x0318,
+    ambit_log_sample_type_cadence_source = 0x031a,
     ambit_log_sample_type_position = 0x031b,
+    ambit_log_sample_type_fwinfo = 0x031c,
     ambit_log_sample_type_unknown = 0xf000
 } ambit_log_sample_type_t;
 
@@ -284,10 +286,15 @@ typedef struct ambit_log_sample_s {
             uint16_t activitytype;
             uint32_t custommode;
         } activity;
+        uint8_t cadence_source;                 /* 0x40 = Wrist */
         struct {
             int32_t  latitude;                  /* degree, scale: 0.0000001, -90 <= latitude <= 90 */
             int32_t  longitude;                 /* degree, scale: 0.0000001, -180 <= latitude <= 180 */
         } position;
+        struct {
+            uint8_t version[4];
+            ambit_date_time_t build_date;
+        } fwinfo;
         struct {
             size_t datalen;
             uint8_t *data;
