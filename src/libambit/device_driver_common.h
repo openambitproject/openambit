@@ -22,6 +22,13 @@
 #ifndef __DEVICE_DRIVER_COMMON_H__
 #define __DEVICE_DRIVER_COMMON_H__
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <time.h>
+
+#include "libambit.h"
+
 int libambit_device_driver_lock_log(ambit_object_t *object, bool lock);
 int libambit_device_driver_date_time_set(ambit_object_t *object, struct tm *tm);
 int libambit_device_driver_status_get(ambit_object_t *object, ambit_device_status_t *status);

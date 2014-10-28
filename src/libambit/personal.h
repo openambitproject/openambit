@@ -19,22 +19,13 @@
  * Contributors:
  *
  */
-#ifndef __LIBAMBIT_INT_H__
-#define __LIBAMBIT_INT_H__
+#ifndef __PERSONAL_H__
+#define __PERSONAL_H__
 
+#include <stddef.h>
 #include <stdint.h>
-#include "hidapi/hidapi.h"
 #include "libambit.h"
 
-struct ambit_object_s {
-    hid_device *handle;
-    uint16_t sequence_no;
-    ambit_device_info_t device_info;
+int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_personal_settings_t *settings);
 
-    struct ambit_device_driver_s *driver;
-    struct ambit_device_driver_data_s *driver_data; // Driver specific struct,
-                                                    // should be defined
-                                                    // locally for each driver
-};
-
-#endif /* __LIBAMBIT_INT_H__ */
+#endif /* __PERSONAL_H__ */

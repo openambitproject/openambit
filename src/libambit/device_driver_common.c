@@ -19,8 +19,9 @@
  * Contributors:
  *
  */
-#include "libambit.h"
-#include "libambit_int.h"
+#include "device_driver_common.h"
+#include "protocol.h"
+#include "debug.h"
 
 #include <stdlib.h>
 

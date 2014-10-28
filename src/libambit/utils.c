@@ -19,6 +19,8 @@
  * Contributors:
  *
  */
+#include "utils.h"
+
 #include <stdint.h>
 #include <ctype.h>
 #include <limits.h>

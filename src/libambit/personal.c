@@ -19,8 +19,8 @@
  * Contributors:
  *
  */
-#include "libambit.h"
-#include "libambit_int.h"
+#include "personal.h"
+#include "utils.h"
 
 #include <stdlib.h>
 #include <string.h>

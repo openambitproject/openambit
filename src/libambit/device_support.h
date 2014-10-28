@@ -19,22 +19,21 @@
  * Contributors:
  *
  */
-#ifndef __LIBAMBIT_INT_H__
-#define __LIBAMBIT_INT_H__
+#ifndef __DEVICE_SUPPORT_H__
+#define __DEVICE_SUPPORT_H__
 
+#include <stddef.h>
 #include <stdint.h>
-#include "hidapi/hidapi.h"
-#include "libambit.h"
+#include <stdbool.h>
 
-struct ambit_object_s {
-    hid_device *handle;
-    uint16_t sequence_no;
-    ambit_device_info_t device_info;
-
+typedef struct ambit_known_device_s {
+    char *name;
+    bool supported;
     struct ambit_device_driver_s *driver;
-    struct ambit_device_driver_data_s *driver_data; // Driver specific struct,
-                                                    // should be defined
-                                                    // locally for each driver
-};
+    uint32_t driver_param;
+} ambit_known_device_t;
 
-#endif /* __LIBAMBIT_INT_H__ */
+bool libambit_device_support_known(uint16_t vendor_id, uint16_t product_id);
+const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uint16_t product_id, const char *model, const uint8_t *fw_version);
+
+#endif /* __DEVICE_SUPPORT_H__ */

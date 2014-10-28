@@ -19,8 +19,10 @@
  * Contributors:
  *
  */
-#include "libambit.h"
+#include "protocol.h"
 #include "libambit_int.h"
+#include "crc16.h"
+
 #include "hidapi/hidapi.h"
 
 #include <stdlib.h>

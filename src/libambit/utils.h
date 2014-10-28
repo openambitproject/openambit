@@ -22,6 +22,10 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <stddef.h>
+#include <stdint.h>
+#include <time.h>
+
 /**
  * Reduced implementation of the Unix specific strptime
  */
@@ -35,5 +39,39 @@ char *libambit_strptime(const char *p, const char *fmt, struct tm *dt);
  * \return Number of converted bytes, or -1 if error occured
  */
 int libambit_htob(const char *hex_string, uint8_t *binary, size_t binary_size);
+
+// static helpers
+static inline uint8_t read8(uint8_t *buf, size_t offset)
+{
+    return buf[offset];
+}
+
+static inline uint16_t read16(uint8_t *buf, size_t offset)
+{
+    return (buf[offset] | (buf[offset+1] << 8));
+}
+
+static inline uint32_t read32(uint8_t *buf, size_t offset)
+{
+    return (buf[offset] | (buf[offset+1] << 8) | (buf[offset+2] << 16) | (buf[offset+3] << 24));
+}
+
+static inline uint8_t read8inc(uint8_t *buf, size_t *offset)
+{
+    *offset += 1;
+    return buf[(*offset)-1];
+}
+
+static inline uint16_t read16inc(uint8_t *buf, size_t *offset)
+{
+    *offset += 2;
+    return (buf[(*offset)-2] | (buf[(*offset)-1] << 8));
+}
+
+static inline uint32_t read32inc(uint8_t *buf, size_t *offset)
+{
+    *offset += 4;
+    return (buf[(*offset)-4] | (buf[(*offset)-3] << 8) | (buf[(*offset)-2] << 16) | (buf[(*offset)-1] << 24));
+}
 
 #endif /* __UTILS_H__ */

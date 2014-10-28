@@ -18,7 +18,7 @@
 /*                                                               */
 /*****************************************************************/
 
-#include "libambit_int.h"
+#include "crc16.h"
 
 static uint16_t crctable[256] =
 {

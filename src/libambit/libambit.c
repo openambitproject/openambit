@@ -21,6 +21,10 @@
  */
 #include "libambit.h"
 #include "libambit_int.h"
+#include "device_support.h"
+#include "device_driver.h"
+#include "protocol.h"
+#include "debug.h"
 
 #include <errno.h>
 #include <iconv.h>

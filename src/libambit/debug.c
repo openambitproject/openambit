@@ -19,8 +19,7 @@
  * Contributors:
  *
  */
-#include "libambit.h"
-#include "libambit_int.h"
+#include "debug.h"
 
 #include <stdarg.h>
 #include <stdio.h>
