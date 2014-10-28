@@ -242,6 +242,10 @@ static int hf_ambit_log_altitude_source_type = -1;
 static int hf_ambit_log_altitude_source_altitude_offset = -1;
 static int hf_ambit_log_altitude_source_pressure_offset = -1;
 
+static int hf_ambit_log_cadence_source_type = -1;
+
+static int hf_ambit_log_fwinfo_build_date = -1;
+
 static int hf_ambit_log_ibi = -1;
 
 static int hf_ambit_gps_data_head = -1;
@@ -309,6 +313,11 @@ static const value_string log_samples_distance_source_type_vals[] = {
 
 static const value_string log_samples_altitude_source_type_vals[] = {
     { 0x04, "Pressure" },
+    { 0, NULL }
+};
+
+static const value_string log_samples_cadence_source_type_vals[] = {
+    { 0x40, "Wrist" },
     { 0, NULL }
 };
 
@@ -1481,6 +1490,23 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 12);
             }
             break;
+          case 0x1a:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Cadence source)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_cadence_source_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            if (offset < sample_len - 2) {
+                dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 7);
+            }
+            break;
           case 0x1b:
             sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (lat-long)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
@@ -1502,6 +1528,35 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             if (offset < sample_len - 2) {
                 dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 14);
+            }
+            break;
+          case 0x1c:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Firmware info)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            {
+                guint8 fw1,fw2;
+                guint16 fw3;
+                fw1 = tvb_get_guint8(tvb, offset);
+                fw2 = tvb_get_guint8(tvb, offset+1);
+                fw3 = tvb_get_letohs(tvb, offset+2);
+                proto_tree_add_string_format_value(sample_tree, hf_ambit_fw_version, tvb, offset, 4, "FW version", "%d.%d.%d", fw1, fw2, fw3);
+                offset += 4;
+                guint16 year = tvb_get_letohs(tvb, offset);
+                guint8 month = tvb_get_guint8(tvb, offset + 2);
+                guint8 day = tvb_get_guint8(tvb, offset + 3);
+                guint8 hour = tvb_get_guint8(tvb, offset + 4);
+                guint8 minute = tvb_get_guint8(tvb, offset + 5);
+                guint16 seconds = tvb_get_letohs(tvb, offset + 6);
+                proto_tree_add_string_format_value(sample_tree, hf_ambit_log_fwinfo_build_date, tvb, offset, 8, "Builddate", "%04d-%02d-%02d %02d:%02d:%2.3f", year, month, day, hour, minute, ((float)seconds/1000.0));
+                offset += 8;
             }
             break;
           default:
@@ -2314,6 +2369,11 @@ proto_register_ambit(void)
           { "Altitude offset", "ambit.log_sample.altitude_source.alt_offset", FT_INT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_altitude_source_pressure_offset,
           { "Pressure", "ambit.log_sample.altitude_source.pres_offset", FT_INT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_cadence_source_type,
+          { "Type", "ambit.log_sample.cadence_source.type", FT_UINT8, BASE_HEX, VALS(log_samples_cadence_source_type_vals), 0x0,NULL, HFILL } },
+
+        { &hf_ambit_log_fwinfo_build_date,
+          { "Build date", "ambit.log_sample.fwinfo.builddate", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_ibi,
           { "IBI entry", "ambit.log_sample.ibi", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
