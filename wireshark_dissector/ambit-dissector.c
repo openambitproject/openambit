@@ -155,6 +155,7 @@ static int hf_ambit_log_header_sample_count = -1;
 static int hf_ambit_log_header_energy = -1;
 static int hf_ambit_log_header_cadence_max = -1;
 static int hf_ambit_log_header_cadence_avg = -1;
+static int hf_ambit_log_header_swimming_lengths = -1;
 static int hf_ambit_log_header_speed_max_time = -1;
 static int hf_ambit_log_header_alt_max_time = -1;
 static int hf_ambit_log_header_alt_min_time = -1;
@@ -163,6 +164,7 @@ static int hf_ambit_log_header_hr_min_time = -1;
 static int hf_ambit_log_header_temp_max_time = -1;
 static int hf_ambit_log_header_temp_min_time = -1;
 static int hf_ambit_log_header_cadence_max_time = -1;
+static int hf_ambit_log_header_swimming_pool_length = -1;
 static int hf_ambit_log_header_time_first_fix = -1;
 static int hf_ambit_log_header_battery_start = -1;
 static int hf_ambit_log_header_battery_stop = -1;
@@ -688,8 +690,10 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 1;
         proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
         offset += 1;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-        offset += 4;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+        offset += 2;
+        proto_tree_add_item(tree, hf_ambit_log_header_swimming_lengths, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+        offset += 2;
         proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_alt_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
@@ -706,7 +710,7 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+        proto_tree_add_item(tree, hf_ambit_log_header_swimming_pool_length, tvb, offset, 4, ENC_LITTLE_ENDIAN);
         offset += 4;
         proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
@@ -1006,9 +1010,12 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 1 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_cadence_avg, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
-    if (offset + 4 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-    offset += 4;
+    if (offset + 2 >= length) return offset;
+    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
+    offset += 2;
+    if (offset + 2 >= length) return offset;
+    proto_tree_add_item(tree, hf_ambit_log_header_swimming_lengths, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+    offset += 2;
     if (offset + 4 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_speed_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
@@ -1034,7 +1041,7 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     proto_tree_add_item(tree, hf_ambit_log_header_cadence_max_time, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
     if (offset + 4 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+    proto_tree_add_item(tree, hf_ambit_log_header_swimming_pool_length, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_time_first_fix, tvb, offset, 2, ENC_LITTLE_ENDIAN);
@@ -2289,6 +2296,8 @@ proto_register_ambit(void)
           { "Cadence max (rpm)", "ambit.log_header.cadence_max", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_cadence_avg,
           { "Cadence avg (rpm)", "ambit.log_header.cadence_avg", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_swimming_lengths,
+          { "Swimming pool lengths", "ambit.log_header.swimming_lengths", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_speed_max_time,
           { "Time max speed (ms)", "ambit.log_header.speed_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_alt_max_time,
@@ -2305,6 +2314,8 @@ proto_register_ambit(void)
           { "Time min temperature (ms)", "ambit.log_header.temp_mintime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_cadence_max_time,
           { "Time max cadence (ms)", "ambit.log_header.cadence_maxtime", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header_swimming_pool_length,
+          { "Swimming pool length (m)", "ambit.log_header.swimming_pool_length", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_time_first_fix,
           { "Time of first fix", "ambit.log_header.time_first_fix", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_battery_start,
@@ -2461,9 +2472,9 @@ proto_register_ambit(void)
         { &hf_ambit_log_swimming_turn_distance,
           { "Distance (cm)", "ambit.log_sample.swimming_turn.distance", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_swimming_turn_lengths,
-          { "Total lengths", "ambit.log_sample.swimming_turn.lengths", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+          { "Total pool lengths", "ambit.log_sample.swimming_turn.lengths", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_swimming_turn_lengths_wo_change,
-          { "Total lengths w/o style change(!?)", "ambit.log_sample.swimming_turn.lengths_wo_change", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+          { "Total pool lengths w/o style change(!?)", "ambit.log_sample.swimming_turn.lengths_wo_change", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_swimming_turn_prev_style,
           { "Style", "ambit.log_sample.swimming_turn.style", FT_UINT8, BASE_HEX, VALS(log_samples_swimming_style_vals), 0x0,NULL, HFILL } },
         { &hf_ambit_log_swimming_turn_classification0,
