@@ -246,6 +246,17 @@ static int hf_ambit_log_cadence_source_type = -1;
 
 static int hf_ambit_log_fwinfo_build_date = -1;
 
+static int hf_ambit_log_swimming_turn_distance = -1;
+static int hf_ambit_log_swimming_turn_lengths = -1;
+static int hf_ambit_log_swimming_turn_lengths_wo_change = -1;
+static int hf_ambit_log_swimming_turn_classification0 = -1;
+static int hf_ambit_log_swimming_turn_classification1 = -1;
+static int hf_ambit_log_swimming_turn_classification2 = -1;
+static int hf_ambit_log_swimming_turn_classification3 = -1;
+static int hf_ambit_log_swimming_turn_prev_style = -1;
+
+static int hf_ambit_log_delayed_store = -1;
+
 static int hf_ambit_log_ibi = -1;
 
 static int hf_ambit_gps_data_head = -1;
@@ -306,8 +317,12 @@ static const value_string log_samples_time_event_type_vals[] = {
 };
 
 static const value_string log_samples_distance_source_type_vals[] = {
+    { 0x00, "Bikepod" },
+    { 0x01, "Footpod" },
     { 0x02, "GPS" },
     { 0x03, "Wrist" },
+    { 0x04, "Indoorswimming" },
+    { 0x05, "Outdoorswimming" },
     { 0, NULL }
 };
 
@@ -318,6 +333,16 @@ static const value_string log_samples_altitude_source_type_vals[] = {
 
 static const value_string log_samples_cadence_source_type_vals[] = {
     { 0x40, "Wrist" },
+    { 0, NULL }
+};
+
+static const value_string log_samples_swimming_style_vals[] = {
+    { 0x00, "Other" },
+    { 0x01, "Butterfly" },
+    { 0x02, "Backstroke" },
+    { 0x03, "Breaststroke" },
+    { 0x04, "Freestyle" },
+    { 0x05, "Drill" },
     { 0, NULL }
 };
 
@@ -1471,6 +1496,64 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 9);
             }
             break;
+          case 0x14:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Swimming turn)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 1);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_delayed_store, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 1);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_lengths, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 4);
+            offset += 4;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 2);
+            offset += 2;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 8);
+            offset += 8;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_lengths_wo_change, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_classification0, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_classification1, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_classification2, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_classification3, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_prev_style, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, 1);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_swimming_turn_distance, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            break;
+          case 0x15:
+            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Swimming stroke)", (*sampleno)++);
+            sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            proto_tree_add_item(sample_tree, hf_ambit_log_sample_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_time_offset, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+            offset += 4;
+            proto_tree_add_item(sample_tree, hf_ambit_log_other_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+            offset += 1;
+            proto_tree_add_item(sample_tree, hf_ambit_log_delayed_store, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+            offset += 2;
+            break;
           case 0x18:
             sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Activity)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
@@ -2374,6 +2457,26 @@ proto_register_ambit(void)
 
         { &hf_ambit_log_fwinfo_build_date,
           { "Build date", "ambit.log_sample.fwinfo.builddate", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_log_swimming_turn_distance,
+          { "Distance (cm)", "ambit.log_sample.swimming_turn.distance", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_lengths,
+          { "Total lengths", "ambit.log_sample.swimming_turn.lengths", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_lengths_wo_change,
+          { "Total lengths w/o style change(!?)", "ambit.log_sample.swimming_turn.lengths_wo_change", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_prev_style,
+          { "Style", "ambit.log_sample.swimming_turn.style", FT_UINT8, BASE_HEX, VALS(log_samples_swimming_style_vals), 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_classification0,
+          { "ClassificationVector[0]", "ambit.log_sample.swimming_turn.classification0", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_classification1,
+          { "ClassificationVector[1]", "ambit.log_sample.swimming_turn.classification1", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_classification2,
+          { "ClassificationVector[2]", "ambit.log_sample.swimming_turn.classification2", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_swimming_turn_classification3,
+          { "ClassificationVector[3]", "ambit.log_sample.swimming_turn.classification3", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_log_delayed_store,
+          { "Log write delay (1/10 s)", "ambit.log_sample.delayed_store", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_ibi,
           { "IBI entry", "ambit.log_sample.ibi", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
