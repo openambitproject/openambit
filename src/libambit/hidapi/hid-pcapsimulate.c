@@ -112,7 +112,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
         tmp = malloc(sizeof(struct hid_device_info));
         tmp->next = NULL;
 
-        tmp->path = NULL;
+        tmp->path = calloc(1, 1);
         tmp->vendor_id = detected_device->vendor_id;
         tmp->product_id = detected_device->product_id;
         tmp->serial_number = utf8_to_wchar_t(detected_device_serial);
