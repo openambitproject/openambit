@@ -64,7 +64,7 @@ ambit_device_info_t * libambit_enumerate(void)
     struct hid_device_info *current;
 
     if (!devs) {
-      LOG_ERROR("HID: something went wrong");
+      LOG_WARNING("HID: no USB HID devices found");
       return NULL;
     }
 
@@ -415,6 +415,8 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 
     hid_device *hid;
 
+    
+
     if (!dev || !dev->path) {
         LOG_ERROR("internal error: expecting hidraw device");
         return NULL;
@@ -425,7 +427,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     pid = dev->product_id;
 
     if (!libambit_device_support_known(vid, pid)) {
-        LOG_WARNING("unknown device (VID/PID: %04x/%04x)", vid, pid);
+        LOG_INFO("ignoring unknown device (VID/PID: %04x/%04x)", vid, pid);
         return NULL;
     }
 
