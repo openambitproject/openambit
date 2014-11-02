@@ -52,6 +52,8 @@ private:
     int compressData(QByteArray &content, QByteArray &output);
     QList<int> rearrangeSamples(LogEntry *logEntry);
     QString dateTimeString(QDateTime dateTime);
+    QDateTime dateTimeRound(QDateTime dateTime, int msecRoundFactor);
+    QDateTime dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset);
 };
 
 #endif // MOVESCOUNTJSON_H

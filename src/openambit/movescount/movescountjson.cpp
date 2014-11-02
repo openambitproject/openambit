@@ -103,10 +103,24 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     return -1;
 }
 
+/**
+ * @brief MovesCountJSON::generateLogData
+ * @param logEntry
+ * @param output
+ * @return
+ * @note Fucked up facts about movescount:
+ *  - The periodic samples timestamps are truncated to 10th of milliseconds by movescount
+ *  - That would be fine, if it wasn't for the swimming logs where the periodic entries
+ *    are matched to the time of entries in the marksContent list (which has ms precision).
+ *  - Some of the entries that should match in marksContent are virtual created entries,
+ *    generated here. This can lead to time collisions.
+ *  - To compensate for the collisions, samples might need to be shifted in time,
+ *    hence the fuzz with dateTimeCompensate
+ */
 int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
 {
     QJson::Serializer serializer;
-    bool ok;
+    bool ok, inPause = false;
     QVariantMap content;
     QVariantList IBIContent;
     QVariantList marksContent;
@@ -114,6 +128,8 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     QVariantList GPSSamplesContent;
     QByteArray uncompressedData, compressedData;
     ambit_log_sample_t *sample;
+    QDateTime prevMarksDateTime;
+    QDateTime prevPeriodicSamplesDateTime;
 
     QDateTime localBaseTime(QDate(logEntry->logEntry->header.date_time.year,
                                   logEntry->logEntry->header.date_time.month,
@@ -123,14 +139,15 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
 
     // Loop through content
     QList<int> order = rearrangeSamples(logEntry);
-    foreach(int index, order) {
-        sample = &logEntry->logEntry->samples[index];
+    for (int i=0; i<order.length(); i++) {
+        sample = &logEntry->logEntry->samples[order[i]];
 
         switch(sample->type) {
         case ambit_log_sample_type_periodic:
         {
             QVariantMap tmpMap;
-            tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+            prevPeriodicSamplesDateTime = dateTimeRound(dateTimeCompensate(dateTimeRound(localBaseTime.addMSecs(sample->time), 10), prevPeriodicSamplesDateTime, 0), 10);
+            tmpMap.insert("LocalTime", dateTimeString(prevPeriodicSamplesDateTime));
             writePeriodicSample(sample, tmpMap);
             periodicSamplesContent.append(tmpMap);
             break;
@@ -178,7 +195,13 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
             case 0x00: /* autolap = 5 */
             {
                 QVariantMap tmpMap;
-                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+                if (sample->time > 0) {
+                    prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+                }
+                else {
+                    prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+                }
+                tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
                 tmpMap.insert("Type", 5);
                 marksContent.append(tmpMap);
                 break;
@@ -186,45 +209,162 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
             case 0x01: /* manual = 0 */
             case 0x16: /* interval = 0 */
             {
-                QVariantMap tmpMap;
-                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
-                tmpMap.insert("Type", 0);
-                marksContent.append(tmpMap);
+                // Try to remove strange manual lap events at end after pause/stop
+                // A lap during a pause doesn't make sense anyway?
+                if (!inPause) {
+                    QVariantMap tmpMap;
+                    if (sample->time > 0) {
+                        prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+                    }
+                    else {
+                        prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+                    }
+                    tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
+                    tmpMap.insert("Type", 0);
+                    marksContent.append(tmpMap);
+                }
                 break;
             }
             case 0x1f: /* start = 1 */
             {
                 QVariantMap tmpMap;
-                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
                 if (sample->time > 0) {
+                    prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+                    tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
                     tmpMap.insert("Type", 1);
                 }
+                else {
+                    prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+                    tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
+                }
                 marksContent.append(tmpMap);
+
+                inPause = false;
                 break;
             }
             case 0x1e: /* pause = 2 */
             {
                 QVariantMap tmpMap;
-                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+                if (sample->time > 0) {
+                    prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+                }
+                else {
+                    prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+                }
+                tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
                 tmpMap.insert("Type", 2);
                 marksContent.append(tmpMap);
+
+                inPause = true;
                 break;
             }
             case 0x14: /* high interval = 3 */
             case 0x15: /* low interval = 3 */
             {
                 QVariantMap tmpMap;
-                tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+                if (sample->time > 0) {
+                    prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+                }
+                else {
+                    prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+                }
+                tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
                 tmpMap.insert("Type", 3);
                 marksContent.append(tmpMap);
                 break;
             }
             };
             break;
+        case ambit_log_sample_type_swimming_turn:
+        {
+            int nextIndex;
+            ambit_log_sample_t *next_swimming_turn = NULL;
+            uint8_t style = 0;
+            QDateTime sampleDateTime;
+            if (sample->time > 0) {
+                sampleDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+            }
+            else {
+                sampleDateTime = localBaseTime.addMSecs(sample->time);
+            }
+
+            // Find next swimming turn, to check what marks to generate
+            for (nextIndex=i+1; nextIndex<order.length(); nextIndex++) {
+                next_swimming_turn = &logEntry->logEntry->samples[order[nextIndex]];
+                if (next_swimming_turn->type == ambit_log_sample_type_swimming_turn) {
+                    break;
+                }
+            }
+            if (nextIndex == order.length()) {
+                next_swimming_turn = NULL;
+            }
+            if (next_swimming_turn == NULL || sample->u.swimming_turn.style != next_swimming_turn->u.swimming_turn.style) {
+                QVariantMap tmpMap;
+                QVariantList calibration;
+                tmpMap.insert("LocalTime", dateTimeString(sampleDateTime));
+                tmpMap.insert("Type", 7);
+                tmpMap.insert("SwimmingStyle", sample->u.swimming_turn.style);
+                for (size_t k=0; k<sizeof(sample->u.swimming_turn.classification)/sizeof(sample->u.swimming_turn.classification[0]); k++) {
+                    calibration.append(sample->u.swimming_turn.classification[k]);
+                }
+                tmpMap.insert("SwimmingStyleCalibration", calibration);
+                marksContent.append(tmpMap);
+
+                if (next_swimming_turn != NULL) {
+                    style = next_swimming_turn->u.swimming_turn.style;
+                }
+                else {
+                    style = 0;
+                }
+
+                // Add some time to timestamp
+                sampleDateTime = sampleDateTime.addMSecs(5);
+            }
+            else {
+                style = sample->u.swimming_turn.style;
+            }
+
+            sampleDateTime = dateTimeRound(dateTimeCompensate(dateTimeCompensate(dateTimeRound(sampleDateTime, 10), prevMarksDateTime, 0), prevPeriodicSamplesDateTime, 0), 10);
+
+            QVariantMap tmpMap, attribMap;
+            QVariantList attributes;
+            tmpMap.insert("LocalTime", dateTimeString(sampleDateTime));
+            tmpMap.insert("Type", 5);
+            tmpMap.insert("SwimmingStyle", style);
+            attribMap.insert("Name", "type");
+            attribMap.insert("Value", "swimmingturn");
+            attributes.append(attribMap);
+            tmpMap.insert("Attributes", attributes);
+            marksContent.append(tmpMap);
+
+            QVariantMap periodicMap;
+            periodicMap.insert("Distance", sample->u.swimming_turn.distance / 100);
+            periodicMap.insert("LocalTime", dateTimeString(sampleDateTime));
+            periodicSamplesContent.append(periodicMap);
+
+            prevPeriodicSamplesDateTime = prevMarksDateTime = sampleDateTime;
+
+            break;
+        }
+        case ambit_log_sample_type_swimming_stroke:
+        {
+            QVariantMap tmpMap;
+            prevPeriodicSamplesDateTime = dateTimeRound(dateTimeCompensate(dateTimeRound(localBaseTime.addMSecs(sample->time), 10), prevPeriodicSamplesDateTime, 0), 10);
+            tmpMap.insert("LocalTime", dateTimeString(prevPeriodicSamplesDateTime));
+            tmpMap.insert("SwimmingStrokeType", 0);
+            periodicSamplesContent.append(tmpMap);
+            break;
+        }
         case ambit_log_sample_type_activity:
         {
             QVariantMap tmpMap;
-            tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
+            if (sample->time > 0) {
+                prevMarksDateTime = dateTimeCompensate(localBaseTime.addMSecs(sample->time), prevMarksDateTime, 1);
+            }
+            else {
+                prevMarksDateTime = localBaseTime.addMSecs(sample->time);
+            }
+            tmpMap.insert("LocalTime", dateTimeString(prevMarksDateTime));
             tmpMap.insert("NextActivityID", sample->u.activity.activitytype);
             tmpMap.insert("Type", 8);
             marksContent.append(tmpMap);
@@ -594,4 +734,22 @@ QString MovesCountJSON::dateTimeString(QDateTime dateTime)
     else {
         return dateTime.toString("yyyy-MM-ddThh:mm:ss");
     }
+}
+
+QDateTime MovesCountJSON::dateTimeRound(QDateTime dateTime, int msecRoundFactor)
+{
+    if (msecRoundFactor != 1) {
+        return dateTime.addMSecs(qRound(1.0*dateTime.time().msec()/msecRoundFactor)*msecRoundFactor - dateTime.time().msec());
+    }
+    else {
+        return dateTime;
+    }
+}
+
+QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset)
+{
+    if (dateTime <= prevDateTime) {
+        return prevDateTime.addMSecs(minOffset);
+    }
+    return dateTime;
 }
