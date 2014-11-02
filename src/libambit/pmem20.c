@@ -47,8 +47,8 @@ typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
 /*
  * Static functions
  */
-static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count);
-static void correct_samples(ambit_log_entry_t *log_entry);
+static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count, int32_t *time_compensators);
+static void correct_samples(ambit_log_entry_t *log_entry, int32_t *time_compensators);
 static int read_upto(libambit_pmem20_t *object, uint32_t address, uint32_t length);
 static int read_log_chunk(libambit_pmem20_t *object, uint32_t address, uint32_t length, uint8_t *buffer);
 static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buffer_count, const uint8_t **buffers, const size_t *buffer_sizes);
@@ -200,6 +200,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     uint16_t tmp_len, sample_len;
     size_t buffer_offset, sample_count = 0;
     ambit_log_entry_t *log_entry;
+    int32_t *time_compensators;
 
     if (!object->log.initialized) {
         LOG_ERROR("Trying to get log entry without initialization");
@@ -236,6 +237,12 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
         return NULL;
     }
     log_entry->samples_count = log_entry->header.samples_count;
+    if ((time_compensators = calloc(log_entry->header.samples_count, sizeof(int32_t))) == NULL) {
+        free(log_entry->samples);
+        free(log_entry);
+        object->log.initialized = false;
+        return NULL;
+    }
 
     LOG_INFO("Log entry got %d samples, reading", log_entry->samples_count);
 
@@ -270,7 +277,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
             memcpy(object->log.buffer + object->log.mem_size, object->log.buffer + PMEM20_LOG_WRAP_START_OFFSET, (buffer_offset + 2 + sample_len) - object->log.mem_size);
         }
 
-        parse_sample(object->log.buffer, buffer_offset, &periodic_sample_spec, log_entry, &sample_count);
+        parse_sample(object->log.buffer, buffer_offset, &periodic_sample_spec, log_entry, &sample_count, time_compensators);
         buffer_offset += 2 + sample_len;
         // Wrap
         if (buffer_offset >= object->log.mem_size) {
@@ -278,7 +285,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
         }
     }
 
-    correct_samples(log_entry);
+    correct_samples(log_entry, time_compensators);
+
+    free(time_compensators);
 
     return log_entry;
 }
@@ -292,6 +301,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     uint16_t tmp_len, sample_len;
     size_t buffer_offset, sample_count = 0;
     ambit_log_entry_t *log_entry;
+    int32_t *time_compensators;
 
     // Allocate log entry
     if ((log_entry = calloc(1, sizeof(ambit_log_entry_t))) == NULL) {
@@ -351,6 +361,12 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         return NULL;
     }
     log_entry->samples_count = log_entry->header.samples_count;
+    if ((time_compensators = calloc(log_entry->header.samples_count, sizeof(int32_t))) == NULL) {
+        free(log_entry->samples);
+        free(log_entry);
+        object->log.initialized = false;
+        return NULL;
+    }
 
     LOG_INFO("Log entry got %d samples, reading", log_entry->samples_count);
 
@@ -358,11 +374,11 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     while (sample_count < log_entry->samples_count) {
         sample_len = read16(buffer, buffer_offset);
 
-        parse_sample(buffer, buffer_offset, &periodic_sample_spec, log_entry, &sample_count);
+        parse_sample(buffer, buffer_offset, &periodic_sample_spec, log_entry, &sample_count, time_compensators);
         buffer_offset += 2 + sample_len;
     }
 
-    correct_samples(log_entry);
+    correct_samples(log_entry, time_compensators);
 
     return log_entry;
 }
@@ -417,9 +433,10 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->cadence_max = read8inc(data, &offset);
     log_header->cadence_avg = read8inc(data, &offset);
 
-    memcpy(log_header->unknown3, data+offset, 4);
-    offset += 4;
+    memcpy(log_header->unknown3, data+offset, 2);
+    offset += 2;
 
+    log_header->swimming_pool_lengths = read16inc(data, &offset);
     log_header->speed_max_time = read32inc(data, &offset);
     log_header->altitude_max_time = read32inc(data, &offset);
     log_header->altitude_min_time = read32inc(data, &offset);
@@ -428,10 +445,7 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->temperature_max_time = read32inc(data, &offset);
     log_header->temperature_min_time = read32inc(data, &offset);
     log_header->cadence_max_time = read32inc(data, &offset);
-
-    memcpy(log_header->unknown4, data+offset, 4);
-    offset += 4;
-
+    log_header->swimming_pool_length = read32inc(data, &offset);
     log_header->first_fix_time = read16inc(data, &offset)*1000;
     log_header->battery_start = read8inc(data, &offset);
     log_header->battery_end = read8inc(data, &offset);
@@ -515,7 +529,7 @@ int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *da
  * Parse the given sample
  * \return number of samples added (1 or 0)
  */
-static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count)
+static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_entry_t *log_entry, size_t *sample_count, int32_t *time_compensators)
 {
     int ret = 0;
     size_t int_offset = offset;
@@ -770,6 +784,26 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             log_entry->samples[*sample_count].u.time.minute = read8inc(buf, &int_offset);
             log_entry->samples[*sample_count].u.time.second = read8inc(buf, &int_offset);
             break;
+          case 0x14:
+            log_entry->samples[*sample_count].type = ambit_log_sample_type_swimming_turn;
+            int_offset += 1;
+            // Time compensation offset in 0.1 second format, convert to ms
+            time_compensators[*sample_count] = 0 - read16inc(buf, &int_offset) * 100;
+            int_offset += 1;
+            log_entry->samples[*sample_count].u.swimming_turn.distance = read32inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.swimming_turn.lengths = read16inc(buf, &int_offset);
+            int_offset += 18;
+            log_entry->samples[*sample_count].u.swimming_turn.classification[0] = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.swimming_turn.classification[1] = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.swimming_turn.classification[2] = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.swimming_turn.classification[3] = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.swimming_turn.style = read8inc(buf, &int_offset);
+            break;
+          case 0x15:
+            log_entry->samples[*sample_count].type = ambit_log_sample_type_swimming_stroke;
+            // Time compensation offset in 0.1 second format, convert to ms
+            time_compensators[*sample_count] = 0 - read16inc(buf, &int_offset) * 100;
+            break;
           case 0x18:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_activity;
             log_entry->samples[*sample_count].u.activity.activitytype = read16inc(buf, &int_offset);
@@ -820,7 +854,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
     return ret;
 }
 
-static void correct_samples(ambit_log_entry_t *log_entry)
+static void correct_samples(ambit_log_entry_t *log_entry, int32_t *time_compensators)
 {
     size_t sample_count, i;
     ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *altisource = NULL;
@@ -829,6 +863,7 @@ static void correct_samples(ambit_log_entry_t *log_entry)
     uint32_t last_base_lat = 0, last_base_long = 0;
     uint32_t last_small_lat = 0, last_small_long = 0;
     uint32_t last_ehpe = 0;
+    ambit_log_sample_t tmpsample;
 
     for (sample_count = 0; sample_count < log_entry->header.samples_count; sample_count++) {
         // Calculate times
@@ -840,6 +875,14 @@ static void correct_samples(ambit_log_entry_t *log_entry)
         }
         else {
             log_entry->samples[sample_count].time = 0;
+        }
+        // Correct with time_compensators
+        if (time_compensators[sample_count] < 0 && log_entry->samples[sample_count].time < (0 - time_compensators[sample_count])) {
+            // Avoid negative times, never set to less than 0
+            log_entry->samples[sample_count].time = 0;
+        }
+        else {
+            log_entry->samples[sample_count].time += time_compensators[sample_count];
         }
 
         if (utcsource == NULL && log_entry->samples[sample_count].type == ambit_log_sample_type_gps_base) {
@@ -893,6 +936,22 @@ static void correct_samples(ambit_log_entry_t *log_entry)
                     log_entry->samples[sample_count].u.periodic.values[i].u.altitude += altisource->u.altitude_source.altitude_offset;
                 }
             }
+        }
+    }
+
+    // Rearrange samples in respect to time values
+    for (sample_count = 1; sample_count < log_entry->header.samples_count; sample_count++) {
+        // Look for bad sorted samples
+        if (log_entry->samples[sample_count].time < log_entry->samples[sample_count-1].time) {
+            // Find out new position of sample
+            for (i = sample_count - 1; i > 0; i--) {
+                if (log_entry->samples[sample_count].time >= log_entry->samples[i-1].time) {
+                    break;
+                }
+            }
+            memcpy(&tmpsample, &log_entry->samples[sample_count], sizeof(ambit_log_sample_t));
+            memmove(&log_entry->samples[i+1], &log_entry->samples[i], sizeof(ambit_log_sample_t)*(sample_count-i));
+            memcpy(&log_entry->samples[i], &tmpsample, sizeof(ambit_log_sample_t));
         }
     }
 }

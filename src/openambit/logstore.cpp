@@ -46,6 +46,8 @@ static sample_type_names_t sampleTypeNames[] = {
     { ambit_log_sample_type_gps_small, "gps-small" },
     { ambit_log_sample_type_gps_tiny, "gps-tiny" },
     { ambit_log_sample_type_time, "time" },
+    { ambit_log_sample_type_swimming_turn, "swimming-turn" },
+    { ambit_log_sample_type_swimming_stroke, "swimming-stroke" },
     { ambit_log_sample_type_activity, "activity" },
     { ambit_log_sample_type_cadence_source, "cadence-source" },
     { ambit_log_sample_type_position, "position" },
@@ -60,8 +62,12 @@ typedef struct sample_distance_source_name_s {
 } sample_distance_source_name_t;
 
 static sample_distance_source_name_t sampleDistanceSourceNames[] = {
+    { 0x00, "Bikepod" },
+    { 0x01, "Footpod" },
     { 0x02, "GPS" },
     { 0x03, "Wrist" },
+    { 0x04, "Indoorswimming" },
+    { 0x05, "Outdoorswimming" },
     { 0, "" }
 };
 
@@ -98,6 +104,21 @@ typedef struct sample_cadence_source_name_s {
 
 static sample_cadence_source_name_t sampleCadenceSourceNames[] = {
     { 0x40, "Wrist" },
+    { 0, "" }
+};
+
+typedef struct sample_swimming_style_name_s {
+    u_int8_t source_id;
+    QString XMLName;
+} sample_swimming_style_name_t;
+
+static sample_swimming_style_name_t sampleSwimmingStyleNames[] = {
+    { 0x00, "Other" },
+    { 0x01, "Butterfly" },
+    { 0x02, "Backstroke" },
+    { 0x03, "Breaststroke" },
+    { 0x04, "Freestyle" },
+    { 0x05, "Drill" },
     { 0, "" }
 };
 
@@ -684,6 +705,19 @@ void LogStore::XMLReader::readLogHeader()
         else if (xml.name() == "DistanceBeforeCalibrationChange") {
             logEntry->logEntry->header.distance_before_calib = xml.readElementText().toUInt();
         }
+        else if (xml.name() == "Swimming") {
+            while (xml.readNextStartElement()) {
+                if (xml.name() == "PoolLengths") {
+                    logEntry->logEntry->header.swimming_pool_lengths = xml.readElementText().toUInt();
+                }
+                else if (xml.name() == "PoolLength") {
+                    logEntry->logEntry->header.swimming_pool_length = xml.readElementText().toUInt();
+                }
+                else {
+                    xml.skipCurrentElement();
+                }
+            }
+        }
         else if (xml.name() == "Unknown1") {
             QByteArray val = xml.readElementText().toLocal8Bit();
             const char *c_str = val.data();
@@ -707,7 +741,7 @@ void LogStore::XMLReader::readLogHeader()
                 sscanf(c_str, "%2hhx", &logEntry->logEntry->header.cadence_avg);
                 c_str += 2 * sizeof(char);
             }
-            for (int i=0; i<4 && i<val.length()/2; i++) {
+            for (int i=0; i<2 && i<val.length()/2; i++) {
                 sscanf(c_str, "%2hhx", &logEntry->logEntry->header.unknown3[i]);
                 c_str += 2 * sizeof(char);
             }
@@ -725,10 +759,6 @@ void LogStore::XMLReader::readLogHeader()
                     c_str += 2 * sizeof(char);
                 }
                 logEntry->logEntry->header.cadence_max_time = cadence_max_time;
-            }
-            for (int i=0; i<4 && i<val.length()/2; i++) {
-                sscanf(c_str, "%2hhx", &logEntry->logEntry->header.unknown4[i]);
-                c_str += 2 * sizeof(char);
             }
         }
         else if (xml.name() == "Unknown5") {
@@ -1004,6 +1034,39 @@ void LogStore::XMLReader::readLogSamples()
                             /* Should not get here! */
                             xml.skipCurrentElement();
                         }
+                        break;
+                    case ambit_log_sample_type_swimming_turn:
+                        if (xml.name() == "Distance") {
+                            logEntry->logEntry->samples[sampleCount].u.swimming_turn.distance = xml.readElementText().toInt();
+                        }
+                        else if (xml.name() == "Lengths") {
+                            logEntry->logEntry->samples[sampleCount].u.swimming_turn.lengths = xml.readElementText().toInt();
+                        }
+                        else if (xml.name() == "Classification") {
+                            int itemCount = 0;
+                            while(xml.readNextStartElement()) {
+                                if (xml.name() == "Item" && itemCount < (int)(sizeof(logEntry->logEntry->samples[sampleCount].u.swimming_turn.classification)/sizeof(logEntry->logEntry->samples[sampleCount].u.swimming_turn.classification[0]))) {
+                                    logEntry->logEntry->samples[sampleCount].u.swimming_turn.classification[itemCount++] = xml.readElementText().toInt();
+                                }
+                                else {
+                                    /* Should not get here! */
+                                    xml.skipCurrentElement();
+                                }
+                            }
+                        }
+                        else if (xml.name() == "Style") {
+                            int styleId = xml.attributes().value("id").toString().toUInt();
+                            logEntry->logEntry->samples[sampleCount].u.swimming_turn.style = styleId;
+                            xml.skipCurrentElement();
+                        }
+                        else {
+                            /* Should not get here! */
+                            xml.skipCurrentElement();
+                        }
+                        break;
+                    case ambit_log_sample_type_swimming_stroke:
+                        /* Should not get here! */
+                        xml.skipCurrentElement();
                         break;
                     case ambit_log_sample_type_activity:
                         if (xml.name() == "ActivityType") {
@@ -1436,6 +1499,10 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeTextElement("BatteryChargeAtStart", QString("%1").arg(logEntry->header.battery_start));
     xml.writeTextElement("BatteryCharge", QString("%1").arg(logEntry->header.battery_end));
     xml.writeTextElement("DistanceBeforeCalibrationChange", QString("%1").arg(logEntry->header.distance_before_calib));
+    xml.writeStartElement("Swimming");
+    xml.writeTextElement("PoolLengths", QString("%1").arg(logEntry->header.swimming_pool_lengths));
+    xml.writeTextElement("PoolLength", QString("%1").arg(logEntry->header.swimming_pool_length));
+    xml.writeEndElement();
 
     QString hexstring;
     hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x", logEntry->header.unknown1[0],
@@ -1446,16 +1513,9 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeTextElement("Unknown1", hexstring);
     hexstring = hexstring.sprintf("%02x", logEntry->header.unknown2);
     xml.writeTextElement("Unknown2", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown3[0],
-                                                      logEntry->header.unknown3[1],
-                                                      logEntry->header.unknown3[2],
-                                                      logEntry->header.unknown3[3]);
+    hexstring = hexstring.sprintf("%02x%02x", logEntry->header.unknown3[0],
+                                              logEntry->header.unknown3[1]);
     xml.writeTextElement("Unknown3", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown4[0],
-                                                      logEntry->header.unknown4[1],
-                                                      logEntry->header.unknown4[2],
-                                                      logEntry->header.unknown4[3]);
-    xml.writeTextElement("Unknown4", hexstring);
     hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown5[0],
                                                       logEntry->header.unknown5[1],
                                                       logEntry->header.unknown5[2],
@@ -1506,6 +1566,7 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
     sample_altitude_source_name_t *altitude_source_name;
     sample_lap_event_type_t *lap_type_name;
     sample_cadence_source_name_t *cadence_source_name;
+    sample_swimming_style_name_t *swimming_style_name;
     int i;
 
     xml.writeStartElement("Sample");
@@ -1634,6 +1695,28 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
         xml.writeTextElement("TimeRef", timeref.toString(Qt::ISODate));
         break;
     }
+    case ambit_log_sample_type_swimming_turn:
+    {
+        xml.writeTextElement("Distance", QString("%1").arg(sample->u.swimming_turn.distance));
+        xml.writeTextElement("Lengths", QString("%1").arg(sample->u.swimming_turn.lengths));
+        xml.writeStartElement("Classification");
+        for (size_t i=0; i<(sizeof(sample->u.swimming_turn.classification)/sizeof(sample->u.swimming_turn.classification[0])); i++) {
+            xml.writeTextElement("Item", QString("%1").arg(sample->u.swimming_turn.classification[i]));
+        }
+        xml.writeEndElement();
+        xml.writeStartElement("Style");
+        xml.writeAttribute("id", QString("%1").arg(sample->u.swimming_turn.style));
+        for (swimming_style_name = &sampleSwimmingStyleNames[0]; swimming_style_name->XMLName != ""; swimming_style_name++) {
+            if (swimming_style_name->source_id == sample->u.swimming_turn.style) {
+                xml.writeCharacters(QString(swimming_style_name->XMLName));
+                break;
+            }
+        }
+        xml.writeEndElement();
+        break;
+    }
+    case ambit_log_sample_type_swimming_stroke:
+        break;
     case ambit_log_sample_type_activity:
     {
         xml.writeTextElement("ActivityType", QString("%1").arg(sample->u.activity.activitytype));

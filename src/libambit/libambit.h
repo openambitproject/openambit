@@ -131,6 +131,8 @@ typedef enum ambit_log_sample_type_e {
     ambit_log_sample_type_gps_small = 0x0310,
     ambit_log_sample_type_gps_tiny = 0x0311,
     ambit_log_sample_type_time = 0x0312,
+    ambit_log_sample_type_swimming_turn = 0x0314,
+    ambit_log_sample_type_swimming_stroke = 0x0315,
     ambit_log_sample_type_activity = 0x0318,
     ambit_log_sample_type_cadence_source = 0x031a,
     ambit_log_sample_type_position = 0x031b,
@@ -233,7 +235,12 @@ typedef struct ambit_log_sample_s {
             uint16_t ibi[32];
         } ibi;
         uint16_t ttff;
-        uint8_t  distance_source;               /* 2 = GPS, 3 = Wrist */
+        uint8_t  distance_source;               /* 0x00 = Bikepod,
+                                                   0x01 = Footpod,
+                                                   0x02 = GPS,
+                                                   0x03 = Wrist,
+                                                   0x04 = Indoorswimming,
+                                                   0x05 = Outdoorswimming */
         struct {
             uint8_t event_type;                 /* 0x01 = manual lap,
                                                    0x14 = high interval end,
@@ -282,6 +289,18 @@ typedef struct ambit_log_sample_s {
             uint8_t  minute;
             uint8_t  second;
         } time;
+        struct {
+            uint32_t distance;                  /* Total distance, meters scale: 0.01 */
+            uint16_t lengths;                   /* Total pool lengths */
+            uint16_t classification[4];
+            uint8_t  style;                     /* (style of previous length)
+                                                   0x00 = Other,
+                                                   0x01 = Butterfly,
+                                                   0x02 = Backstroke,
+                                                   0x03 = Breaststroke,
+                                                   0x04 = Freestyle,
+                                                   0x05 = Drill */
+        } swimming_turn;
         struct {
             uint16_t activitytype;
             uint32_t custommode;
@@ -341,9 +360,10 @@ typedef struct ambit_log_header_s {
     uint8_t  unknown2;
     uint8_t  cadence_max;           /* rpm */
     uint8_t  cadence_avg;           /* rpm */
-    uint8_t  unknown3[4];
+    uint8_t  unknown3[2];
+    uint16_t swimming_pool_lengths;
     uint32_t cadence_max_time;      /* ms */
-    uint8_t  unknown4[4];
+    uint32_t swimming_pool_length;  /* m */
     uint8_t  unknown5[4];
     uint8_t  unknown6[24];
 } ambit_log_header_t;
