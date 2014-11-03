@@ -41,13 +41,16 @@
 /*
  * Local definitions
  */
+#define LIBAMBIT_MODEL_LENGTH    16
+#define LIBAMBIT_SERIAL_LENGTH   16
 
 /*
  * Static functions
  */
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
-static char * utf8strncpy(char *dst, const char *src, size_t n);
+static char * utf8memconv(const char *src, size_t n);
+static char * utf8wcsconv(const wchar_t *src);
 
 /*
  * Static variables
@@ -92,6 +95,9 @@ void libambit_free_enumeration(ambit_device_info_t *devices)
 {
     while (devices) {
         ambit_device_info_t *next = devices->next;
+        if (devices->name)   free(devices->name);
+        if (devices->model)  free(devices->model);
+        if (devices->serial) free(devices->serial);
         free((char *) devices->path);
         free(devices);
         devices = next;
@@ -324,11 +330,9 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
         if (info != NULL) {
             const char *p = (char *)reply_data;
 
-            utf8strncpy(info->model, p, LIBAMBIT_MODEL_NAME_LENGTH);
-            info->model[LIBAMBIT_MODEL_NAME_LENGTH] = 0;
-            p += LIBAMBIT_MODEL_NAME_LENGTH;
-            utf8strncpy(info->serial, p, LIBAMBIT_SERIAL_LENGTH);
-            info->serial[LIBAMBIT_SERIAL_LENGTH] = 0;
+            info->model  = utf8memconv(p, LIBAMBIT_MODEL_LENGTH);
+            p += LIBAMBIT_MODEL_LENGTH;
+            info->serial = utf8memconv(p, LIBAMBIT_SERIAL_LENGTH);
             p += LIBAMBIT_SERIAL_LENGTH;
             memcpy(info->fw_version, p, 4);
             memcpy(info->hw_version, p + 4, 4);
@@ -354,73 +358,17 @@ static inline void version_string(char string[LIBAMBIT_VERSION_LENGTH+1],
            version[0], version[1], (version[2] << 0) | (version[3] << 8));
 }
 
-/* Converts a wide-character string to a limited length UTF-8 string.
- * This produces the longest valid UTF-8 string that doesn't exceed n
- * bytes.  If the converted string would be too long, it is shortened
- * one wchar_t at a time until the result is short enough.  Invalid
- * and incomplete multibyte sequences will result in an empty string.
- */
-static const char * wcs2nutf8(char *dest, const wchar_t *src, size_t n)
-{
-    const char *rv = NULL;
-
-    iconv_t cd = iconv_open("UTF-8", "WCHAR_T");
-
-    if ((iconv_t) -1 == cd) {
-        LOG_ERROR("iconv_open: %s", strerror(errno));
-    }
-    else {
-        char  *s = (char *) malloc((n + 1) * sizeof(char));
-        size_t m = wcslen(src) + 1;
-
-        if (s) {
-            size_t sz;
-
-            do {
-                char  *ibuf = (char *) src;
-                char  *obuf = s;
-                size_t ilen = --m * sizeof(wchar_t);
-                size_t olen = n;
-
-                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
-
-                if ((size_t) -1 == sz) {
-                    s[0] = '\0';
-                }
-                else {          /* we're good, terminate string */
-                    s[n - olen] = '\0';
-                }
-            } while ((size_t) -1 == sz && E2BIG == errno && 0 < m);
-
-            if ((size_t) -1 == sz && E2BIG != errno) {
-                LOG_ERROR("iconv: %s", strerror(errno));
-            }
-
-            strncpy(dest, s, n);
-            rv = s;
-        }
-
-        iconv_close(cd);
-    }
-
-    return rv;
-}
-
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev)
 {
     ambit_device_info_t *device = NULL;
     const ambit_known_device_t *known_device = NULL;
 
     const char *dev_path;
-    const char *name = NULL;
-    const char *uniq = NULL;
 
     uint16_t vid;
     uint16_t pid;
 
     hid_device *hid;
-
-    
 
     if (!dev || !dev->path) {
         LOG_ERROR("internal error: expecting hidraw device");
@@ -449,14 +397,31 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     device->vendor_id  = vid;
     device->product_id = pid;
 
-    if (dev->product_string) {
-        name = wcs2nutf8(device->name, dev->product_string,
-                         LIBAMBIT_PRODUCT_NAME_LENGTH);
-    }
-
-    if (dev->serial_number) {
-        uniq = wcs2nutf8(device->serial, dev->serial_number,
-                         LIBAMBIT_SERIAL_LENGTH);
+    {                           /* create name for display purposes */
+        char *vendor  = utf8wcsconv(dev->manufacturer_string);
+        char *product = utf8wcsconv(dev->product_string);
+        if (vendor && product) {
+            char *name = (char *)malloc((strlen(vendor) + 1
+                                         + strlen(product) + 1)
+                                        * sizeof(char));
+            if (name) {
+                strcpy(name, vendor);
+                strcat(name, " ");
+                strcat(name, product);
+                free(vendor);
+                free(product);
+                device->name = name;
+            }
+            else {
+                device->name = product;
+                if (vendor) free(vendor);
+            }
+        }
+        else {
+            device->name = product;
+            if (vendor) free(vendor);
+        }
+        device->serial = utf8wcsconv(dev->serial_number);
     }
 
     LOG_INFO("HID  : %s: '%s' (serial: %s, VID/PID: %04x/%04x)",
@@ -466,24 +431,39 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     hid = hid_open_path(device->path);
     if (hid) {
         /* HACK ALERT: minimally initialize an ambit object so we can
-         * call device_info_get() */
+         * call device_info_get().  Note that this function sets the
+         * device's model and serial string fields.  Above the latter
+         * has been set already using the HID information.
+         */
+        char *serial = device->serial;
         ambit_object_t obj;
         obj.handle = hid;
         obj.sequence_no = 0;
         if (0 == device_info_get(&obj, device)) {
-            if (name && 0 != strcmp(name, device->name)) {
-                LOG_INFO("preferring F/W name over '%s'", name);
+
+            if (!device->serial) { /* fall back to HID information */
+                device->serial = serial;
             }
-            if (uniq && 0 != strcmp(uniq, device->serial)) {
-                LOG_INFO("preferring F/W serial number over '%s'", uniq);
+            else {
+                if (serial && 0 != strcmp(device->serial, serial)) {
+                  LOG_INFO("preferring F/W serial number over HID '%s'",
+                           serial);
+                }
+                if (serial) free(serial);
             }
 
             known_device = libambit_device_support_find(device->vendor_id, device->product_id, device->model, device->fw_version);
             if (known_device != NULL) {
                 device->is_supported = known_device->supported;
-                if (0 != strcmp(device->name, known_device->name)) {
-                    LOG_INFO("preferring know device name over '%s'", device->name);
-                    strcpy(device->name, known_device->name);
+                if (device->name && known_device->name
+                    && 0 != strcmp(device->name, known_device->name)) {
+                    char *name = strdup(known_device->name);
+                    if (name) {
+                        LOG_INFO("preferring known name over HID '%s'",
+                                 device->name);
+                        free(device->name);
+                        device->name = name;
+                    }
                 }
             }
 
@@ -524,22 +504,21 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
         }
     }
 
-    if (name) free((char *) name);
-    if (uniq) free((char *) uniq);
-
     return device;
 }
 
-/*! \brief Converts up to \a n octets to a UTF-8 encoded string.
+/*! \brief Converts \a n octets to a UTF-8 encoded string.
  *
  *  The \a n octets starting at \a src are assumed to have been
  *  obtained from the clock and in a clock-specific encoding.
  *
  *  \todo  Confirm the clock encoding, assuming ASCII for now.
  */
-static char * utf8strncpy(char *dst, const char *src, size_t n)
+static char * utf8memconv(const char *src, size_t n)
 {
   size_t i;
+
+  if (!src) return NULL;
 
   /* Sanity check the octets we are about to convert.  */
   for (i = 0; i < n && 0 !=src[i]; ++i) {
@@ -548,5 +527,50 @@ static char * utf8strncpy(char *dst, const char *src, size_t n)
                       i, src[i]);
       }
   }
-  return strncpy(dst, src, n);
+  return strndup(src, n);
+}
+
+/*! \brief Converts a wide character string to a UTF-8 encoded one.
+ */
+static char * utf8wcsconv(const wchar_t *src)
+{
+    char *rv = NULL;
+    iconv_t cd = (iconv_t) -1;
+
+    if (src) {
+        cd = iconv_open("UTF-8", "WCHAR_T");
+        if ((iconv_t) -1 == cd) {
+            LOG_ERROR("iconv_open: %s", strerror(errno));
+        }
+        else {
+          size_t ilen = (wcslen(src)) * sizeof (wchar_t);
+            size_t olen = wcslen(src) * 4 + 1;
+            char  *ibuf = (char *)src;
+            char  *obuf = (char *)malloc(olen * sizeof(char));
+
+            if (obuf) {
+                size_t n = olen;
+                size_t sz;
+
+                rv = obuf;
+                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
+
+                if ((size_t) -1 == sz) {
+                    LOG_ERROR("iconv: %s", strerror(errno));
+                    free(rv);
+                    rv = NULL;
+                }
+                else {      /* we're good, terminate string */
+                    rv[n - olen] = '\0';
+                    rv = realloc(rv, strlen(rv) + 1);
+                }
+            }
+        }
+    }
+
+    if ((iconv_t) -1 != cd) {
+        iconv_close(cd);
+    }
+
+    return rv;
 }

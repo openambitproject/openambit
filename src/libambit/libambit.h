@@ -30,16 +30,12 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-#define LIBAMBIT_MODEL_NAME_LENGTH    16
-#define LIBAMBIT_SERIAL_LENGTH        16
-#define LIBAMBIT_PRODUCT_NAME_LENGTH  32
-
 typedef struct ambit_object_s ambit_object_t;
 
 typedef struct ambit_device_info_s {
-    char name[LIBAMBIT_PRODUCT_NAME_LENGTH+1];         /* UTF-8 */
-    char model[LIBAMBIT_MODEL_NAME_LENGTH+1];          /* UTF-8 */
-    char serial[LIBAMBIT_SERIAL_LENGTH+1];             /* UTF-8 */
+    char *name;                                        /* UTF-8 */
+    char *model;                                       /* UTF-8 */
+    char *serial;                                      /* UTF-8 */
     uint8_t fw_version[4];
     uint8_t hw_version[4];
 

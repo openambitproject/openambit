@@ -85,7 +85,7 @@ const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uin
     for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
         if (vendor_id == known_devices[i].vid &&
             product_id == known_devices[i].pid &&
-            strncmp(model, known_devices[i].model, LIBAMBIT_MODEL_NAME_LENGTH) == 0 &&
+            strcmp(model, known_devices[i].model) == 0 &&
             (version_number (fw_version) >= version_number (known_devices[i].min_sw_version))) {
             // Found matching entry, reset to this one!
             device = &known_devices[i].public_info;
