@@ -322,12 +322,16 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 
     if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(komposti_version), &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
-            utf8strncpy(info->model, (char *)reply_data, 16);
-            info->model[16] = 0;
-            utf8strncpy(info->serial, (char *)&reply_data[16], 16);
-            info->serial[16] = 0;
-            memcpy(info->fw_version, &reply_data[32], 4);
-            memcpy(info->hw_version, &reply_data[36], 4);
+            const char *p = (char *)reply_data;
+
+            utf8strncpy(info->model, p, LIBAMBIT_MODEL_NAME_LENGTH);
+            info->model[LIBAMBIT_MODEL_NAME_LENGTH] = 0;
+            p += LIBAMBIT_MODEL_NAME_LENGTH;
+            utf8strncpy(info->serial, p, LIBAMBIT_SERIAL_LENGTH);
+            info->serial[LIBAMBIT_SERIAL_LENGTH] = 0;
+            p += LIBAMBIT_SERIAL_LENGTH;
+            memcpy(info->fw_version, p, 4);
+            memcpy(info->hw_version, p + 4, 4);
         }
         ret = 0;
     }
