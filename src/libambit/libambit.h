@@ -37,13 +37,13 @@ extern "C" {
 typedef struct ambit_object_s ambit_object_t;
 
 typedef struct ambit_device_info_s {
-    char name[LIBAMBIT_PRODUCT_NAME_LENGTH+1];
-    char model[LIBAMBIT_MODEL_NAME_LENGTH+1];
-    char serial[LIBAMBIT_SERIAL_LENGTH+1];
+    char name[LIBAMBIT_PRODUCT_NAME_LENGTH+1];         /* UTF-8 */
+    char model[LIBAMBIT_MODEL_NAME_LENGTH+1];          /* UTF-8 */
+    char serial[LIBAMBIT_SERIAL_LENGTH+1];             /* UTF-8 */
     uint8_t fw_version[4];
     uint8_t hw_version[4];
 
-    const char *path;
+    const char *path;                   /* file system encoding */
     uint16_t    vendor_id;
     uint16_t    product_id;
     bool        is_supported;

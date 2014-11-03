@@ -47,6 +47,7 @@
  */
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
+static char * utf8strncpy(char *dst, const char *src, size_t n);
 
 /*
  * Static variables
@@ -321,9 +322,9 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 
     if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(komposti_version), &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
-            memcpy(info->model, reply_data, 16);
+            utf8strncpy(info->model, (char *)reply_data, 16);
             info->model[16] = 0;
-            memcpy(info->serial, &reply_data[16], 16);
+            utf8strncpy(info->serial, (char *)&reply_data[16], 16);
             info->serial[16] = 0;
             memcpy(info->fw_version, &reply_data[32], 4);
             memcpy(info->hw_version, &reply_data[36], 4);
@@ -523,4 +524,25 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     if (uniq) free((char *) uniq);
 
     return device;
+}
+
+/*! \brief Converts up to \a n octets to a UTF-8 encoded string.
+ *
+ *  The \a n octets starting at \a src are assumed to have been
+ *  obtained from the clock and in a clock-specific encoding.
+ *
+ *  \todo  Confirm the clock encoding, assuming ASCII for now.
+ */
+static char * utf8strncpy(char *dst, const char *src, size_t n)
+{
+  size_t i;
+
+  /* Sanity check the octets we are about to convert.  */
+  for (i = 0; i < n && 0 !=src[i]; ++i) {
+      if (0 > src[i] && src[i] > 127) {
+          LOG_WARNING("non-ASCII byte at position %i: 0x%02x",
+                      i, src[i]);
+      }
+  }
+  return strncpy(dst, src, n);
 }
