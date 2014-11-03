@@ -1,5 +1,5 @@
-set ( openambit_SRCS
-  ${openambit_SRCS}
+set ( OpenAmbitQt_SRCS
+  ${OpenAmbitQt_SRCS}
   ${CMAKE_CURRENT_SOURCE_DIR}/movescount.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/movescountjson.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/movescountlogchecker.cpp
@@ -8,8 +8,8 @@ set ( openambit_SRCS
   PARENT_SCOPE
 )
 
-set ( openambit_MOCS
-  ${openambit_MOCS}
+set ( OpenAmbitQt_MOCS
+  ${OpenAmbitQt_MOCS}
   ${CMAKE_CURRENT_SOURCE_DIR}/movescount.h
   ${CMAKE_CURRENT_SOURCE_DIR}/movescountjson.h
   ${CMAKE_CURRENT_SOURCE_DIR}/movescountlogchecker.h
