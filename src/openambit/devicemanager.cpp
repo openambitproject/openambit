@@ -173,7 +173,7 @@ void DeviceManager::logMovescountID(QString device, QDateTime time, QString move
 int DeviceManager::log_skip_cb(void *ref, ambit_log_header_t *log_header)
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
-    if (manager->logStore.logExists(QString(manager->currentDeviceInfo.serial), log_header)) {
+    if (manager->logStore.logExists(manager->currentDeviceInfo.serial, log_header)) {
         return 0;
     }
     return 1;
@@ -182,7 +182,7 @@ int DeviceManager::log_skip_cb(void *ref, ambit_log_header_t *log_header)
 void DeviceManager::log_push_cb(void *ref, ambit_log_entry_t *log_entry)
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
-    LogEntry *entry = manager->logStore.store(&manager->currentDeviceInfo, &manager->currentPersonalSettings, log_entry);
+    LogEntry *entry = manager->logStore.store(manager->currentDeviceInfo, &manager->currentPersonalSettings, log_entry);
     if (entry != NULL) {
         //! TODO: make this optional, only used for debugging
         manager->movesCountXML.writeLog(entry);

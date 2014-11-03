@@ -386,8 +386,8 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("AvgSpeed", (double)logEntry->logEntry->header.speed_avg/3600.0);
     content.insert("DescentAltitude", (double)logEntry->logEntry->header.descent);
     content.insert("DescentTime", (double)logEntry->logEntry->header.descent_time/1000.0);
-    content.insert("DeviceName", logEntry->deviceInfo->model);
-    content.insert("DeviceSerialNumber", logEntry->deviceInfo->serial);
+    content.insert("DeviceName", logEntry->deviceInfo.model);
+    content.insert("DeviceSerialNumber", logEntry->deviceInfo.serial);
     content.insert("Distance", logEntry->logEntry->header.distance);
     content.insert("Duration", (double)logEntry->logEntry->header.duration/1000.0);
     content.insert("Energy", logEntry->logEntry->header.energy_consumption);

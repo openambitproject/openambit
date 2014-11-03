@@ -22,7 +22,6 @@
 #include "logentry.h"
 
 LogEntry::LogEntry() :
-    deviceInfo(NULL),
     personalSettings(NULL),
     logEntry(NULL)
 {
@@ -35,14 +34,7 @@ LogEntry::LogEntry(const LogEntry &other)
     device = other.device;
     time = other.time;
     movescountId = other.movescountId;
-
-    if (other.deviceInfo != NULL) {
-        deviceInfo = (ambit_device_info_t*)malloc(sizeof(ambit_device_info_t));
-        memcpy(deviceInfo, other.deviceInfo, sizeof(ambit_device_info_t));
-    }
-    else {
-        deviceInfo = NULL;
-    }
+    deviceInfo = other.deviceInfo;
 
     if (other.personalSettings != NULL) {
         personalSettings = (ambit_personal_settings_t*)malloc(sizeof(ambit_personal_settings_t));
@@ -99,11 +91,6 @@ LogEntry& LogEntry::operator=(const LogEntry &rhs)
 LogEntry::~LogEntry()
 {
     u_int32_t i;
-
-    if (deviceInfo != NULL) {
-        free(deviceInfo);
-        deviceInfo = NULL;
-    }
 
     if (personalSettings != NULL) {
         free(personalSettings);

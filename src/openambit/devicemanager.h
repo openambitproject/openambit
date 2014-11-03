@@ -46,7 +46,7 @@ public:
     ~DeviceManager();
     void start();
 signals:
-    void deviceDetected(ambit_device_info_t deviceInfo, bool supported);
+    void deviceDetected(const DeviceInfo& deviceInfo, bool supported);
     void deviceRemoved(void);
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);
@@ -67,7 +67,7 @@ private:
     ambit_object_t *deviceObject;
     UdevListener *udevListener;
 
-    ambit_device_info_t currentDeviceInfo;
+    DeviceInfo currentDeviceInfo;
     ambit_personal_settings_t currentPersonalSettings;
 
     int syncParts;

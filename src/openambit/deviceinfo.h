@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Emil Ljungdahl
+ * (C) Copyright 2014 Olaf Meeuwissen
  *
  * This file is part of Openambit.
  *
@@ -19,35 +19,25 @@
  * Contributors:
  *
  */
-#ifndef LOGENTRY_H
-#define LOGENTRY_H
+#ifndef DEVICEINFO_H
+#define DEVICEINFO_H
 
-#include <QDateTime>
+#include <QString>
+
 #include <libambit.h>
 
-#include "deviceinfo.h"
-
-class LogEntry
+struct DeviceInfo
 {
-public:
-    explicit LogEntry();
-    LogEntry(const LogEntry &other);
-    ~LogEntry();
+    QString name;
+    QString model;
+    QString serial;
 
-    LogEntry& operator=(const LogEntry &rhs);
+    int fw_version[4];
+    int hw_version[4];
 
-    bool isUploaded();
+    int access_status;
 
-    QString device;
-    QDateTime time;
-    QString movescountId;
-    DeviceInfo deviceInfo;
-    ambit_personal_settings_t *personalSettings;
-    ambit_log_entry_t *logEntry;
-signals:
-    
-public slots:
-    
+    DeviceInfo& operator= (const ambit_device_info_t& devinfo);
 };
 
-#endif // LOGENTRY_H
+#endif // DEVICEINFO_H

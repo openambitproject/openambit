@@ -30,6 +30,7 @@
 #include <QXmlStreamWriter>
 #include <libambit.h>
 
+#include "deviceinfo.h"
 #include "logentry.h"
 
 class LogStore : public QObject
@@ -45,7 +46,7 @@ public:
     };
 
     explicit LogStore(QObject *parent = 0);
-    LogEntry *store(ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
+    LogEntry *store(const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
     LogEntry *store(LogEntry *entry);
     void storeMovescountId(QString device, QDateTime time, QString movescountId);
     bool logExists(QString device, ambit_log_header_t *logHeader);
@@ -59,7 +60,7 @@ public slots:
 
 private:
     QString logEntryPath(QString device, QDateTime time);
-    LogEntry *storeInternal(QString serial, QDateTime dateTime, ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId = "");
+    LogEntry *storeInternal(QString serial, QDateTime dateTime, const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId = "");
     LogEntry *readInternal(QString path);
 
     QString storagePath;
@@ -89,7 +90,7 @@ private:
     class XMLWriter
     {
     public:
-        XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, QString movescountId, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
+        XMLWriter(const DeviceInfo& deviceInfo, QDateTime time, QString movescountId, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry);
         bool write(QIODevice *device);
 
     private:
@@ -99,7 +100,7 @@ private:
         bool writeLogSample(ambit_log_sample_t *sample);
         bool writePeriodicSample(ambit_log_sample_t *sample);
 
-        ambit_device_info_t *deviceInfo;
+        DeviceInfo deviceInfo;
         QDateTime time;
         QString movescountId;
         QXmlStreamWriter xml;

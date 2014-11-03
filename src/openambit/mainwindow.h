@@ -22,6 +22,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "deviceinfo.h"
 #include "devicemanager.h"
 #include "settingsdialog.h"
 #include "confirmbetadialog.h"
@@ -68,7 +69,7 @@ private slots:
 
     void syncNowClicked();
 
-    void deviceDetected(ambit_device_info_t deviceInfo, bool supported);
+    void deviceDetected(const DeviceInfo& deviceInfo, bool supported);
     void deviceRemoved();
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);

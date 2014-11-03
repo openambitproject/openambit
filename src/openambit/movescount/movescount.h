@@ -31,6 +31,7 @@
 
 #include <libambit.h>
 
+#include "deviceinfo.h"
 #include "logentry.h"
 #include "logstore.h"
 #include "movescountjson.h"
@@ -49,7 +50,7 @@ public:
     void setUsername(QString username);
     void setUserkey(QString userkey);
     QString generateUserkey();
-    void setDevice(ambit_device_info_t *device_info);
+    void setDevice(const DeviceInfo& device_info);
 
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
@@ -104,7 +105,7 @@ private:
     QString userkey;
     QString model;
     QString serial;
-    ambit_device_info_t device_info;
+    DeviceInfo device_info;
 
     QNetworkAccessManager *manager;
     QNetworkReply *firmwareCheckReply;

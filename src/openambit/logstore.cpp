@@ -128,12 +128,12 @@ LogStore::LogStore(QObject *parent) :
     storagePath = QString(getenv("HOME")) + "/.openambit";
 }
 
-LogEntry *LogStore::store(ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
+LogEntry *LogStore::store(const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
 {
     QDateTime dateTime(QDate(logEntry->header.date_time.year, logEntry->header.date_time.month, logEntry->header.date_time.day),
                        QTime(logEntry->header.date_time.hour, logEntry->header.date_time.minute, logEntry->header.date_time.msec/1000));
 
-    return storeInternal(QString(deviceInfo->serial), dateTime, deviceInfo, personalSettings, logEntry);
+    return storeInternal(deviceInfo.serial, dateTime, deviceInfo, personalSettings, logEntry);
 }
 
 LogEntry *LogStore::store(LogEntry *entry)
@@ -211,7 +211,7 @@ QString LogStore::logEntryPath(QString device, QDateTime time)
     return storagePath + "/log_" + device + "_" + time.toString("yyyy_MM_dd_hh_mm_ss") + ".log";
 }
 
-LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, ambit_device_info_t *deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId)
+LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId)
 {
     LogEntry *retEntry = new LogEntry();
 
@@ -337,35 +337,30 @@ void LogStore::XMLReader::readDeviceInfo()
 
     Q_ASSERT(xml.isStartElement() && xml.name() == "DeviceInfo");
 
-    if (logEntry->deviceInfo == NULL) {
-        logEntry->deviceInfo = (ambit_device_info_t*)malloc(sizeof(ambit_device_info_t));
-        memset(logEntry->deviceInfo, 0, sizeof(ambit_device_info_t));
-    }
-
     while (xml.readNextStartElement()) {
         if (xml.name() == "Serial") {
-            strcpy(logEntry->deviceInfo->serial, xml.readElementText().toLatin1().data());
+            logEntry->deviceInfo.serial = xml.readElementText().toUtf8();
         }
         else if (xml.name() == "Model") {
-            strcpy(logEntry->deviceInfo->model, xml.readElementText().toLatin1().data());
+            logEntry->deviceInfo.model = xml.readElementText().toUtf8();
         }
         else if (xml.name() == "Name") {
-            strcpy(logEntry->deviceInfo->name, xml.readElementText().toLatin1().data());
+            logEntry->deviceInfo.name = xml.readElementText().toUtf8();
         }
         else if (xml.name() == "FWVersion") {
             if (versionRX.indexIn(xml.readElementText()) >= 0) {
-                logEntry->deviceInfo->fw_version[0] = versionRX.cap(1).toInt();
-                logEntry->deviceInfo->fw_version[1] = versionRX.cap(2).toInt();
-                logEntry->deviceInfo->fw_version[2] = versionRX.cap(3).toInt() & 0xff;
-                logEntry->deviceInfo->fw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+                logEntry->deviceInfo.fw_version[0] = versionRX.cap(1).toInt();
+                logEntry->deviceInfo.fw_version[1] = versionRX.cap(2).toInt();
+                logEntry->deviceInfo.fw_version[2] = versionRX.cap(3).toInt() & 0xff;
+                logEntry->deviceInfo.fw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
             }
         }
         else if (xml.name() == "HWVersion") {
             if (versionRX.indexIn(xml.readElementText()) >= 0) {
-                logEntry->deviceInfo->hw_version[0] = versionRX.cap(1).toInt();
-                logEntry->deviceInfo->hw_version[1] = versionRX.cap(2).toInt();
-                logEntry->deviceInfo->hw_version[2] = versionRX.cap(3).toInt() & 0xff;
-                logEntry->deviceInfo->hw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+                logEntry->deviceInfo.hw_version[0] = versionRX.cap(1).toInt();
+                logEntry->deviceInfo.hw_version[1] = versionRX.cap(2).toInt();
+                logEntry->deviceInfo.hw_version[2] = versionRX.cap(3).toInt() & 0xff;
+                logEntry->deviceInfo.hw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
             }
         }
         else {
@@ -1356,7 +1351,7 @@ void LogStore::XMLReader::readPeriodicSample(QList<ambit_log_sample_periodic_val
 }
 
 
-LogStore::XMLWriter::XMLWriter(ambit_device_info_t *deviceInfo, QDateTime time, QString movescountId, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
+LogStore::XMLWriter::XMLWriter(const DeviceInfo& deviceInfo, QDateTime time, QString movescountId, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry) :
     deviceInfo(deviceInfo), time(time), movescountId(movescountId), personalSettings(personalSettings), logEntry(logEntry)
 {
     xml.setAutoFormatting(true);
@@ -1373,7 +1368,7 @@ bool LogStore::XMLWriter::write(QIODevice *device)
     xml.writeStartElement("openambitlog");
     xml.writeAttribute("version", "1.0");
 
-    xml.writeTextElement("SerialNumber", QString("%1").arg(deviceInfo->serial));
+    xml.writeTextElement("SerialNumber", deviceInfo.serial);
     xml.writeTextElement("Time", time.toString(Qt::ISODate));
     xml.writeTextElement("MovescountId", QString("%1").arg(movescountId));
     ret = writeDeviceInfo();
@@ -1390,11 +1385,11 @@ bool LogStore::XMLWriter::write(QIODevice *device)
 bool LogStore::XMLWriter::writeDeviceInfo()
 {
     xml.writeStartElement("DeviceInfo");
-    xml.writeTextElement("Serial", QString("%1").arg(deviceInfo->serial));
-    xml.writeTextElement("Model", QString("%1").arg(deviceInfo->model));
-    xml.writeTextElement("Name", QString("%1").arg(deviceInfo->name));
-    xml.writeTextElement("FWVersion", QString("%1.%2.%3").arg((int)deviceInfo->fw_version[0]).arg((int)deviceInfo->fw_version[1]).arg((int)deviceInfo->fw_version[2] | ((int)deviceInfo->fw_version[3] << 8)));
-    xml.writeTextElement("HWVersion", QString("%1.%2.%3").arg((int)deviceInfo->hw_version[0]).arg((int)deviceInfo->hw_version[1]).arg((int)deviceInfo->hw_version[2] | ((int)deviceInfo->hw_version[3] << 8)));
+    xml.writeTextElement("Serial", deviceInfo.serial);
+    xml.writeTextElement("Model", deviceInfo.model);
+    xml.writeTextElement("Name", deviceInfo.name);
+    xml.writeTextElement("FWVersion", QString("%1.%2.%3").arg((int)deviceInfo.fw_version[0]).arg((int)deviceInfo.fw_version[1]).arg((int)deviceInfo.fw_version[2] | ((int)deviceInfo.fw_version[3] << 8)));
+    xml.writeTextElement("HWVersion", QString("%1.%2.%3").arg((int)deviceInfo.hw_version[0]).arg((int)deviceInfo.hw_version[1]).arg((int)deviceInfo.hw_version[2] | ((int)deviceInfo.hw_version[3] << 8)));
     xml.writeEndElement();
 
     return true;

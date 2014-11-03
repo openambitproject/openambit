@@ -102,9 +102,9 @@ QString MovesCount::generateUserkey()
     return retString;
 }
 
-void MovesCount::setDevice(ambit_device_info_t *device_info)
+void MovesCount::setDevice(const DeviceInfo& device_info)
 {
-    memcpy(&this->device_info, device_info, sizeof(ambit_device_info_t));
+    this->device_info = device_info;
 }
 
 bool MovesCount::isAuthorized()
@@ -274,7 +274,7 @@ void MovesCount::getDeviceSettingsInThread()
 {
     QNetworkReply *reply;
 
-    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), "", true);
+    reply = syncGET("/userdevices/" + device_info.serial, "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();

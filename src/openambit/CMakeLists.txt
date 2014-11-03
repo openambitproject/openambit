@@ -30,11 +30,13 @@ link_directories(
 )
 
 set ( openambit_HDRS
+  deviceinfo.h
   logentry.h
 )
 
 set ( openambit_SRCS
   confirmbetadialog.cpp
+  deviceinfo.cpp
   devicemanager.cpp
   logentry.cpp
   logstore.cpp
