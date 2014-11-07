@@ -574,7 +574,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_sealevelpressure:
-            output.insert("SeaLevelPressure", (int)round((double)value->u.sealevelpressure/10.0));
+            if (value->u.sealevelpressure >= 8500 && value->u.sealevelpressure <= 11000) {
+                output.insert("SeaLevelPressure", (int)round((double)value->u.sealevelpressure/10.0));
+            }
             break;
         case ambit_log_sample_periodic_type_verticalspeed:
             output.insert("VerticalSpeed", (double)value->u.verticalspeed/100.0);
