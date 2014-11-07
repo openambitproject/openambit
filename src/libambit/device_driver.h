@@ -39,6 +39,7 @@ typedef struct ambit_device_driver_s {
     int (*gps_orbit_write)(ambit_object_t *object, uint8_t *data, size_t datalen);
 } ambit_device_driver_t;
 
-extern ambit_device_driver_t ambit_device_driver_ambit; // Ambit & Ambit2
+extern ambit_device_driver_t ambit_device_driver_ambit;  // Ambit & Ambit2
+extern ambit_device_driver_t ambit_device_driver_ambit3; // Ambit3
 
 #endif /* __DEVICE_DRIVER_H__ */

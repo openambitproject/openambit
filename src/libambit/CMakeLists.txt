@@ -24,12 +24,14 @@ add_library (
   crc16.c
   debug.c
   device_driver_ambit.c
+  device_driver_ambit3.c
   device_driver_common.c
   device_support.c
   libambit.c
   personal.c
   pmem20.c
   protocol.c
+  sbem0102.c
   sha256.c
   utils.c
   ${HIDAPI_SOURCE_FILES}

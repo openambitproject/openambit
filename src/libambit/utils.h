@@ -41,34 +41,34 @@ char *libambit_strptime(const char *p, const char *fmt, struct tm *dt);
 int libambit_htob(const char *hex_string, uint8_t *binary, size_t binary_size);
 
 // static helpers
-static inline uint8_t read8(uint8_t *buf, size_t offset)
+static inline uint8_t read8(const uint8_t *buf, size_t offset)
 {
     return buf[offset];
 }
 
-static inline uint16_t read16(uint8_t *buf, size_t offset)
+static inline uint16_t read16(const uint8_t *buf, size_t offset)
 {
     return (buf[offset] | (buf[offset+1] << 8));
 }
 
-static inline uint32_t read32(uint8_t *buf, size_t offset)
+static inline uint32_t read32(const uint8_t *buf, size_t offset)
 {
     return (buf[offset] | (buf[offset+1] << 8) | (buf[offset+2] << 16) | (buf[offset+3] << 24));
 }
 
-static inline uint8_t read8inc(uint8_t *buf, size_t *offset)
+static inline uint8_t read8inc(const uint8_t *buf, size_t *offset)
 {
     *offset += 1;
     return buf[(*offset)-1];
 }
 
-static inline uint16_t read16inc(uint8_t *buf, size_t *offset)
+static inline uint16_t read16inc(const uint8_t *buf, size_t *offset)
 {
     *offset += 2;
     return (buf[(*offset)-2] | (buf[(*offset)-1] << 8));
 }
 
-static inline uint32_t read32inc(uint8_t *buf, size_t *offset)
+static inline uint32_t read32inc(const uint8_t *buf, size_t *offset)
 {
     *offset += 4;
     return (buf[(*offset)-4] | (buf[(*offset)-3] << 8) | (buf[(*offset)-2] << 16) | (buf[(*offset)-1] << 24));
