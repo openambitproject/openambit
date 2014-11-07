@@ -102,9 +102,7 @@ int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_person
     offset += 3;
 
     settings->alti_baro_mode = read8inc(data, &offset);
-
-    offset += 1;
-
+    settings->storm_alarm = read8inc(data, &offset);
     settings->fused_alti_disabled = read8inc(data, &offset);
 
     offset = 0x80;
@@ -116,6 +114,10 @@ int libambit_personal_settings_parse(uint8_t *data, size_t datalen, ambit_person
         settings->bikepod_calibration3 = read16inc(data, &offset);
         settings->footpod_calibration = read16inc(data, &offset);
         settings->automatic_bikepower_calib = read8inc(data, &offset);
+        settings->automatic_footpod_calib = read8inc(data, &offset);
+
+        offset = 0xba;
+        settings->training_program = read8inc(data, &offset);
     }
 
     return 0;

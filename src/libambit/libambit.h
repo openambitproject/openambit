@@ -101,12 +101,15 @@ typedef struct ambit_personal_settings_s {
     uint8_t  is_male;
     uint8_t  length;
     uint8_t  alti_baro_mode;
+    uint8_t  storm_alarm;
     uint8_t  fused_alti_disabled;
     uint16_t bikepod_calibration;     /* scale 0.0001 */
     uint16_t bikepod_calibration2;    /* scale 0.0001 */
     uint16_t bikepod_calibration3;    /* scale 0.0001 */
     uint16_t footpod_calibration;     /* scale 0.0001 */
     uint8_t  automatic_bikepower_calib;
+    uint8_t  automatic_footpod_calib;
+    uint8_t  training_program;
 } ambit_personal_settings_t;
 
 typedef struct ambit_log_date_time_s {

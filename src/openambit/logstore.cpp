@@ -503,6 +503,9 @@ void LogStore::XMLReader::readPersonalSettings()
         else if (xml.name() == "AltiBaroMode") {
             logEntry->personalSettings->alti_baro_mode = xml.readElementText().toUInt();
         }
+        else if (xml.name() == "StormAlarm") {
+            logEntry->personalSettings->storm_alarm = xml.readElementText().toUInt();
+        }
         else if (xml.name() == "FusedAltiDisabled") {
             logEntry->personalSettings->fused_alti_disabled = xml.readElementText().toUInt();
         }
@@ -520,6 +523,12 @@ void LogStore::XMLReader::readPersonalSettings()
         }
         else if (xml.name() == "AutomaticBikePowerCalibration") {
             logEntry->personalSettings->automatic_bikepower_calib = xml.readElementText().toUInt();
+        }
+        else if (xml.name() == "AutomaticFootPODCalibration") {
+            logEntry->personalSettings->automatic_footpod_calib = xml.readElementText().toUInt();
+        }
+        else if (xml.name() == "TrainingProgram") {
+            logEntry->personalSettings->training_program = xml.readElementText().toUInt();
         }
         else {
             xml.skipCurrentElement();
@@ -1434,12 +1443,15 @@ bool LogStore::XMLWriter::writePersonalSettings()
     xml.writeTextElement("IsMale", QString("%1").arg(personalSettings->is_male));
     xml.writeTextElement("Length", QString("%1").arg(personalSettings->length));
     xml.writeTextElement("AltiBaroMode", QString("%1").arg(personalSettings->alti_baro_mode));
+    xml.writeTextElement("StormAlarm", QString("%1").arg(personalSettings->storm_alarm));
     xml.writeTextElement("FusedAltiDisabled", QString("%1").arg(personalSettings->fused_alti_disabled));
     xml.writeTextElement("BikePODCalibration", QString("%1").arg(personalSettings->bikepod_calibration));
     xml.writeTextElement("BikePODCalibration2", QString("%1").arg(personalSettings->bikepod_calibration2));
     xml.writeTextElement("BikePODCalibration3", QString("%1").arg(personalSettings->bikepod_calibration3));
     xml.writeTextElement("FootPODCalibration", QString("%1").arg(personalSettings->footpod_calibration));
     xml.writeTextElement("AutomaticBikePowerCalibration", QString("%1").arg(personalSettings->automatic_bikepower_calib));
+    xml.writeTextElement("AutomaticFootPODCalibration", QString("%1").arg(personalSettings->automatic_footpod_calib));
+    xml.writeTextElement("TrainingProgram", QString("%1").arg(personalSettings->training_program));
 
     xml.writeEndElement();
 
