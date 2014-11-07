@@ -19,7 +19,7 @@ void LogView::showLog(LogEntry *entry)
         }
         log_html += "<h2>" + tr("Details") + "</h2>";
         log_html += "<h4>" + entry->time.toString() + "</h4>";
-        log_html += "<h4>" + tr("Duration: %1").arg(QTime(0, 0, 0,0 ).addMSecs(entry->logEntry->header.duration).toString("HH:mm:ss")) + "</h4>";
+        log_html += "<h4>" + tr("Duration: %1").arg(msecToHHMMSS(entry->logEntry->header.duration)) + "</h4>";
         log_html += "<h4>" + tr("Distance: %1 m").arg(QString::number(entry->logEntry->header.distance)) + "</h4>";
         log_html += "<h2>" + tr("Training values") + "</h2>";
         log_html += "<h4>" + tr("Avg HR: %1 bpm").arg(QString::number(entry->logEntry->header.heartrate_avg)) + "</h4>";
@@ -38,4 +38,17 @@ void LogView::showLog(LogEntry *entry)
 void LogView::hideLog()
 {
     this->setHtml("");
+}
+
+QString LogView::msecToHHMMSS(quint32 msec)
+{
+    quint32 hours;
+    quint8 minutes;
+    quint8 seconds;
+
+    hours = msec / (3600000);
+    minutes = (msec - hours*3600000) / 60000;
+    seconds = (msec - hours*3600000 - minutes*60000) / 1000;
+
+    return QString("%1:%2:%3").arg(hours, 2, 10, QChar('0')).arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
 }

@@ -18,6 +18,9 @@ signals:
 
 public slots:
 
+private:
+    QString msecToHHMMSS(quint32 msec);
+
 };
 
 #endif // LOGVIEW_H
