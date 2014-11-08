@@ -26,6 +26,7 @@
 #include <QLibraryInfo>
 
 #include "single_application.h"
+#include "signalhandler.h"
 
 static void initTranslations(void);
 
@@ -83,6 +84,10 @@ int main(int argc, char *argv[])
 
     // Connect single application message bus
     QObject::connect(&a, SIGNAL(messageAvailable(QString)), &w, SLOT(singleApplicationMsgRecv(QString)));
+
+    // Handle signals
+    SignalHandler sigHandler;
+    QObject::connect(&sigHandler, SIGNAL(signalReceived(int)), &w, SLOT(closeRequested()));
 
     w.show();
     

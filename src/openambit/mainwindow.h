@@ -50,6 +50,7 @@ signals:
 
 public slots:
     void singleApplicationMsgRecv(QString msg);
+    void closeRequested();
 
 protected:
     void changeEvent(QEvent *event);
@@ -58,7 +59,6 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void closeRequested();
     void showHideWindow();
     void trayIconClicked(QSystemTrayIcon::ActivationReason reason);
 

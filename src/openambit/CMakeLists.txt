@@ -43,6 +43,7 @@ set ( openambit_SRCS
   mainwindow.cpp
   settings.cpp
   settingsdialog.cpp
+  signalhandler.cpp
   single_application.cpp
   udevlistener.cpp
 )
@@ -65,6 +66,7 @@ set ( openambit_MOCS
   mainwindow.h
   settings.h
   settingsdialog.h
+  signalhandler.h
   single_application.h
   udevlistener.h
 )
