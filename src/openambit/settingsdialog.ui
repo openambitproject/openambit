@@ -108,7 +108,7 @@
               <item row="1" column="0">
                <widget class="QCheckBox" name="checkBoxRunningBackground">
                 <property name="text">
-                 <string>Continue running in background when OpenAmbit main window is closed</string>
+                 <string>Continue running in background when Openambit main window is closed</string>
                 </property>
                </widget>
               </item>

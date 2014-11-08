@@ -274,7 +274,7 @@ Rad %2, kolumn %3</translation>
         <translation>Visa inte beta-varning vid uppstart</translation>
     </message>
     <message>
-        <source>Continue running in background when OpenAmbit main window is closed</source>
+        <source>Continue running in background when Openambit main window is closed</source>
         <translation>Låt Openambit fortsätta köra i bakgrunden när fönstret stängs</translation>
     </message>
     <message>

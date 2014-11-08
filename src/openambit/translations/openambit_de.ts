@@ -285,7 +285,7 @@ Zeile %2, Spalte %3</translation>
         <translation>Beta-Warnung beim Start nicht anzeigen </translation>
     </message>
     <message>
-        <source>Continue running in background when OpenAmbit main window is closed</source>
+        <source>Continue running in background when Openambit main window is closed</source>
         <translation>Im Hintergrund weiter ausführen wenn das Hauptfenster geschlossen wird</translation>
     </message>
     <message>

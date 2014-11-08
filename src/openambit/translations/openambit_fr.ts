@@ -240,7 +240,7 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>Ce fichier n&apos;est pas un fichier OpenAmbit version 1.0</translation>
+        <translation>Ce fichier n&apos;est pas un fichier Openambit version 1.0</translation>
     </message>
     <message>
         <source>%1
@@ -276,8 +276,8 @@ Ligne %2, colonne %3</translation>
         <translation>Ne pas signaler les versions beta au démarrage</translation>
     </message>
     <message>
-        <source>Continue running in background when OpenAmbit main window is closed</source>
-        <translation>Poursuivre le fonctionnement en tâche de fond lorsque la fenêtre principale d&apos;OpenAmbit est fermée</translation>
+        <source>Continue running in background when Openambit main window is closed</source>
+        <translation>Poursuivre le fonctionnement en tâche de fond lorsque la fenêtre principale d&apos;Openambit est fermée</translation>
     </message>
     <message>
         <source>Device syncronisation settings</source>

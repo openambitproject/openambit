@@ -285,8 +285,8 @@ Linia %2, kolumna %3</translation>
         <translation>Pomiń Beta sprawdzanie przy uruchomieniu</translation>
     </message>
     <message>
-        <source>Continue running in background when OpenAmbit main window is closed</source>
-        <translation>Kontynuuj działanie w tle, gdy główne okno OpenAmbit jest zamknięte</translation>
+        <source>Continue running in background when Openambit main window is closed</source>
+        <translation>Kontynuuj działanie w tle, gdy główne okno Openambit jest zamknięte</translation>
     </message>
     <message>
         <source>Device syncronisation settings</source>

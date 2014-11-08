@@ -285,7 +285,7 @@ riga %2, colonna %3</translation>
         <translation>Salta il controllo beta all&apos;accensione</translation>
     </message>
     <message>
-        <source>Continue running in background when OpenAmbit main window is closed</source>
+        <source>Continue running in background when Openambit main window is closed</source>
         <translation>RImani in background anche chiudendo la finestra pincipale</translation>
     </message>
     <message>
