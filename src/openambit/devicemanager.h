@@ -46,7 +46,7 @@ public:
     ~DeviceManager();
     void start();
 signals:
-    void deviceDetected(const DeviceInfo& deviceInfo, bool supported);
+    void deviceDetected(const DeviceInfo& deviceInfo);
     void deviceRemoved(void);
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);

@@ -32,6 +32,7 @@ DeviceInfo::operator=(const ambit_device_info_t& devinfo)
     memcpy(this->hw_version, devinfo.hw_version, 4);
 
     this->access_status = devinfo.access_status;
+    this->is_supported  = devinfo.is_supported;
 
     return *this;
 }

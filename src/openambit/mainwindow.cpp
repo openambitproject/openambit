@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
     deviceManager = new DeviceManager();
     deviceManager->moveToThread(&deviceWorkerThread);
     qRegisterMetaType<DeviceInfo>("DeviceInfo");
-    connect(deviceManager, SIGNAL(deviceDetected(const DeviceInfo&,bool)), this, SLOT(deviceDetected(const DeviceInfo&,bool)), Qt::QueuedConnection);
+    connect(deviceManager, SIGNAL(deviceDetected(const DeviceInfo&)), this, SLOT(deviceDetected(const DeviceInfo&)), Qt::QueuedConnection);
     connect(deviceManager, SIGNAL(deviceRemoved()), this, SLOT(deviceRemoved()), Qt::QueuedConnection);
     connect(deviceManager, SIGNAL(deviceCharge(quint8)), this, SLOT(deviceCharge(quint8)), Qt::QueuedConnection);
     connect(deviceManager, SIGNAL(syncFinished(bool)), this, SLOT(syncFinished(bool)), Qt::QueuedConnection);
@@ -236,7 +236,7 @@ void MainWindow::syncNowClicked()
     startSync();
 }
 
-void MainWindow::deviceDetected(const DeviceInfo& deviceInfo, bool supported)
+void MainWindow::deviceDetected(const DeviceInfo& deviceInfo)
 {
     if (0 != deviceInfo.access_status) {
         ui->labelNotSupported->setText(strerror(deviceInfo.access_status));
@@ -248,7 +248,7 @@ void MainWindow::deviceDetected(const DeviceInfo& deviceInfo, bool supported)
     ui->labelDeviceDetected->setText(deviceInfo.name);
     ui->labelSerial->setText(deviceInfo.serial);
     trayIcon->setIcon(QIcon(":/icon_connected"));
-    if (0 != deviceInfo.access_status || !supported) {
+    if (0 != deviceInfo.access_status || !deviceInfo.is_supported) {
         ui->labelNotSupportedIcon->setHidden(false);
         ui->labelNotSupported->setHidden(false);
         ui->labelMovescountAuthIcon->setHidden(true);

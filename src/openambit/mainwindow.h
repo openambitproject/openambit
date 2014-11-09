@@ -69,7 +69,7 @@ private slots:
 
     void syncNowClicked();
 
-    void deviceDetected(const DeviceInfo& deviceInfo, bool supported);
+    void deviceDetected(const DeviceInfo& deviceInfo);
     void deviceRemoved();
     void deviceCharge(quint8 percent);
     void syncFinished(bool success);

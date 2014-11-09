@@ -36,6 +36,7 @@ struct DeviceInfo
     int hw_version[4];
 
     int access_status;
+    bool is_supported;
 
     DeviceInfo& operator= (const ambit_device_info_t& devinfo);
 };

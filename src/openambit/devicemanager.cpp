@@ -66,7 +66,7 @@ void DeviceManager::detect()
     ambit_device_info_t *devinfo = libambit_enumerate();
     if (devinfo) {
         this->currentDeviceInfo = *devinfo;
-        emit deviceDetected(this->currentDeviceInfo, devinfo->is_supported);
+        emit deviceDetected(this->currentDeviceInfo);
         this->deviceObject = libambit_new(devinfo);
     }
     libambit_free_enumeration(devinfo);
