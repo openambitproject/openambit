@@ -6,19 +6,14 @@
 # LIBAMBIT_LIBS - the libambit libraries
 
 find_path(LIBAMBIT_INCLUDE_DIR NAMES libambit.h
-  PATHS
-  ../libambit
+  PATHS ${CMAKE_SOURCE_DIR}/../libambit NO_DEFAULT_PATH
 )
-
-find_library(LIBAMBIT_LIBS_PATH NAMES libambit.so
-  PATHS
-  ../../libambit-build
-)
+find_path(LIBAMBIT_INCLUDE_DIR NAMES libambit.h)
 
 find_library(LIBAMBIT_LIBS NAMES ambit
-  PATHS
-  ../../libambit-build
+  PATHS ${CMAKE_BINARY_DIR}/../libambit-build NO_DEFAULT_PATH
 )
+find_library(LIBAMBIT_LIBS NAMES ambit)
 
 if(LIBAMBIT_INCLUDE_DIR AND LIBAMBIT_LIBS)
   set(LIBAMBIT_FOUND TRUE CACHE INTERNAL "libambit found")
