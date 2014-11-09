@@ -468,17 +468,20 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
             }
 
 #ifdef DEBUG_PRINT_INFO
-            char fw_version[LIBAMBIT_VERSION_LENGTH+1];
-            char hw_version[LIBAMBIT_VERSION_LENGTH+1];
-            version_string(fw_version, device->fw_version);
-            version_string(hw_version, device->hw_version);
+            {
+                char fw_version[LIBAMBIT_VERSION_LENGTH+1];
+                char hw_version[LIBAMBIT_VERSION_LENGTH+1];
+                version_string(fw_version, device->fw_version);
+                version_string(hw_version, device->hw_version);
+
+                LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
+                         "nick: %s, F/W: %s, H/W: %s, supported: %s)",
+                         device->path, device->name, device->serial,
+                         device->vendor_id, device->product_id,
+                         device->model, fw_version, hw_version,
+                         (device->is_supported ? "YES" : "NO"));
+            }
 #endif
-            LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
-                     "nick: %s, F/W: %s, H/W: %s, supported: %s)",
-                     device->path, device->name, device->serial,
-                     device->vendor_id, device->product_id,
-                     device->model, fw_version, hw_version,
-                     (device->is_supported ? "YES" : "NO"));
         }
         else {
             LOG_ERROR("cannot get device info from %s", device->path);
