@@ -8,7 +8,7 @@ cd $SOURCE_LOCATION
 echo "------building libambit------"
 mkdir -p libambit-build
 cd libambit-build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../src/libambit
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/libambit
 make -j$CORES
 if [ "$DO_INSTALL" == "1" ]; then
     echo "------installing libambit------"
@@ -19,7 +19,7 @@ cd $SOURCE_LOCATION
 echo "------building openambit------"
 mkdir -p openambit-build
 cd openambit-build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../src/openambit
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/openambit
 make -j$CORES
 if [ "$DO_INSTALL" == "1" ]; then
     echo "------installing openambit------"
@@ -31,13 +31,13 @@ if [ "$BUILD_EXTRAS" == "1" ]; then
     echo "------building example------"
     mkdir -p example-build
     cd example-build
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../src/example
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/example
     make -j$CORES
 
     cd $SOURCE_LOCATION
     echo "------building wireshark dissector------"
     mkdir -p dissector-build
     cd dissector-build
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ../wireshark_dissector
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../wireshark_dissector
     make -j$CORES
 fi
