@@ -282,7 +282,7 @@ void MainWindow::deviceDetected(const DeviceInfo& deviceInfo)
             if (settings.value("checkNewVersions", true).toBool()) {
                 movesCount->checkLatestFirmwareVersion();
             }
-            if (settings.value("movescountEnable", true).toBool()) {
+            if (settings.value("movescountEnable", false).toBool()) {
                 movesCount->getDeviceSettings();
             }
             settings.endGroup();
@@ -462,7 +462,7 @@ void MainWindow::startSync()
     syncOrbit = settings.value("syncOrbit", true).toBool();
     settings.endGroup();
     settings.beginGroup("movescountSettings");
-    syncMovescount = settings.value("movescountEnable", true).toBool();
+    syncMovescount = settings.value("movescountEnable", false).toBool();
     settings.endGroup();
 
     trayIcon->setIcon(QIcon(":/icon_syncing"));
@@ -479,11 +479,11 @@ void MainWindow::movesCountSetup()
     bool movescountEnable = false;
 
     settings.beginGroup("syncSettings");
-    syncOrbit = settings.value("syncOrbit").toBool();
+    syncOrbit = settings.value("syncOrbit", true).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
-    movescountEnable = settings.value("movescountEnable").toBool();
+    movescountEnable = settings.value("movescountEnable", false).toBool();
     if (syncOrbit || movescountEnable) {
         if (movesCount == NULL) {
             movesCount = MovesCount::instance();
