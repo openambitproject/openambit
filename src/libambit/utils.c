@@ -20,12 +20,16 @@
  *
  */
 #include "utils.h"
+#include "debug.h"
 
-#include <stdint.h>
 #include <ctype.h>
+#include <errno.h>
+#include <iconv.h>
 #include <limits.h>
-#include <time.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static int date_get_num(const char **pp, int n_min, int n_max, int len_max)
 {
@@ -150,3 +154,88 @@ int libambit_htob(const char *hex_string, uint8_t *binary, size_t binary_size)
     return i;
 }
 
+char * utf8memconv(const char *src, size_t n, const char *encoding)
+{
+    char *rv = NULL;
+    iconv_t cd = (iconv_t) -1;
+
+    if (src) {
+        cd = iconv_open("UTF-8", (encoding ? encoding : "ASCII"));
+        if ((iconv_t) -1 == cd) {
+            LOG_ERROR("iconv_open: %s", strerror(errno));
+        }
+        else {
+            size_t ilen = n;
+            size_t olen = n * 4 + 1;
+            char  *ibuf = (char *)src;
+            char  *obuf = (char *)malloc(olen * sizeof(char));
+
+            if (obuf) {
+                size_t n = olen;
+                size_t sz;
+
+                rv = obuf;
+                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
+
+                if ((size_t) -1 == sz) {
+                    LOG_ERROR("iconv: %s", strerror(errno));
+                    free(rv);
+                    rv = NULL;
+                }
+                else {      /* we're good, terminate string */
+                    rv[n - olen] = '\0';
+                    rv = realloc(rv, strlen(rv) + 1);
+                }
+            }
+        }
+    }
+
+    if ((iconv_t) -1 != cd) {
+        iconv_close(cd);
+    }
+
+    return rv;
+}
+
+char * utf8wcsconv(const wchar_t *src)
+{
+    char *rv = NULL;
+    iconv_t cd = (iconv_t) -1;
+
+    if (src) {
+        cd = iconv_open("UTF-8", "WCHAR_T");
+        if ((iconv_t) -1 == cd) {
+            LOG_ERROR("iconv_open: %s", strerror(errno));
+        }
+        else {
+            size_t ilen = (wcslen(src)) * sizeof (wchar_t);
+            size_t olen = wcslen(src) * 4 + 1;
+            char  *ibuf = (char *)src;
+            char  *obuf = (char *)malloc(olen * sizeof(char));
+
+            if (obuf) {
+                size_t n = olen;
+                size_t sz;
+
+                rv = obuf;
+                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
+
+                if ((size_t) -1 == sz) {
+                    LOG_ERROR("iconv: %s", strerror(errno));
+                    free(rv);
+                    rv = NULL;
+                }
+                else {      /* we're good, terminate string */
+                    rv[n - olen] = '\0';
+                    rv = realloc(rv, strlen(rv) + 1);
+                }
+            }
+        }
+    }
+
+    if ((iconv_t) -1 != cd) {
+        iconv_close(cd);
+    }
+
+    return rv;
+}

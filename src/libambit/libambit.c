@@ -24,14 +24,13 @@
 #include "device_support.h"
 #include "device_driver.h"
 #include "protocol.h"
+#include "utils.h"
 #include "debug.h"
 
 #include <errno.h>
-#include <iconv.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -49,8 +48,6 @@
  */
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
-static char * utf8memconv(const char *src, size_t n);
-static char * utf8wcsconv(const wchar_t *src);
 
 /*
  * Static variables
@@ -330,9 +327,9 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
         if (info != NULL) {
             const char *p = (char *)reply_data;
 
-            info->model  = utf8memconv(p, LIBAMBIT_MODEL_LENGTH);
+            info->model  = utf8memconv(p, LIBAMBIT_MODEL_LENGTH, NULL);
             p += LIBAMBIT_MODEL_LENGTH;
-            info->serial = utf8memconv(p, LIBAMBIT_SERIAL_LENGTH);
+            info->serial = utf8memconv(p, LIBAMBIT_SERIAL_LENGTH, NULL);
             p += LIBAMBIT_SERIAL_LENGTH;
             memcpy(info->fw_version, p, 4);
             memcpy(info->hw_version, p + 4, 4);
@@ -508,72 +505,4 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     }
 
     return device;
-}
-
-/*! \brief Converts \a n octets to a UTF-8 encoded string.
- *
- *  The \a n octets starting at \a src are assumed to have been
- *  obtained from the clock and in a clock-specific encoding.
- *
- *  \todo  Confirm the clock encoding, assuming ASCII for now.
- */
-static char * utf8memconv(const char *src, size_t n)
-{
-  size_t i;
-
-  if (!src) return NULL;
-
-  /* Sanity check the octets we are about to convert.  */
-  for (i = 0; i < n && 0 !=src[i]; ++i) {
-      if (0 > src[i] && src[i] > 127) {
-          LOG_WARNING("non-ASCII byte at position %i: 0x%02x",
-                      i, src[i]);
-      }
-  }
-  return strndup(src, n);
-}
-
-/*! \brief Converts a wide character string to a UTF-8 encoded one.
- */
-static char * utf8wcsconv(const wchar_t *src)
-{
-    char *rv = NULL;
-    iconv_t cd = (iconv_t) -1;
-
-    if (src) {
-        cd = iconv_open("UTF-8", "WCHAR_T");
-        if ((iconv_t) -1 == cd) {
-            LOG_ERROR("iconv_open: %s", strerror(errno));
-        }
-        else {
-          size_t ilen = (wcslen(src)) * sizeof (wchar_t);
-            size_t olen = wcslen(src) * 4 + 1;
-            char  *ibuf = (char *)src;
-            char  *obuf = (char *)malloc(olen * sizeof(char));
-
-            if (obuf) {
-                size_t n = olen;
-                size_t sz;
-
-                rv = obuf;
-                sz = iconv(cd, &ibuf, &ilen, &obuf, &olen);
-
-                if ((size_t) -1 == sz) {
-                    LOG_ERROR("iconv: %s", strerror(errno));
-                    free(rv);
-                    rv = NULL;
-                }
-                else {      /* we're good, terminate string */
-                    rv[n - olen] = '\0';
-                    rv = realloc(rv, strlen(rv) + 1);
-                }
-            }
-        }
-    }
-
-    if ((iconv_t) -1 != cd) {
-        iconv_close(cd);
-    }
-
-    return rv;
 }

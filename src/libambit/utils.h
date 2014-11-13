@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+#include <wchar.h>
 
 /**
  * Reduced implementation of the Unix specific strptime
@@ -39,6 +40,22 @@ char *libambit_strptime(const char *p, const char *fmt, struct tm *dt);
  * \return Number of converted bytes, or -1 if error occured
  */
 int libambit_htob(const char *hex_string, uint8_t *binary, size_t binary_size);
+
+/**
+ * Converts \a n octets to a UTF-8 encoded string.
+ *
+ * The caller gets to manage the memory associated with the returned
+ * string.  In case \a encoding is \c NULL, ASCII will be assumed.
+ */
+char * utf8memconv(const char *src, size_t n, const char *encoding);
+
+/**
+ * Converts a wide character string to a UTF-8 encoded one.
+ *
+ * The caller get s to manage the memory associated with the returned
+ * string.
+ */
+char * utf8wcsconv(const wchar_t *src);
 
 // static helpers
 static inline uint8_t read8(const uint8_t *buf, size_t offset)
