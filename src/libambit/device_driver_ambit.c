@@ -126,6 +126,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
     ambit_log_entry_t *log_entry;
 
     LOG_INFO("Reading number of logs");
+    log_header.activity_name = NULL;
 
     /*
      * Read number of log entries

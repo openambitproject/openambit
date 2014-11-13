@@ -241,7 +241,7 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
         xml.writeTextElement("PeakTrainingEffect", QString::number((double)logEntry->logEntry->header.peak_training_effect/10.0, 'g', 16));
     }
     xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString::fromLatin1(logEntry->logEntry->header.activity_name));
+    xml.writeTextElement("Activity", QString::fromUtf8(logEntry->logEntry->header.activity_name));
     xml.writeStartElement("Temperature");
     xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.temperature_max/10.0 + 273.15, 'g', 16));
     xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.temperature_min/10.0 + 273.15, 'g', 16));

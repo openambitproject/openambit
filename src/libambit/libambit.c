@@ -311,6 +311,9 @@ void libambit_log_entry_free(ambit_log_entry_t *log_entry)
             }
             free(log_entry->samples);
         }
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
     }
 }

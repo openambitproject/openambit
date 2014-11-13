@@ -223,6 +223,9 @@ LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, const Devi
     logfile.open(QIODevice::ReadOnly);
     XMLReader reader(retEntry);
     if (!reader.read(&logfile)) {
+        if (retEntry->logEntry && retEntry->logEntry->header.activity_name) {
+            free(retEntry->logEntry->header.activity_name);
+        }
         delete retEntry;
         retEntry = NULL;
     }
@@ -664,10 +667,9 @@ void LogStore::XMLReader::readLogHeader()
             logEntry->logEntry->header.activity_type = xml.readElementText().toUInt();
         }
         else if (xml.name() == "Activity") {
-            QByteArray ba = xml.readElementText().toLatin1();
+            QByteArray ba = xml.readElementText().toUtf8();
             const char *c_str = ba.data();
-            strncpy(logEntry->logEntry->header.activity_name, c_str, 16);
-            logEntry->logEntry->header.activity_name[16] = 0;
+            logEntry->logEntry->header.activity_name = strdup(c_str);
         }
         else if (xml.name() == "Temperature") {
             while (xml.readNextStartElement()) {
@@ -1492,7 +1494,7 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeEndElement();
     xml.writeTextElement("PeakTrainingEffect", QString("%1").arg(logEntry->header.peak_training_effect));
     xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString::fromLatin1(logEntry->header.activity_name));
+    xml.writeTextElement("Activity", QString::fromUtf8(logEntry->header.activity_name));
     xml.writeStartElement("Temperature");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->header.temperature_max));
     xml.writeTextElement("Min", QString("%1").arg(logEntry->header.temperature_min));

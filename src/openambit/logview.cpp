@@ -10,7 +10,7 @@ void LogView::showLog(LogEntry *entry)
     QString log_html;
 
     if (entry != NULL && entry->logEntry != NULL) {
-        log_html += "<h1>" + QString::fromLatin1(entry->logEntry->header.activity_name) + "</h1>";
+        log_html += "<h1>" + QString::fromUtf8(entry->logEntry->header.activity_name) + "</h1>";
         if (entry->isUploaded()){
             log_html += "<a href='http://www.movescount.com/moves/move" + entry->movescountId + "'>" + tr("see on movescount.com") + "</a>";
         }

@@ -212,6 +212,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
         object->log.initialized = false;
         return NULL;
     }
+    log_entry->header.activity_name = NULL;
 
     LOG_INFO("Reading log entry from address=%08x", object->log.current.current);
 
@@ -225,6 +226,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     tmp_len = read16inc(object->log.buffer, &buffer_offset);
     if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
         LOG_ERROR("Failed to parse log entry header correctly");
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -232,6 +236,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     buffer_offset += tmp_len;
     // Now that we know number of samples, allocate space for them!
     if ((log_entry->samples = calloc(log_entry->header.samples_count, sizeof(ambit_log_sample_t))) == NULL) {
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -239,6 +246,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     log_entry->samples_count = log_entry->header.samples_count;
     if ((time_compensators = calloc(log_entry->header.samples_count, sizeof(int32_t))) == NULL) {
         free(log_entry->samples);
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -317,6 +327,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     }
 
     LOG_INFO("Reading log entry from address=%08x", address);
+    log_entry->header.activity_name = NULL;
 
     // Handle wrap in "the middle" of the log
     next_address = address;
@@ -349,6 +360,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     tmp_len = read16inc(buffer, &buffer_offset);
     if (libambit_pmem20_log_parse_header(buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
         LOG_ERROR("Failed to parse log entry header correctly");
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -356,6 +370,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     buffer_offset += tmp_len;
     // Now that we know number of samples, allocate space for them!
     if ((log_entry->samples = calloc(log_entry->header.samples_count, sizeof(ambit_log_sample_t))) == NULL) {
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -363,6 +380,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     log_entry->samples_count = log_entry->header.samples_count;
     if ((time_compensators = calloc(log_entry->header.samples_count, sizeof(int32_t))) == NULL) {
         free(log_entry->samples);
+        if (log_entry->header.activity_name) {
+            free(log_entry->header.activity_name);
+        }
         free(log_entry);
         object->log.initialized = false;
         return NULL;
@@ -417,8 +437,11 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->heartrate_max = read8inc(data, &offset);
     log_header->peak_training_effect = read8inc(data, &offset);
     log_header->activity_type = read8inc(data, &offset);
-    memcpy(log_header->activity_name, data + offset, 16);
-    log_header->activity_name[16] = 0;
+    if (log_header->activity_name) {
+        free(log_header->activity_name);
+    }
+    log_header->activity_name = utf8memconv((char *)data + offset, 16,
+                                            "ISO-8859-15");
     offset += 16;
     log_header->heartrate_min = read8inc(data, &offset);
 

@@ -47,6 +47,9 @@ LogEntry::LogEntry(const LogEntry &other)
     if (other.logEntry != NULL) {
         logEntry = (ambit_log_entry_t*)malloc(sizeof(ambit_log_entry_t));
         memcpy(logEntry, other.logEntry, sizeof(ambit_log_entry_t));
+        if (other.logEntry->header.activity_name) {
+            logEntry->header.activity_name = strdup(other.logEntry->header.activity_name);
+        }
         if (other.logEntry->samples != NULL) {
             logEntry->samples = (ambit_log_sample_t*)malloc(sizeof(ambit_log_sample_t)*other.logEntry->samples_count);
             memcpy(logEntry->samples, other.logEntry->samples, sizeof(ambit_log_sample_t)*other.logEntry->samples_count);

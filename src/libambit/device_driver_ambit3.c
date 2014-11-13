@@ -200,6 +200,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
     libambit_sbem0102_data_t send_data_object, reply_data_object;
 
     LOG_INFO("Reading log headers");
+    log_header.header.activity_name = NULL;
     
     libambit_sbem0102_data_init(&send_data_object);
     libambit_sbem0102_data_init(&reply_data_object);
@@ -366,8 +367,10 @@ static int parse_log_header(const uint8_t *data, ambit3_log_header_t *log_header
     log_header->header.descent_time = read32inc(data, &offset)*1000;
     log_header->header.recovery_time = read16inc(data, &offset)*60*1000;
     log_header->header.peak_training_effect = read8inc(data, &offset);
-    strncpy(log_header->header.activity_name, (const char*)(data + offset), 16);
-    offset += strlen((const char*)(data + offset)) + 1;
+    if (log_header->header.activity_name) {
+        free(log_header->header.activity_name);
+    }
+    log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "ISO-8859-15");
     log_header->header.distance = read32inc(data, &offset);
     log_header->header.energy_consumption = read16inc(data, &offset);
 
