@@ -12,8 +12,6 @@ int main(int argc, char *argv[])
     ambit_object_t *ambit_object;
     ambit_device_status_t status;
     ambit_personal_settings_t settings;
-    time_t current_time;
-    struct tm *local_time;
 
     if (info) {
         printf("Device: %s, serial: %s\n", info->name, info->serial);
@@ -42,14 +40,6 @@ int main(int argc, char *argv[])
             else {
                 printf("Failed to read status\n");
             }
-
-            current_time = time(NULL);
-            local_time = localtime(&current_time);
-            //if (libambit_date_time_set(ambit_object, local_time) == 0) {
-            //}
-            //else {
-            //    printf("Failed to set date and time\n");
-            //}
 
             libambit_log_read(ambit_object, log_skip_cb, log_data_cb, NULL, ambit_object);
             libambit_close(ambit_object);
