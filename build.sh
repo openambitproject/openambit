@@ -31,13 +31,13 @@ if [ "$BUILD_EXTRAS" == "1" ]; then
     echo "------building example------"
     mkdir -p example-build
     cd example-build
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/example
+    cmake "$@" ../src/example
     make -j$CORES
 
     cd $SOURCE_LOCATION
     echo "------building wireshark dissector------"
     mkdir -p dissector-build
     cd dissector-build
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../wireshark_dissector
+    cmake "$@" ../wireshark_dissector
     make -j$CORES
 fi
