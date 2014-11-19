@@ -10,7 +10,7 @@ cd $SOURCE_LOCATION
 echo "------building libambit------"
 mkdir -p libambit-build
 cd libambit-build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/libambit
+cmake "$@" ../src/libambit
 make -j$CORES
 if [ "$DO_INSTALL" == "1" ]; then
     echo "------installing libambit------"
@@ -21,7 +21,7 @@ cd $SOURCE_LOCATION
 echo "------building openambit------"
 mkdir -p openambit-build
 cd openambit-build
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr "$@" ../src/openambit
+cmake "$@" ../src/openambit
 make -j$CORES
 if [ "$DO_INSTALL" == "1" ]; then
     echo "------installing openambit------"
