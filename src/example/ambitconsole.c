@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
             if (libambit_personal_settings_get(ambit_object, &settings) == 0) {
             }
             else {
-                printf("Failed to read status\n");
+                printf("Failed to read personal settings\n");
             }
 
             libambit_log_read(ambit_object, log_skip_cb, log_data_cb, NULL, ambit_object);
