@@ -1,3 +1,5 @@
+#!/bin/sh
+
 SOURCE_LOCATION="`dirname \"$0\"`"
 SOURCE_LOCATION="`( cd \"$SOURCE_LOCATION\" && pwd )`"
 
