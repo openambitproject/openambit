@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.5)
-project (OPENAMBIT)
+project (OPENAMBIT CXX)
 
 set (OPENAMBIT_VERSION HEAD)
 
