@@ -51,3 +51,11 @@ include_directories(
 
 install(TARGETS ambit DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES libambit.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+set(CMAKE_INSTALL_UDEVRULESDIR /lib/udev/rules.d
+    CACHE PATH "Where to install udev rules")
+mark_as_advanced(CMAKE_INSTALL_UDEVRULESDIR)
+
+install(FILES libambit.rules
+        DESTINATION ${CMAKE_INSTALL_UDEVRULESDIR}
+        COMPONENT system)

@@ -77,11 +77,6 @@ set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_HDRS} ${o
 
 set ( APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png )
 
-set ( CMAKE_INSTALL_UDEVRULESDIR /lib/udev/rules.d
-      CACHE PATH "Where to install udev rules"
-)
-mark_as_advanced ( CMAKE_INSTALL_UDEVRULESDIR )
-
 add_subdirectory("${PROJECT_SOURCE_DIR}/movescount")
 
 ######### Translations
@@ -120,10 +115,6 @@ add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${MOCS} )
 target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${UDEV_LIBS} ${ZLIB_LIBRARY} ${QJSON_LIBRARIES} )
 
 install ( TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR} )
-install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/99-suunto-ambit.rules
-          DESTINATION ${CMAKE_INSTALL_UDEVRULESDIR}
-          COMPONENT system
-)
 install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
           DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications )
 install ( FILES ${APP_ICON}
