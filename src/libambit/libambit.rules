@@ -1,22 +1,30 @@
-#
-# Suunto Ambit / Ambit 2 UDEV rules
-# Change the permissions for devices to 0666 (work readable/writeable)
-#
+# Rules for Suunto Ambit devices
+# Change permissions so that libambit can communicate with these
+# devices for any user.
+
+ACTION!="add", GOTO="openambit_rules_end"
+ATTR{idVendor}!="1493", GOTO="openambit_rules_end"
+
+LABEL="openambit_rules_begin"
 
 # Bluebird (a.k.a Suunto Ambit)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="0010", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="0010", ENV{openambit}="yes"
 
 # Duck (a.k.a Suunto Ambit2)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="0019", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="0019", ENV{openambit}="yes"
 
 # Colibri (a.k.a Suunto Ambit2 S)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001a", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="001a", ENV{openambit}="yes"
 
 # Emu (a.k.a Suunto Ambit3 Peak)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001b", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="001b", ENV{openambit}="yes"
 
 # Finch (a.k.a Suunto Ambit3 Sport)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001c", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="001c", ENV{openambit}="yes"
 
 # Greentit (a.k.a Suunto Ambit2 R)
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="1493", ATTRS{idProduct}=="001d", MODE="0666"
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="001d", ENV{openambit}="yes"
+
+ENV{openambit}=="yes", MODE="0666", OWNER="root", GROUP="root"
+
+LABEL="openambit_rules_end"
