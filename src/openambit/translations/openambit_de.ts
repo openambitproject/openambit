@@ -119,7 +119,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Min HR: %1 bpm</source>
-        <translation>Mininmalpuls: %1 bpm</translation>
+        <translation>Minimalpuls: %1 bpm</translation>
     </message>
     <message>
         <source>PTE: %1</source>
@@ -170,7 +170,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Resync all</source>
-        <translation>Alle nochmal synchronisieren</translation>
+        <translation>Alle erneut synchronisieren</translation>
     </message>
     <message>
         <source>Sync now</source>
@@ -214,7 +214,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Syncronization complete</source>
-        <translation>Synchronisierung fertig</translation>
+        <translation>Synchronisierung abgeschlossen</translation>
     </message>
     <message>
         <source>Syncronisation finished</source>
