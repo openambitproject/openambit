@@ -1,9 +1,9 @@
 [Desktop Entry]
-Version=HEAD
+Version=1.0
 Type=Application
 Name=Openambit
 Comment=Open source synchronization for Suunto Ambit series
 TryExec=openambit
 Exec=openambit
 Icon=openambit
-Categories=Utility;Education;Sports
+Categories=Utility;Education;Sports;
