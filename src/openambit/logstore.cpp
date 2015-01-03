@@ -354,16 +354,14 @@ void LogStore::XMLReader::readDeviceInfo()
             if (versionRX.indexIn(xml.readElementText()) >= 0) {
                 logEntry->deviceInfo.fw_version[0] = versionRX.cap(1).toInt();
                 logEntry->deviceInfo.fw_version[1] = versionRX.cap(2).toInt();
-                logEntry->deviceInfo.fw_version[2] = versionRX.cap(3).toInt() & 0xff;
-                logEntry->deviceInfo.fw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+                logEntry->deviceInfo.fw_version[2] = versionRX.cap(3).toInt();
             }
         }
         else if (xml.name() == "HWVersion") {
             if (versionRX.indexIn(xml.readElementText()) >= 0) {
                 logEntry->deviceInfo.hw_version[0] = versionRX.cap(1).toInt();
                 logEntry->deviceInfo.hw_version[1] = versionRX.cap(2).toInt();
-                logEntry->deviceInfo.hw_version[2] = versionRX.cap(3).toInt() & 0xff;
-                logEntry->deviceInfo.hw_version[3] = (versionRX.cap(3).toInt() >> 8) & 0xff;
+                logEntry->deviceInfo.hw_version[2] = versionRX.cap(3).toInt();
             }
         }
         else {
@@ -1390,8 +1388,8 @@ bool LogStore::XMLWriter::writeDeviceInfo()
     xml.writeTextElement("Serial", deviceInfo.serial);
     xml.writeTextElement("Model", deviceInfo.model);
     xml.writeTextElement("Name", deviceInfo.name);
-    xml.writeTextElement("FWVersion", QString("%1.%2.%3").arg((int)deviceInfo.fw_version[0]).arg((int)deviceInfo.fw_version[1]).arg((int)deviceInfo.fw_version[2] | ((int)deviceInfo.fw_version[3] << 8)));
-    xml.writeTextElement("HWVersion", QString("%1.%2.%3").arg((int)deviceInfo.hw_version[0]).arg((int)deviceInfo.hw_version[1]).arg((int)deviceInfo.hw_version[2] | ((int)deviceInfo.hw_version[3] << 8)));
+    xml.writeTextElement("FWVersion", QString("%1.%2.%3").arg(deviceInfo.fw_version[0]).arg(deviceInfo.fw_version[1]).arg(deviceInfo.fw_version[2]));
+    xml.writeTextElement("HWVersion", QString("%1.%2.%3").arg(deviceInfo.hw_version[0]).arg(deviceInfo.hw_version[1]).arg(deviceInfo.hw_version[2]));
     xml.writeEndElement();
 
     return true;

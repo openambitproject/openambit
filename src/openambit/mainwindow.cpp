@@ -379,7 +379,7 @@ void MainWindow::syncProgressInform(QString message, bool error, bool newRow, qu
 
 void MainWindow::newerFirmwareExists(QByteArray fw_version)
 {
-    ui->labelNewFirmware->setText(QString(tr("Newer firmware exists (%1.%2.%3)")).arg((int)fw_version[0]).arg((int)fw_version[1]).arg((int)(fw_version[2] | ((int)fw_version[3] << 8))));
+    ui->labelNewFirmware->setText(QString(tr("Newer firmware exists (%1.%2.%3)")).arg((int)fw_version[0]).arg((int)fw_version[1]).arg((int)(fw_version[2])));
     ui->labelNewFirmware->setHidden(false);
     ui->labelNewFirmwareIcon->setHidden(false);
 }

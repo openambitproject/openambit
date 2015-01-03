@@ -36,7 +36,7 @@ class MovesCountJSON : public QObject
 public:
     explicit MovesCountJSON(QObject *parent = 0);
 
-    int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[4]);
+    int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3]);
     int parseLogReply(QByteArray &input, QString &moveId);
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
 

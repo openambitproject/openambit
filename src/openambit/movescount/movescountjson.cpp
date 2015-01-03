@@ -34,7 +34,7 @@ MovesCountJSON::MovesCountJSON(QObject *parent) :
 {
 }
 
-int MovesCountJSON::parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[4])
+int MovesCountJSON::parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3])
 {
     QJson::Parser parser;
     bool ok;
@@ -50,8 +50,7 @@ int MovesCountJSON::parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_ver
         if (rx.indexIn(result["LatestFirmwareVersion"].toString()) >= 0) {
             fw_version[0] = rx.cap(1).toInt();
             fw_version[1] = rx.cap(2).toInt();
-            fw_version[2] = rx.cap(3).toInt() & 0xff;
-            fw_version[3] = (rx.cap(3).toInt() >> 8) & 0xff;
+            fw_version[2] = rx.cap(3).toInt();
             return 0;
         }
     }

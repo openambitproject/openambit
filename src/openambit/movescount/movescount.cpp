@@ -209,7 +209,7 @@ void MovesCount::authCheckFinished()
 
 void MovesCount::firmwareReplyFinished()
 {
-    u_int8_t fw_version[4];
+    u_int8_t fw_version[3];
 
     if (firmwareCheckReply != NULL) {
         if (firmwareCheckReply->error() == QNetworkReply::NoError) {
@@ -217,8 +217,8 @@ void MovesCount::firmwareReplyFinished()
             if (jsonParser.parseFirmwareVersionReply(data, fw_version) == 0) {
                 if (fw_version[0] > device_info.fw_version[0] ||
                     (fw_version[0] == device_info.fw_version[0] && (fw_version[1] > device_info.fw_version[1] ||
-                     (fw_version[1] == device_info.fw_version[1] && ((fw_version[2] | (fw_version[3] << 8)) > (device_info.fw_version[2] | (device_info.fw_version[3] << 8))))))) {
-                    emit newerFirmwareExists(QByteArray((const char*)fw_version, 4));
+                     (fw_version[1] == device_info.fw_version[1] && (fw_version[2] > device_info.fw_version[2]))))) {
+                    emit newerFirmwareExists(QByteArray((const char*)fw_version, 3));
                 }
             }
         }
@@ -315,7 +315,7 @@ void MovesCount::checkLatestFirmwareVersionInThread()
                                       .arg(device_info.model)
                                       .arg(device_info.hw_version[0])
                                       .arg(device_info.hw_version[1])
-                                      .arg(device_info.hw_version[3] << 8 | device_info.hw_version[2]), "", false);
+                                      .arg(device_info.hw_version[2]), "", false);
         connect(firmwareCheckReply, SIGNAL(finished()), this, SLOT(firmwareReplyFinished()));
     }
 }

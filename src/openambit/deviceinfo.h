@@ -32,8 +32,8 @@ struct DeviceInfo
     QString model;
     QString serial;
 
-    int fw_version[4];
-    int hw_version[4];
+    int fw_version[3];
+    int hw_version[3];
 
     int access_status;
     bool is_supported;

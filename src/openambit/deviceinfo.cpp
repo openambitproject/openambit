@@ -28,8 +28,12 @@ DeviceInfo::operator=(const ambit_device_info_t& devinfo)
     this->model  = QString::fromUtf8(devinfo.model);
     this->serial = QString::fromUtf8(devinfo.serial);
 
-    memcpy(this->fw_version, devinfo.fw_version, 4);
-    memcpy(this->hw_version, devinfo.hw_version, 4);
+    this->fw_version[0] = devinfo.fw_version[0];
+    this->fw_version[1] = devinfo.fw_version[1];
+    this->fw_version[2] = devinfo.fw_version[2] | (devinfo.fw_version[3] << 8);
+    this->hw_version[0] = devinfo.hw_version[0];
+    this->hw_version[1] = devinfo.hw_version[1];
+    this->hw_version[2] = devinfo.hw_version[2] | (devinfo.hw_version[3] << 8);
 
     this->access_status = devinfo.access_status;
     this->is_supported  = devinfo.is_supported;
