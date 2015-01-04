@@ -1144,6 +1144,7 @@ void LogStore::XMLReader::readLogSamples()
                                     sscanf(c_str, "%2hhx", &logEntry->logEntry->samples[sampleCount].u.unknown.data[i]);
                                     c_str += 2 * sizeof(char);
                                 }
+                                logEntry->logEntry->samples[sampleCount].u.unknown.datalen = val.length()/2;
                             }
                         }
                         else {
