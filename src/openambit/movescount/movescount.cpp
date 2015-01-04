@@ -333,6 +333,11 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
 
     jsonParser.generateLogData(logEntry, output);
 
+#ifdef QT_DEBUG
+    // Write json data to storage
+    writeJsonToStorage("log-" + logEntry->device + "-" + logEntry->time.toString("yyyy-MM-ddThh_mm_ss") + ".json", output);
+#endif
+
     reply = syncPOST("/moves/", "", output, true);
 
     if (reply->error() == QNetworkReply::NoError) {
@@ -440,3 +445,17 @@ QNetworkReply *MovesCount::syncPOST(QString path, QString additionalHeaders, QBy
 
     return reply;
 }
+
+#ifdef QT_DEBUG
+#include <QDir>
+void MovesCount::writeJsonToStorage(QString filename, QByteArray &data)
+{
+    QString storagePath = QString(getenv("HOME")) + "/.openambit/movescount";
+    if (QDir().mkpath(storagePath)) {
+        QFile logfile(storagePath + "/" + filename);
+        logfile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        logfile.write(data);
+        logfile.close();
+    }
+}
+#endif

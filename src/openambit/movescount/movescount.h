@@ -96,6 +96,10 @@ private:
     QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
     QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
 
+#ifdef QT_DEBUG
+    void writeJsonToStorage(QString filename, QByteArray &data);
+#endif
+
     bool exiting;
     bool authorized;
 
