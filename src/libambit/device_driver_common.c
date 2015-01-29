@@ -24,6 +24,7 @@
 #include "debug.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * Local definitions
@@ -70,23 +71,25 @@ int libambit_device_driver_date_time_set(ambit_object_t *object, struct tm *tm)
 {
     uint8_t date_data[8] = { 0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00 };
     uint8_t time_data[8];
+    uint16_t year = htole16(1900 + tm->tm_year);
+    uint16_t sec = htole16(1000*tm->tm_sec);
     int ret = -1;
 
     LOG_INFO("Writing date and time to clock");
 
     // Set date
-    *(uint16_t*)(&date_data[0]) = htole16(1900 + tm->tm_year);
+    memcpy(&date_data[0], &year, sizeof(uint16_t));
     date_data[2] = 1 + tm->tm_mon;
     date_data[3] = tm->tm_mday;
     // byte[4-7] unknown (but set to 0x28000000 in moveslink)
 
     // Set time (+date)
-    *(uint16_t*)(&time_data[0]) = htole16(1900 + tm->tm_year);
+    memcpy(&time_data[0], &year, sizeof(uint16_t));
     time_data[2] = 1 + tm->tm_mon;
     time_data[3] = tm->tm_mday;
     time_data[4] = tm->tm_hour;
     time_data[5] = tm->tm_min;
-    *(uint16_t*)(&time_data[6]) = htole16(1000*tm->tm_sec);
+    memcpy(&time_data[6], &sec, sizeof(uint16_t));
 
     if (libambit_protocol_command(object, ambit_command_date, date_data, sizeof(date_data), NULL, NULL, 0) == 0 &&
         libambit_protocol_command(object, ambit_command_time, time_data, sizeof(time_data), NULL, NULL, 0) == 0) {
