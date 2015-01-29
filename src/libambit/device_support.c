@@ -79,7 +79,7 @@ bool libambit_device_support_known(uint16_t vendor_id, uint16_t product_id)
 
 const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uint16_t product_id, const char *model, const uint8_t *fw_version)
 {
-    ambit_known_device_t *device;
+    ambit_known_device_t *device = NULL;
     int i;
 
     for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
