@@ -75,8 +75,11 @@ RUN  apt-get update \
              libwireshark-dev \
              python
 
-WORKDIR /code
+WORKDIR /code/openambit
 CMD     ./build.sh
+
+RUN apt-get -y install git 
+RUN cd /code && git clone https://github.com/openambitproject/openambit
 
 # Finally, things that really should be fixed in the Openambit code.
 # FIXME add multiarch support to src/libambit/cmake/FindUdev.cmake
