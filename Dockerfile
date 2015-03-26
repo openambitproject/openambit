@@ -1,5 +1,5 @@
 #  Dockerfile -- to build the sources on a well-known platform
-#  Copyright (C) 2014  Olaf Meeuwissen
+#  Copyright (C) 2014, 2015  Olaf Meeuwissen
 #
 #  This file is part of Openambit.
 #
@@ -32,7 +32,7 @@
 #    docker run -v $PWD:/code --env BUILD_EXTRAS=1 openambit:jessie \
 #      ./build.sh -DCMAKE_BUILD_TYPE=Debug
 #
-#  Doing so gives you a basic sanity check of code compilablity in a
+#  Doing so gives you a basic sanity check of code compilability on a
 #  minimalistic, reproducible development platform.
 
 FROM        debian:jessie
@@ -41,7 +41,7 @@ MAINTAINER  Olaf Meeuwissen <paddy-hack@member.fsf.org>
 ENV  APT_OPTS --assume-yes --no-install-recommends
 
 # build system dependencies
-# Note that gcc does#not* depend on any specific C library.  Debian
+# Note that gcc does *not* depend on any specific C library.  Debian
 # and derivatives ship several ...
 RUN  apt-get update \
      && apt-get install ${APT_OPTS} \
@@ -75,8 +75,8 @@ RUN  apt-get update \
              libwireshark-dev \
              python
 
-WORKDIR /code
-CMD     ./build.sh
+WORKDIR  /code
+CMD      ./build.sh
 
 # Finally, things that really should be fixed in the Openambit code.
 # FIXME add multiarch support to src/libambit/cmake/FindUdev.cmake
