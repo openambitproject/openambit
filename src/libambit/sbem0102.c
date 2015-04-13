@@ -73,7 +73,7 @@ int libambit_sbem0102_write(libambit_sbem0102_t *object, uint16_t command, libam
     }
 
     // Calculate size of buffer, and allocate it
-    send_data = malloc(sizeof(header) + data != NULL ? data->size : 0);
+    send_data = malloc(sizeof(header) + (data != NULL ? data->size : 0));
     if (send_data == NULL) {
         return -1;
     }
@@ -116,7 +116,7 @@ int libambit_sbem0102_command_request(libambit_sbem0102_t *object, uint16_t comm
     // TODO: log headers seems to have a different format than the rest, treat
     // it here until the mystery of the 2 extra bytes is really solved
     if (command == ambit_command_ambit3_log_headers) {
-        send_data = malloc(sizeof(special_header) + data_objects != NULL ? data_objects->size : 0);
+        send_data = malloc(sizeof(special_header) + (data_objects != NULL ? data_objects->size : 0));
         if (send_data == NULL) {
             return -1;
         }
@@ -124,7 +124,7 @@ int libambit_sbem0102_command_request(libambit_sbem0102_t *object, uint16_t comm
         offset += sizeof(special_header);
     }
     else {
-        send_data = malloc(sizeof(header) + data_objects != NULL ? data_objects->size : 0);
+        send_data = malloc(sizeof(header) + (data_objects != NULL ? data_objects->size : 0));
         if (send_data == NULL) {
             return -1;
         }
