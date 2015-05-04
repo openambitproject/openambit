@@ -23,6 +23,7 @@ project(Openambit
   LANGUAGES NONE)
 
 add_subdirectory(src/libambit)
+add_subdirectory(src/movescount)
 add_subdirectory(src/openambit)
 
 if (BUILD_EXTRAS)

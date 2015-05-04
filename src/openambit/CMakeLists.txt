@@ -10,9 +10,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 find_package(Qt4 REQUIRED)
 find_package(libambit REQUIRED)
+find_package(Movescount REQUIRED)
 find_package(UDev REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(QJSON 0.8.0 REQUIRED)
 
 include(${QT_USE_FILE})
 include(GNUInstallDirs)
@@ -23,10 +22,12 @@ include_directories (
   ${QT_QTGUI_INCLUDE_DIR}
   ${QT_QTNETWORK_INCLUDE_DIR}
   ${LIBAMBIT_INCLUDE_DIR}
+  ..
 )
 
 link_directories(
   ${LIBAMBIT_LIBS_DIR}
+  ${MOVESCOUNT_LIBS_DIR}
 )
 
 set ( openambit_HDRS
@@ -77,8 +78,6 @@ set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_HDRS} ${o
 
 set ( APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png )
 
-add_subdirectory("${PROJECT_SOURCE_DIR}/movescount")
-
 ######### Translations
 file (GLOB TRANSLATIONS_FILES translations/*.ts)
 
@@ -112,7 +111,7 @@ add_definitions( -DAPP_VERSION="${OPENAMBIT_VERSION}" )
 
 add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${MOCS} )
 
-target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${UDEV_LIBS} ${ZLIB_LIBRARY} ${QJSON_LIBRARIES} )
+target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} )
 
 install ( TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR} )
 install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
