@@ -4,3 +4,24 @@
 # Ignore temporary and user files
 *~
 *.user
+
+# Ignore in-tree build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+/src/example/ambitconsole
+/src/libambit/libambit.a
+/src/libambit/libambit.so*
+/src/openambit/moc_*.cxx
+/src/openambit/moc_*.cxx_parameters
+/src/openambit/openambit
+/src/openambit/openambit_*.qm
+/src/openambit/qrc_*.cxx
+/src/openambit/ts.qrc
+/src/openambit/ui_*.h
+/src/openambit/*.qrc.depends
+/src/openambit/*/moc_*.cxx
+/src/openambit/*/moc_*.cxx_parameters
+/wireshark_dissector/ambit.so
+/wireshark_dissector/plugin.c
