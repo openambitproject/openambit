@@ -30,17 +30,9 @@ link_directories(
   ${MOVESCOUNT_LIBS_DIR}
 )
 
-set ( openambit_HDRS
-  deviceinfo.h
-  logentry.h
-)
-
 set ( openambit_SRCS
   confirmbetadialog.cpp
-  deviceinfo.cpp
   devicemanager.cpp
-  logentry.cpp
-  logstore.cpp
   logview.cpp
   main.cpp
   mainwindow.cpp
@@ -64,7 +56,6 @@ set ( openambit_RSCS
 set ( openambit_MOCS
   confirmbetadialog.h
   devicemanager.h
-  logstore.h
   logview.h
   mainwindow.h
   settings.h
@@ -74,7 +65,7 @@ set ( openambit_MOCS
   udevlistener.h
 )
 
-set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_HDRS} ${openambit_MOCS})
+set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_MOCS})
 
 set ( APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png )
 

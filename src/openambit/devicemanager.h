@@ -30,7 +30,7 @@
 #include <QSocketNotifier>
 
 #include "settings.h"
-#include "logstore.h"
+#include <movescount/logstore.h>
 #include <movescount/movescount.h>
 #include <movescount/movescountxml.h>
 #include "udevlistener.h"

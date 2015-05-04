@@ -38,7 +38,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(
-  ../openambit/
   ../libambit/
   ${QJSON_INCLUDE_DIR}
   ${ZLIB_INCLUDE_DIRS}
@@ -51,6 +50,9 @@ link_directories(
 add_library (
   movescount
   SHARED
+  deviceinfo.cpp
+  logentry.cpp
+  logstore.cpp
   movescount.cpp
   movescountjson.cpp
   movescountlogdirentry.cpp
@@ -77,6 +79,9 @@ install(TARGETS
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 install(FILES
+  deviceinfo.h
+  logentry.h
+  logstore.h
   movescount.h
   movescountxml.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/movescount

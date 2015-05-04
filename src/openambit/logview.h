@@ -3,7 +3,7 @@
 
 #include <QTextBrowser>
 
-#include "logentry.h"
+#include <movescount/logentry.h>
 
 class LogView : public QTextBrowser
 {

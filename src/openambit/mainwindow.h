@@ -22,10 +22,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "deviceinfo.h"
 #include "devicemanager.h"
 #include "settingsdialog.h"
 #include "confirmbetadialog.h"
+#include <movescount/deviceinfo.h>
 #include <movescount/movescount.h>
 #include <QMainWindow>
 #include <QThread>
