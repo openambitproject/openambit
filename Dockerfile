@@ -25,15 +25,21 @@
 #
 #    docker run -v $PWD:/code -u $(id -u) openambit:jessie
 #
-#  once you've removed any existing *-build directories.  In order
-#  to set BUILD_EXTRAS and pass arguments on to `cmake` that becomes
-#  something like:
-#
-#    docker run -v $PWD:/code -u $(id -u) --env BUILD_EXTRAS=1 \
-#      openambit:jessie ./build.sh -DCMAKE_BUILD_TYPE=Debug
-#
 #  Doing so gives you a basic sanity check of code compilability on a
 #  minimalistic, reproducible development platform.
+#
+#  If you don't like the defaults of building in $PWD/_build with no
+#  options to either cmake or make, feel free to adjust the relevant
+#  environment variables.  For example, you could build with:
+#
+#    docker run -v $PWD:/code -u $(id -u) \
+#      --env BUILD_DIR=tmp \
+#      --env CMAKE_OPTS="-DBUILD_EXTRAS=1" \
+#      --env MAKE_OPTS=-k \
+#      openambit:jessie
+#
+#  Check out the --env-file option to docker if you find that overly
+#  long-winded.
 
 FROM        debian:jessie
 MAINTAINER  Olaf Meeuwissen <paddy-hack@member.fsf.org>
@@ -76,7 +82,11 @@ RUN  apt-get update \
              python
 
 WORKDIR  /code
-CMD      ./build.sh
+ENV      BUILD_DIR _build
+CMD      test -d ${BUILD_DIR} || mkdir ${BUILD_DIR}; \
+	      cd ${BUILD_DIR} \
+	      && cmake ${CMAKE_OPTS} .. \
+	      && make ${MAKE_OPTS}
 
 # Finally, things that really should be fixed in the Openambit code.
 # FIXME add multiarch support to src/libambit/cmake/FindUdev.cmake
