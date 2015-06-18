@@ -23,14 +23,14 @@
 #
 #  After that is just a matter of compiling the sources with:
 #
-#    docker run -v $PWD:/code openambit:jessie
+#    docker run -v $PWD:/code -u $(id -u) openambit:jessie
 #
 #  once you've removed any existing *-build directories.  In order
 #  to set BUILD_EXTRAS and pass arguments on to `cmake` that becomes
 #  something like:
 #
-#    docker run -v $PWD:/code --env BUILD_EXTRAS=1 openambit:jessie \
-#      ./build.sh -DCMAKE_BUILD_TYPE=Debug
+#    docker run -v $PWD:/code -u $(id -u) --env BUILD_EXTRAS=1 \
+#      openambit:jessie ./build.sh -DCMAKE_BUILD_TYPE=Debug
 #
 #  Doing so gives you a basic sanity check of code compilability on a
 #  minimalistic, reproducible development platform.
