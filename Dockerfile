@@ -23,7 +23,7 @@
 #
 #  After that is just a matter of compiling the sources with:
 #
-#    docker run -v $PWD:/code -u $(id -u) openambit:jessie
+#    docker run --rm -v $PWD:/code -u $(id -u) openambit:jessie
 #
 #  Doing so gives you a basic sanity check of code compilability on a
 #  minimalistic, reproducible development platform.
@@ -32,14 +32,23 @@
 #  options to either cmake or make, feel free to adjust the relevant
 #  environment variables.  For example, you could build with:
 #
-#    docker run -v $PWD:/code -u $(id -u) \
+#    docker run --rm -v $PWD:/code -u $(id -u) \
 #      --env BUILD_DIR=tmp \
 #      --env CMAKE_OPTS="-DBUILD_EXTRAS=1" \
 #      --env MAKE_OPTS=-k \
 #      openambit:jessie
 #
 #  Check out the --env-file option to docker if you find that overly
-#  long-winded.
+#  long-winded.  If you use a BUILD_DIR that is not below /code make
+#  sure to drop the --rm option.
+#
+#  For interactive sessions, you may want to use:
+#
+#    docker -i -t --rm -v $PWD:/code -u $(id -u) openambit:jessie \
+#      /bin/bash
+#
+#  Again, drop the --rm option if you build in a location that is not
+#  below /code.
 
 FROM        debian:jessie
 MAINTAINER  Olaf Meeuwissen <paddy-hack@member.fsf.org>
