@@ -26,7 +26,20 @@ add_subdirectory(src/libambit)
 add_subdirectory(src/movescount)
 add_subdirectory(src/openambit)
 
+if (NOT ${LIBAMBIT_FOUND})
+  add_dependencies(movescount ambit)
+  add_dependencies(openambit ambit)
+endif ()
+if (NOT ${MOVESCOUNT_FOUND})
+  add_dependencies(openambit movescount)
+endif ()
+
 if (BUILD_EXTRAS)
   add_subdirectory(src/example)
   add_subdirectory(wireshark_dissector)
+
+  if (NOT ${LIBAMBIT_FOUND})
+    add_dependencies(ambitconsole ambit)
+  endif ()
+
 endif ()
