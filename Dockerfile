@@ -44,8 +44,8 @@
 #
 #  For interactive sessions, you may want to use:
 #
-#    docker -i -t --rm -v $PWD:/code -u $(id -u) openambit:jessie \
-#      /bin/bash
+#    docker run -i -t --rm -v $PWD:/code -u $(id -u) \
+#      openambit:jessie /bin/bash
 #
 #  Again, drop the --rm option if you build in a location that is not
 #  below /code.
