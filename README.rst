@@ -117,6 +117,16 @@ is ``libambit`` and nothing else, you could (for example)
    cmake ../src/libambit
    make
 
+Actually, you can also build everything directly with ``cmake``.  The
+following ought to work
+
+.. code-block:: sh
+
+   cd /path/to/your/clone/of/openambit
+   mkdir _build
+   cd _build
+   cmake ..
+   make
 
 Install Procedure
 -----------------
@@ -129,6 +139,14 @@ parts, simply install them with
 .. code-block:: sh
 
    cd /path/to/your/build/directory
+   sudo make install
+
+If you built directly with ``cmake``, installation is simply
+
+.. code-block:: sh
+
+   cd /path/to/you/clone/of/openambit
+   cd _build
    sudo make install
 
 To enable the Wireshark dissector, just copy the ``ambit.so`` file to
