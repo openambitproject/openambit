@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-""" concerts the *.log files produced by openambit in ~/.openambit/ to standard gpx format.
+""" converts the *.log files produced by openambit in ~/.openambit/ to standard gpx format.
 usage: ./openambit2gpx.py inputfile outputFile
 """
 
@@ -13,9 +13,17 @@ import sys
 ## getting input parameters ##
 ##############################
 
-fileIn=sys.argv[1]
-fileOut=sys.argv[2]
+if len(sys.argv) == 3:
+    fileIn=sys.argv[1]
+    fileOut=sys.argv[2]
+else:
+    sys.stderr.write("""\
+Convert Openambit *.log files to standard GPX format
+usage: {} inputfile outputfile 
 
+Openambit *.log files can normally be found in ~/.openambit/
+""".format(sys.argv[0]))
+    sys.exit(1)
 
 ###########################################
 ## setting variables up, starting output ##
