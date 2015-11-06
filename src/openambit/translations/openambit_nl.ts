@@ -226,6 +226,14 @@ p, li { white-space: pre-wrap; }
         <source>Syncronisation started</source>
         <translation>Synchronisatie gestart</translation>
     </message>
+    <message>
+        <source>Charging %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>

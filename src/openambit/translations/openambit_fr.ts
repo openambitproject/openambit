@@ -235,17 +235,25 @@ p, li { white-space: pre-wrap; }
         <source>&amp;Settings</source>
         <translation>&amp;Réglages</translation>
     </message>
+    <message>
+        <source>Charging %1%</source>
+        <translation>Charge %1%</translation>
+    </message>
+    <message>
+        <source>Downloading %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>Ce fichier n&apos;est pas un fichier Openambit version 1.0</translation>
+        <translation type="obsolete">Ce fichier n&apos;est pas un fichier Openambit version 1.0</translation>
     </message>
     <message>
         <source>%1
 Line %2, column %3</source>
-        <translation>%1
+        <translation type="obsolete">%1
 Ligne %2, colonne %3</translation>
     </message>
 </context>

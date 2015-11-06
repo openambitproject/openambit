@@ -233,17 +233,25 @@ p, li { white-space: pre-wrap; }
         <source>&amp;Settings</source>
         <translation>&amp;Inställningar</translation>
     </message>
+    <message>
+        <source>Charging %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>Filen är inte i openambit version 1.0-format.</translation>
+        <translation type="obsolete">Filen är inte i openambit version 1.0-format.</translation>
     </message>
     <message>
         <source>%1
 Line %2, column %3</source>
-        <translation>%1
+        <translation type="obsolete">%1
 Rad %2, kolumn %3</translation>
     </message>
 </context>

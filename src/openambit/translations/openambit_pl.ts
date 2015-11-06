@@ -244,17 +244,25 @@ p, li { white-space: pre-wrap; }
         <source>Syncronisation started</source>
         <translation>Synchronizacja rozpoczęta</translation>
     </message>
+    <message>
+        <source>Charging %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>To nie jest plik openambit w wersji 1.0.</translation>
+        <translation type="obsolete">To nie jest plik openambit w wersji 1.0.</translation>
     </message>
     <message>
         <source>%1
 Line %2, column %3</source>
-        <translation>%1
+        <translation type="obsolete">%1
 Linia %2, kolumna %3</translation>
     </message>
 </context>
