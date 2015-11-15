@@ -257,12 +257,12 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation type="obsolete">To nie jest plik openambit w wersji 1.0.</translation>
+        <translation>To nie jest plik openambit w wersji 1.0.</translation>
     </message>
     <message>
         <source>%1
 Line %2, column %3</source>
-        <translation type="obsolete">%1
+        <translation>%1
 Linia %2, kolumna %3</translation>
     </message>
 </context>

@@ -88,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
     trayIcon->setVisible(true);
 
-
     // Setup device manager
     deviceManager = new DeviceManager();
     deviceManager->moveToThread(&deviceWorkerThread);
@@ -313,6 +312,7 @@ void MainWindow::deviceRemoved(void)
     ui->buttonSyncNow->setHidden(true);
     trayIconSyncAction->setDisabled(true);
     ui->syncProgressBar->setHidden(true);
+
     trayIcon->toolTip();
     trayIcon->setIcon(QIcon(":/icon_disconnected"));
 }
