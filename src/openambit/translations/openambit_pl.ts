@@ -244,6 +244,14 @@ p, li { white-space: pre-wrap; }
         <source>Syncronisation started</source>
         <translation>Synchronizacja rozpoczęta</translation>
     </message>
+    <message>
+        <source>Charging %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloading %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>

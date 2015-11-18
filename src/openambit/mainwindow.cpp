@@ -313,12 +313,14 @@ void MainWindow::deviceRemoved(void)
     trayIconSyncAction->setDisabled(true);
     ui->syncProgressBar->setHidden(true);
 
+    trayIcon->toolTip();
     trayIcon->setIcon(QIcon(":/icon_disconnected"));
 }
 
 void MainWindow::deviceCharge(quint8 percent)
 {
     ui->chargeIndicator->setValue(percent);
+    trayIcon->setToolTip(QString(tr("Charging %1%")).arg(percent));
 }
 
 void MainWindow::syncFinished(bool success)
@@ -375,6 +377,7 @@ void MainWindow::syncProgressInform(QString message, bool error, bool newRow, qu
         }
     }
     ui->syncProgressBar->setValue(percentDone);
+    trayIcon->setToolTip(QString(tr("Downloading %1%")).arg(percentDone));
 }
 
 void MainWindow::newerFirmwareExists(QByteArray fw_version)
