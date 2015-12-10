@@ -289,10 +289,11 @@ void MainWindow::deviceDetected(const DeviceInfo& deviceInfo)
         }
 
         settings.beginGroup("syncSettings");
-        if (settings.value("syncAutomatically", false).toBool()) {
+        bool syncAutomatically = settings.value("syncAutomatically", false).toBool();
+        settings.endGroup();
+        if (syncAutomatically) {
             startSync();
         }
-        settings.endGroup();
     }
 }
 
