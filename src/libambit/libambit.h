@@ -56,6 +56,7 @@ typedef struct ambit_personal_settings_s {
     uint8_t  sportmode_button_lock;
     uint8_t  timemode_button_lock;
     uint16_t compass_declination;
+    float compass_declination_f;      /* Ambit3: 32 bit float containing the radian */
     uint8_t  units_mode;
     struct {
         uint8_t pressure;
