@@ -32,6 +32,9 @@ typedef struct ambit_protocol_type {
     gint (*dissector)(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 } ambit_protocol_type_t;
 
+static gint fw_version = 0;
+static gint fw_version_2_0_0 = 2 << 16;
+
 static const ambit_protocol_type_t *find_subdissector(guint32 command);
 static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_date_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
@@ -497,6 +500,7 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     fw2 = tvb_get_guint8(tvb, offset+1);
     fw3 = tvb_get_letohs(tvb, offset+2);
     proto_tree_add_string_format_value(tree, hf_ambit_fw_version, tvb, offset, 4, "FW version", "%d.%d.%d", fw1, fw2, fw3);
+    fw_version = (fw1 << 16) | (fw2 << 8) | fw3;
     offset += 4;
     hw1 = tvb_get_guint8(tvb, offset);
     hw2 = tvb_get_guint8(tvb, offset+1);
@@ -985,9 +989,16 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     if (offset + 1 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_hr_min, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
-    if (offset + 1 >= length) return offset;
-    dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
-    offset += 1;
+    if (fw_version > fw_version_2_0_0) {
+        if (offset + 49 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 49);
+        offset += 49;
+    }
+    else {
+        if (offset + 1 >= length) return offset;
+        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
+        offset += 1;
+    }
     if (offset + 2 >= length) return offset;
     proto_tree_add_item(tree, hf_ambit_log_header_temp_max, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
@@ -1059,15 +1070,29 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     proto_tree_add_item(tree, hf_ambit_log_header_distance_before_calib, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
     if (header_1_len >= 913) { /* Long header */
-        if (offset + 24 >= length) return offset;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
-        offset += 24;
+        if (fw_version > fw_version_2_0_0) {
+            if (offset + 40 >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
+            offset += 40;
+        }
+        else {
+            if (offset + 24 >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 24);
+            offset += 24;
+        }
         if (offset + 16 >= length) return offset;
         proto_tree_add_item(tree, hf_ambit_log_header_activity_name, tvb, offset, 16, ENC_LITTLE_ENDIAN);
         offset += 16;
-        if (offset + 4 >= length) return offset;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
-        offset += 4;
+
+        if (fw_version > fw_version_2_0_0) {
+            if (offset + 48 >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 48);
+            offset += 48;
+        } else {
+            if (offset + 4 >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
+            offset += 4;
+        }
         if (offset + 4 >= length) return offset;
         year = tvb_get_letohs(tvb, offset);
         month = tvb_get_guint8(tvb, offset + 2);
@@ -1125,9 +1150,16 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
         if (offset + 1 >= length) return offset;
         proto_tree_add_item(tree, hf_ambit_log_header_activity_type, tvb, offset, 1, ENC_LITTLE_ENDIAN);
         offset += 1;
-        if (offset + (header_1_len - 211) >= length) return offset;
-        dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
-        offset += (header_1_len - 211);
+        if (fw_version > fw_version_2_0_0) {
+            if (offset + (header_1_len - 319) >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 319));
+            offset += (header_1_len - 319);
+        }
+        else {
+            if (offset + (header_1_len - 211) >= length) return offset;
+            dissect_ambit_add_unknown(tvb, pinfo, tree, offset, (header_1_len - 211));
+            offset += (header_1_len - 211);
+        }
     }
 
     sample_ti = proto_tree_add_text(tree, tvb, 0, 0, "Samples");
@@ -1749,7 +1781,14 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
     offset += 2;
     logs_ti = proto_tree_add_text(tree, tvb, 0, 0, "Logs");
     logs_tree = proto_item_add_subtree(logs_ti, ett_ambit3_log_headers);
-    while (offset + 2 < length) {
+
+    int adder = 0;
+    if (fw_version > fw_version_2_0_0)
+        adder = 11;
+    else
+        adder = 2;
+
+    while (offset + adder < length) {
         header_len = tvb_get_guint8(tvb, offset+1);
         log_cntr++;
         log_ti = proto_tree_add_text(logs_tree, tvb, offset, header_len + 2, "Header #%u", log_cntr);
@@ -1757,7 +1796,12 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
         dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 1);
         offset += 1;
         proto_tree_add_item(log_tree, hf_ambit_log_header_length, tvb, offset, 1, ENC_LITTLE_ENDIAN);
-        offset += 1;
+
+        while (tvb_get_guint8(tvb, offset) != 0xFF)
+            offset +=1;
+        while (tvb_get_guint8(tvb, offset) > 0x39 || tvb_get_guint8(tvb, offset) < 0x30)
+            offset +=1;
+
         if (offset + header_len <= length) {
             proto_tree_add_item(log_tree, hf_ambit_time, tvb, offset, 20, ENC_LITTLE_ENDIAN);
             offset += 20;
@@ -1832,7 +1876,7 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
             proto_tree_add_item(log_tree, hf_ambit_log_header_energy, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
             dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 26);
-            offset += 26;
+            offset += 20;
         }
     }
 }
