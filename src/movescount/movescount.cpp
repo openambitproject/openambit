@@ -149,6 +149,22 @@ void MovesCount::getDeviceSettings()
     QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
 }
 
+int MovesCount::getCustomModeData(u_int8_t **data)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getCustomModeDataInThread(data);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getCustomModeDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(u_int8_t **, data));
+    }
+
+    return ret;
+}
+
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, QDate endTime)
 {
     QList<MovesCountLogDirEntry> retList;
@@ -279,6 +295,26 @@ void MovesCount::getDeviceSettingsInThread()
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
     }
+}
+
+int MovesCount::getCustomModeDataInThread(u_int8_t **data)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+        MovescountSettings *settings = new MovescountSettings();
+
+        if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
+            ret = settings->serializeCustomMode(data);
+        }
+//        settings->deleteLater();
+    }
+
+    return ret;
 }
 
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate startTime, QDate endTime)

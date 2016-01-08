@@ -56,6 +56,7 @@ public:
     int getOrbitalData(u_int8_t **data);
     int getPersonalSettings(ambit_personal_settings_t *settings);
     void getDeviceSettings();
+    int getCustomModeData(u_int8_t **data);
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
     void checkAuthorization();
@@ -77,6 +78,7 @@ private slots:
     int getOrbitalDataInThread(u_int8_t **data);
     int getPersonalSettingsInThread(ambit_personal_settings_t *settings);
     void getDeviceSettingsInThread();
+    int getCustomModeDataInThread(u_int8_t **data);
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 
     void checkAuthorizationInThread();

@@ -24,6 +24,8 @@
 #include <QTimer>
 #include <libambit.h>
 
+#include <QDebug>
+
 DeviceManager::DeviceManager(QObject *parent) :
     QObject(parent), deviceObject(NULL), udevListener(NULL)
 {
@@ -95,6 +97,9 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     if (this->deviceObject != NULL) {
         emit this->syncProgressInform(QString(tr("Reading personal settings")), false, true, 0);
         res = libambit_personal_settings_get(this->deviceObject, &currentPersonalSettings);
+
+        ambit_personal_settings_s tempPersonalSettings;
+        res = movesCount->getPersonalSettings(&tempPersonalSettings);
         currentSyncPart++;
 
         libambit_sync_display_show(this->deviceObject);
@@ -126,6 +131,27 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
                 emit this->syncProgressInform(QString(tr("Failed to get orbital data")), true, false, 100*currentSyncPart/syncParts);
                 res = -1;
             }
+
+            currentSyncPart++;
+        }
+
+        if (/*syncMovescount &&*/ res != -1) {
+            emit this->syncProgressInform(QString(tr("Fetching custom modes")), false, true, 100*currentSyncPart/syncParts);
+
+            uint8_t *data = 0;
+            int dataLen = 0;
+            if ((dataLen = movesCount->getCustomModeData(&data)) != -1) {
+                QString debugStr;
+                for(int i = 0; i < dataLen; i++)
+                {
+//                   debugStr += QString(" ") + QString::number(data[i],16);
+                   debugStr += data[i] < 16 ?
+                               QString("0") + QString::number(data[i],16) :
+                               QString::number(data[i],16);
+                }
+                qDebug() << debugStr;
+            }
+            qDebug() << "CustomMode finnished with dataLen = " << dataLen << " and start of data at " << data;
 
             currentSyncPart++;
         }

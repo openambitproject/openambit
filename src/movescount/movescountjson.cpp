@@ -101,6 +101,28 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     return -1;
 }
 
+int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettings *movescountSettings)
+{
+    QJson::Parser parser;
+
+    bool ok;
+
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    QVariantMap entry = parser.parse(input, &ok).toMap();
+
+    if (ok) {
+        QVariantMap settingsMap = entry["Settings"].toMap();
+        movescountSettings->parse(settingsMap);
+
+        return 0;
+    }
+
+    return -1;
+}
+
 /**
  * @brief MovesCountJSON::generateLogData
  * @param logEntry

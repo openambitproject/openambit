@@ -373,6 +373,63 @@ typedef struct ambit_log_entry_s {
     ambit_log_sample_t *samples;
 } ambit_log_entry_t;
 
+
+typedef struct ambit_custom_mode_settings_s {
+    char     activity_name[16];
+    uint16_t activity_id;
+    uint16_t custom_mode_id;
+    uint8_t  unknown1[2];
+    uint16_t hrbelt_and_pods;       /* bit pattern representing usage of hr belt or pods */
+    uint16_t alti_baro_mode;
+    uint16_t gps_interval;
+    uint16_t recording_interval;
+    uint16_t autolap;               /* m */
+    uint16_t heartrate_max;         /* bps */
+    uint16_t heartrate_min;         /* bps */
+    uint16_t use_heartrate_limits;
+    uint8_t  unknown2[2];
+    uint16_t auto_pause;
+    uint16_t auto_scroll;           /* s */
+    uint16_t use_interval_timer;
+    uint16_t interval_repetitions;
+    uint16_t interval_timer_max_unit;   /* m or s */
+    uint8_t  unknown3[6];
+    uint16_t interval_timer_max;    /* s or m */ /*Maybe 2 bytes from unknown3 should be included in this field? */
+    uint8_t  unknown4[2];
+    uint16_t interval_timer_min_unit;   /* m or s */
+    uint8_t  unknown5[6];
+    uint16_t interval_timer_min;    /* s or m */ /*Maybe 2 bytes from unknown3 should be included in this field? */
+    uint8_t  unknown6[14];
+    uint16_t backlight_mode;
+    uint16_t display_mode;
+    uint16_t quick_navigation;
+} ambit_custom_mode_settings_t;
+
+typedef struct ambit_custom_mode_display_layout_s {
+    uint16_t header;
+    uint16_t length;
+    uint16_t display_layout;
+    uint8_t unknown[2];
+} ambit_custom_mode_display_layout_t;
+
+typedef struct ambit_custom_mode_row_s {
+    uint16_t header;
+    uint16_t length;
+    uint16_t row_nbr;
+    uint16_t display_type;
+} ambit_custom_mode_row_t;
+
+typedef struct ambit_custom_mode_view_s {
+    uint16_t header;
+    uint16_t length;
+    uint16_t display_type;
+} ambit_custom_mode_view_t;
+
+typedef struct ambit_write_header_s {
+    uint16_t header;
+    uint16_t length;
+} ambit_write_header_t;
+
 /** \brief Create a list of all known Ambit clocks on the system
  *
  *  The list may include clocks that are not supported or cannot be

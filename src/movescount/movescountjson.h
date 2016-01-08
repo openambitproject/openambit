@@ -29,6 +29,7 @@
 
 #include "logentry.h"
 #include "movescountlogdirentry.h"
+#include "movescountsettings.h"
 
 class MovesCountJSON : public QObject
 {
@@ -39,6 +40,7 @@ public:
     int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3]);
     int parseLogReply(QByteArray &input, QString &moveId);
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
+    int parseDeviceSettingsReply(QByteArray &input, MovescountSettings *movescountSettings);
 
     int generateLogData(LogEntry *logEntry, QByteArray &output);
     

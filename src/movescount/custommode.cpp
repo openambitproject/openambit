@@ -1,0 +1,509 @@
+#include "custommode.h"
+#include "libambit.h"
+
+#include <qdebug.h>
+
+const QString CustomMode::ACTIVITY_ID = "ActivityID";
+const QString CustomMode::ALTI_BARO_MODE = "AltiBaroMode";
+const QString CustomMode::AUTOLAP_DISTANCE = "AutolapDistance";
+const QString CustomMode::GPS_INTERVAL = "GPSInterval";
+const QString CustomMode::HR_LIMIT_HIGH = "HRLimitHigh";
+const QString CustomMode::HR_LIMIT_LOW = "HRLimitLow";
+const QString CustomMode::INTERVAL_1_DISTANCE = "Interval1Distance";
+const QString CustomMode::INTERVAL_2_DISTANCE = "Interval2Distance";
+const QString CustomMode::INTERVAL_1_TIME = "Interval1Time";
+const QString CustomMode::INTERVAL_2_TIME = "Interval2Time";
+const QString CustomMode::INTERVAL_REPETITIONS = "IntervalRepetitions";
+const QString CustomMode::ACTIVITY_NAME = "Name";
+const QString CustomMode::RECORDING_INTERVAL = "RecordingInterval";
+const QString CustomMode::USE_ACCELEROMETER = "UseAccelerometer";
+const QString CustomMode::USE_AUTOLAP = "UseAutolap";
+const QString CustomMode::USE_BIKE_POD = "UseBikePOD";
+const QString CustomMode::USE_CADENS_POD = "UseCadencePOD";
+const QString CustomMode::USE_FOOT_POD = "UseFootPOD";
+const QString CustomMode::USE_POWER_POD = "UsePowerPOD";
+const QString CustomMode::USE_HR_BELT = "UseHRBelt";
+const QString CustomMode::USE_HR_LIMITS = "UseHRLimits";
+const QString CustomMode::USE_INTERVALS = "UseIntervals";
+const QString CustomMode::CUSTOM_MODE_ID = "CustomModeID";
+const QString CustomMode::AUTO_SCROLING_SPEED = "AutoScrolling";
+const QString CustomMode::AUTO_PAUSE_SPEED = "AutoPauseSpeed";
+const QString CustomMode::BACKLIGHT_MODE = "BacklightMode";
+const QString CustomMode::DISPLAY_IS_NEGATIVE = "DisplayIsNegative";
+const QString CustomMode::SHOW_NAVIGATION_SELECTION = "ShowNavigationSelection";
+
+const u_int8_t CustomMode::UNKNOWN_DISPLAYES[] =
+        {0x06,0x01,0x3e,0x00,0x07,0x01,0x04,0x00,0x11,0x01,0x04,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x08,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x08,0x00,0x08,0x01,0x1a,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x10,0x00,0x0a,0x01,0x02,0x00,0x01,0x00,0x0a,0x01,0x02,0x00,0xfe,0xff
+        ,0x06,0x01,0x44,0x00,0x07,0x01,0x04,0x00,0x23,0x01,0x05,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x08,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x28,0x00,0x08,0x01,0x20,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x10,0x00,0x0a,0x01,0x02,0x00,0x08,0x00,0x0a,0x01,0x02,0x00,0x01,0x00,0x0a,0x01,0x02,0x00,0xfe,0xff
+        ,0x06,0x01,0x3e,0x00,0x07,0x01,0x04,0x00,0x22,0x01,0x06,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x18,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x19,0x00,0x08,0x01,0x1a,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x32,0x00,0x0a,0x01,0x02,0x00,0x1a,0x00,0x0a,0x01,0x02,0x00,0x10,0x00
+        ,0x06,0x01,0x08,0x00,0x07,0x01,0x04,0x00,0x50,0x01,0x07,0x00
+        ,0x06,0x01,0x4a,0x00,0x07,0x01,0x04,0x00,0x04,0x01,0x32,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x3e,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x3d,0x00,0x08,0x01,0x26,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x05,0x00,0x0a,0x01,0x02,0x00,0x0a,0x00,0x0a,0x01,0x02,0x00,0x15,0x00,0x0a,0x01,0x02,0x00,0x0b,0x00,0x0a,0x01,0x02,0x00,0x1c,0x00};
+
+
+CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
+    QObject(parent)
+{
+    activityId = customModeMap[ACTIVITY_ID].toUInt();
+    altiBaroMode = customModeMap[ALTI_BARO_MODE].toUInt();
+    autolapDistance = customModeMap[AUTOLAP_DISTANCE].toUInt();
+    gpsInterval = customModeMap[GPS_INTERVAL].toUInt();
+    hrLimitHigh = customModeMap[HR_LIMIT_HIGH].toUInt();
+    hrLimitLow = customModeMap[HR_LIMIT_LOW].toUInt();
+    interval1distance = customModeMap[INTERVAL_1_DISTANCE].toUInt();
+    interval2distance = customModeMap[INTERVAL_2_DISTANCE].toUInt();
+    interval1time = customModeMap[INTERVAL_1_TIME].toUInt();
+    interval2time = customModeMap[INTERVAL_2_TIME].toUInt();
+    intervalRepetitions = customModeMap[INTERVAL_REPETITIONS].toUInt();
+    activityName = customModeMap[ACTIVITY_NAME].toString();
+    recordingInterval = customModeMap[RECORDING_INTERVAL].toUInt();
+    useAccelerometer = customModeMap[USE_ACCELEROMETER].toBool();
+    useAutolap = customModeMap[USE_AUTOLAP].toBool();
+    useBikePod = customModeMap[USE_BIKE_POD].toBool();
+    useCadencePod = customModeMap[USE_CADENS_POD].toBool();
+    useFootPod = customModeMap[USE_FOOT_POD].toBool();
+    usePowerPod = customModeMap[USE_POWER_POD].toBool();
+    useHrBelt = customModeMap[USE_HR_BELT].toBool();
+    useHrLimits = customModeMap[USE_HR_LIMITS].toBool();
+    useIntervals = customModeMap[USE_INTERVALS].toBool();
+    custommodeId = customModeMap[CUSTOM_MODE_ID].toUInt();
+    if (customModeMap[AUTO_SCROLING_SPEED].toString() == QString::null) {
+        autoScrolingSpeed = 0;
+    }
+    else {
+        autoScrolingSpeed = customModeMap[AUTO_SCROLING_SPEED].toUInt();
+    }
+    autoPauseSpeed = customModeMap[AUTO_PAUSE_SPEED].toFloat();
+    if (customModeMap[BACKLIGHT_MODE].toString() == QString::null) {
+        backlightMode = 0xff;
+    }
+    else {
+        backlightMode = customModeMap[BACKLIGHT_MODE].toUInt();
+    }
+    if (customModeMap[DISPLAY_IS_NEGATIVE].toString() == QString::null) {
+        displayIsNegative = 0xff;
+    }
+    else {
+        displayIsNegative = customModeMap[DISPLAY_IS_NEGATIVE].toUInt();
+    }
+    showNavigationSelection = customModeMap[SHOW_NAVIGATION_SELECTION].toUInt();
+
+    foreach (QVariant displayVar, customModeMap["Displays"].toList()) {
+        QVariantMap displayMap = displayVar.toMap();
+
+        CustomModeDisplay display(displayMap, this->parent());
+        displays.append(display);
+    }
+}
+
+CustomMode::CustomMode(const CustomMode &other) :
+    QObject(other.parent()),
+    activityId(other.activityId),
+    altiBaroMode(other.altiBaroMode),
+    autolapDistance(other.autolapDistance),
+    gpsInterval(other.gpsInterval),
+    hrLimitHigh(other.hrLimitHigh),
+    hrLimitLow(other.hrLimitLow),
+    interval1distance(other.interval1distance),
+    interval2distance(other.interval2distance),
+    interval1time(other.interval1time),
+    interval2time(other.interval2time),
+    intervalRepetitions(other.intervalRepetitions),
+    activityName(other.activityName),
+    recordingInterval(other.recordingInterval),
+    useAccelerometer(other.useAccelerometer),
+    useAutolap(other.useAutolap),
+    useBikePod(other.useBikePod),
+    useCadencePod(other.useCadencePod),
+    useFootPod(other.useFootPod),
+    usePowerPod(other.usePowerPod),
+    useHrBelt(other.useHrBelt),
+    useHrLimits(other.useHrLimits),
+    useIntervals(other.useIntervals),
+    custommodeId(other.custommodeId),
+    autoScrolingSpeed(other.autoScrolingSpeed),
+    autoPauseSpeed(other.autoPauseSpeed),
+    backlightMode(other.backlightMode),
+    displayIsNegative(other.displayIsNegative),
+    showNavigationSelection(other.showNavigationSelection),
+    displays(other.displays)
+{
+}
+
+CustomMode &CustomMode::operator=(const CustomMode &rhs)
+{
+    activityId = rhs.activityId;
+    altiBaroMode = rhs.altiBaroMode;
+    autolapDistance = rhs.autolapDistance;
+    gpsInterval = rhs.gpsInterval;
+    hrLimitHigh = rhs.hrLimitHigh;
+    hrLimitLow = rhs.hrLimitLow;
+    interval1distance = rhs.interval1distance;
+    interval2distance = rhs.interval2distance;
+    interval1time = rhs.interval1time;
+    interval2time = rhs.interval2time;
+    intervalRepetitions = rhs.intervalRepetitions;
+    activityName = rhs.activityName;
+    recordingInterval = rhs.recordingInterval;
+    useAccelerometer = rhs.useAccelerometer;
+    useAutolap = rhs.useAutolap;
+    useBikePod = rhs.useBikePod;
+    useCadencePod = rhs.useCadencePod;
+    useFootPod = rhs.useFootPod;
+    usePowerPod = rhs.usePowerPod;
+    useHrBelt = rhs.useHrBelt;
+    useHrLimits = rhs.useHrLimits;
+    useIntervals = rhs.useIntervals;
+    custommodeId = rhs.custommodeId;
+    autoScrolingSpeed = rhs.autoScrolingSpeed;
+    autoPauseSpeed = rhs.autoPauseSpeed;
+    backlightMode = rhs.backlightMode;
+    displayIsNegative = rhs.displayIsNegative;
+    showNavigationSelection = rhs.showNavigationSelection;
+    displays = rhs.displays;
+
+    return *this;
+}
+
+/*
+void CustomMode::serializeStartHeader(u_int16_t length ,u_int8_t *data)
+{
+    ambit_write_data_t *header = (ambit_write_data_t*)data;
+    header->header = START_HEADER;
+    header->length = length;
+}
+*/
+uint CustomMode::serialize(u_int8_t *data)
+{
+    u_int8_t *dataWrite = data + HEADER_SIZE;
+
+    dataWrite += serializeSettings(dataWrite);
+    dataWrite += serializeDisplays(dataWrite);
+
+    serializeHeader(CUSTOM_MODE_HEADER, dataWrite - data - HEADER_SIZE, data);
+
+    return dataWrite - data;
+}
+
+uint CustomMode::serializeSettings(u_int8_t *data)
+{
+    serializeHeader(0x0102, SETTINGS_SIZE, data);
+
+    ambit_custom_mode_settings_t *settings = (ambit_custom_mode_settings_t *)(data + HEADER_SIZE);
+    serializeName(settings);
+    settings->activity_id = (uint16_t)activityId;
+    settings->custom_mode_id = (uint16_t)custommodeId;
+    memset(settings->unknown1, 0, sizeof(settings->unknown1));
+    settings->hrbelt_and_pods = hrbeltAndPods();
+    settings->alti_baro_mode = altiBaroMode;
+    settings->gps_interval = gpsInterval;
+    settings->recording_interval = recordingInterval;
+    settings->autolap = useAutolap ? autolapDistance : 0;
+    settings->heartrate_max = hrLimitHigh;
+    settings->heartrate_min = hrLimitLow;
+    settings->use_heartrate_limits = useHrLimits;
+    memset(settings->unknown2, 0, sizeof(settings->unknown2));
+    settings->auto_pause = autoPauseSpeed * 100;
+    settings->auto_scroll = autoScrolingSpeed;
+    settings->use_interval_timer = useIntervals ? 1 : 0;
+    settings->interval_repetitions = intervalRepetitions;
+    settings->interval_timer_max_unit = interval1time ? 1 : 0;
+    memset(settings->unknown3, 0, sizeof(settings->unknown3));
+    settings->interval_timer_max = interval1distance ? interval1distance : interval1time;
+    memset(settings->unknown4, 0, sizeof(settings->unknown4));
+    settings->interval_timer_min_unit = interval2time ? 1 : 0;
+    memset(settings->unknown5, 0, sizeof(settings->unknown5));
+    settings->interval_timer_min = interval2distance ? interval2distance : interval2time;
+    memset(settings->unknown6, 0, sizeof(settings->unknown6));
+    settings->backlight_mode = backlightMode;
+    settings->display_mode = displayIsNegative;
+    settings->quick_navigation = showNavigationSelection;
+
+    return SETTINGS_SIZE + HEADER_SIZE;
+}
+
+void CustomMode::serializeName(ambit_custom_mode_settings_s *settings)
+{
+    const char *source = activityName.toStdString().c_str();
+    int strLen = activityName.length() < NAME_SIZE ? activityName.length() : NAME_SIZE;
+    memset(settings->activity_name, 0x00, NAME_SIZE);
+    memcpy(settings->activity_name, source, strLen);
+}
+
+uint CustomMode::serializeDisplays(u_int8_t *data)
+{
+    u_int8_t *writePosition;
+    writePosition = data + HEADER_SIZE; //Save space for header.
+
+    foreach (CustomModeDisplay display, displays) {
+        int writtenData = serializeDisplay(display, writePosition);
+        writePosition += writtenData;
+    }
+
+    memcpy(writePosition, UNKNOWN_DISPLAYES, sizeof(UNKNOWN_DISPLAYES));
+    writePosition += sizeof(UNKNOWN_DISPLAYES);
+
+    serializeHeader(0x0105, writePosition - data - HEADER_SIZE, data);
+
+    return writePosition - data;
+}
+
+uint CustomMode::serializeDisplay(CustomModeDisplay display, u_int8_t *data)
+{
+    u_int8_t *writePosition;
+    writePosition = data + HEADER_SIZE; //Save space for header.
+
+    writePosition += display.serializeDisplayLayout(writePosition);
+
+    for (u_int16_t row = 0; row < 3; row++)
+    {
+        writePosition += display.serializeRow(row, writePosition);
+    }
+
+    serializeHeader(0x0106, writePosition - data - HEADER_SIZE, data);
+
+    return writePosition - data;
+}
+
+void CustomMode::serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite)
+{
+    ambit_write_header_t *header = (ambit_write_header_t*)dataWrite;
+    header->header = header_nbr;
+    header->length = length;
+}
+
+u_int16_t CustomMode::hrbeltAndPods()
+{
+    u_int16_t retVal = 0;
+
+    if (useHrBelt)          { retVal |= 0x0003; }
+    if (useAccelerometer)   { retVal |= 0x0004; }
+    if (usePowerPod)        { retVal |= 0x0042; }
+    if (useCadencePod)       { retVal |= 0x0082; }
+    if (useFootPod)         { retVal |= 0x0102; }
+    if (useBikePod)         { retVal |= 0x0802; }
+
+    return retVal;
+}
+
+uint CustomMode::getCustomModeId() const
+{
+    return custommodeId;
+}
+
+QString CustomMode::toString()
+{
+    QString returnStr = QString("Activity ID [") + QString::number(activityId) +
+            QString("]   Alti Baro Mode [") + QString::number(altiBaroMode) +
+                        QString("]");
+    foreach (CustomModeDisplay display, displays) {
+        returnStr += QString(" ") + display.toString();
+    }
+
+    return returnStr;
+}
+
+const QString CustomModeDisplay::REQUIRES_HR_BELT = "RequiresHRBelt";
+const QString CustomModeDisplay::ROW_1 = "Row1";
+const QString CustomModeDisplay::ROW_2 = "Row2";
+const QString CustomModeDisplay::TYPE = "Type";
+const QString CustomModeDisplay::VIEWS = "Views";
+
+CustomModeDisplay::CustomModeDisplay(QVariantMap &displayMap, QObject *parent) :
+    QObject(parent)
+{
+    bool ok = false;
+    requiresHRBelt = displayMap[REQUIRES_HR_BELT].toBool();
+    row1 = displayMap[ROW_1].toInt(&ok);
+    if (!ok) {
+        row1 = -1;
+    }
+    row2 = displayMap[ROW_2].toInt(&ok);
+    if (!ok) {
+        row2 = -1;
+    }
+    type = displayMap[TYPE].toInt();
+
+    foreach (QVariant viewVar, displayMap[VIEWS].toList()) {
+        int view = viewVar.toInt();
+        views.append(view);
+    }
+}
+
+CustomModeDisplay::CustomModeDisplay(const CustomModeDisplay &other) :
+    QObject(other.parent()),
+    requiresHRBelt(other.requiresHRBelt),
+    row1(other.row1),
+    row2(other.row2),
+    type(other.type),
+    views(other.views)
+{
+}
+
+CustomModeDisplay &CustomModeDisplay::operator=(const CustomModeDisplay &rhs)
+{
+    requiresHRBelt = rhs.requiresHRBelt;
+    row1 = rhs.row1;
+    row2 = rhs.row2;
+    type = rhs.type;
+    views = rhs.views;
+
+    return *this;
+}
+
+uint CustomModeDisplay::serializeDisplayLayout(u_int8_t *data)
+{
+    ambit_custom_mode_display_layout_t *layout = (ambit_custom_mode_display_layout_t *)data;
+    layout->header = 0x0107;
+    layout->length = 4;
+    layout->display_layout = ambitDisplayType();
+    layout->unknown[0] = 0x0a;
+    layout->unknown[1] = 0;
+
+    return 4 + HEADER_SIZE;
+}
+
+uint CustomModeDisplay::serializeRow(u_int16_t row, u_int8_t *data)
+{
+    if (type == 4 && row > 0) return 0; // Type 4 is one row display type.
+    if (type == 6 && row > 1) return 0; // Type 6 is two row display type.
+
+    uint lastRowNbr = 2;
+    if (type == 6)
+    {
+        lastRowNbr = 1;
+    }
+
+    u_int8_t *writePosition;
+    writePosition = data + HEADER_SIZE; //Save space for header.
+
+    writePosition += serializeRowEntry(row, writePosition);
+
+    if (row == lastRowNbr)
+    {
+        foreach (int view_data, views) {
+            ambit_custom_mode_view_t *view = (ambit_custom_mode_view_t *)writePosition;
+            view->header = 0x010a;
+            view->length = 2;
+            view->display_type = movescount2ambitConverter.value(view_data);
+            writePosition += sizeof(ambit_custom_mode_view_t);
+        }
+    }
+
+    ambit_write_header_t *header = (ambit_write_header_t*)data;
+    header->header = 0x0108;
+    header->length = writePosition - data - HEADER_SIZE;
+
+    return writePosition - data;
+}
+
+uint CustomModeDisplay::serializeRowEntry(u_int16_t row_nbr, u_int8_t *data)
+{
+    ambit_custom_mode_row_t *row = (ambit_custom_mode_row_t *)data;
+    row->header = 0x0109;
+    row->length = 4;
+    row->row_nbr = row_nbr;
+
+    switch (row_nbr) {
+        case 0:
+            row->display_type = movescount2ambitConverter.value(row1);
+            break;
+        case 1:
+            if (type == 1 && row2 == -1) {
+                row->display_type = 0x20;
+            }
+            else {
+                row->display_type = movescount2ambitConverter.value(row2);
+            }
+            break;
+        default:
+            if (type == 1) {
+                row->display_type = 5;
+            }
+            else {
+                row->display_type = 0;
+            }
+            break;
+    }
+
+    return 8;
+}
+
+QString CustomModeDisplay::toString()
+{
+    QString returnStr = QString("Required HR Belt [") + QString::number(requiresHRBelt) +
+                        QString("] Row1 [") + QString::number(row1) +
+                        QString("] Row2 [") + QString::number(row2) +
+                        QString("] Type [") + QString::number(type) +
+                        QString("]");
+    foreach (int view, views) {
+        returnStr += QString(" view [") + QString::number(view) + QString("]");
+    }
+
+    return returnStr;
+}
+
+u_int16_t CustomModeDisplay::ambitDisplayType()
+{
+    switch (type) {
+    case 5: // 3 rows display
+        return 0x0104;
+        break;
+    case 6: // 2 rows display
+        return 0x0105;
+        break;
+    case 1: // barograph display
+        return 0x0101;
+        break;
+    case 4: // 1 row display
+        return 0x0106;
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+QMap<int, int> qmapInit() {
+    QMap<int, int> map;
+    map.insert(17, 0xb);
+    map.insert(3, 0xc);
+    map.insert(15, 0x31);
+    map.insert(16, 0x1c);
+    map.insert(25, 0x1d);
+    map.insert(4, 0x7);
+    map.insert(7, 0x5);
+    map.insert(10, 0x1b);
+    map.insert(19, 0xd);
+    map.insert(20, 0x1);
+    map.insert(31, 0x30);
+    map.insert(12, 0x2d);
+    map.insert(13, 0x2e);
+    map.insert(23, 0xfffe);
+    map.insert(32, 0x44);
+    map.insert(60, 0x43);
+    map.insert(8, 0xa);
+    map.insert(14, 0x2f);
+    map.insert(61, 0x4a);
+    map.insert(62, 0x4b);
+    map.insert(63, 0x4c);
+    map.insert(64, 0x4d);
+    map.insert(65, 0x4e);
+    map.insert(66, 0x4f);
+    map.insert(67, 0x50);
+    map.insert(11, 0x15);
+    map.insert(2, 0x9);
+    map.insert(5, 0x17);
+    map.insert(21, 0x1f);
+    map.insert(6, 0x11);
+    map.insert(0, 0x6);
+    map.insert(1, 0x21);
+    map.insert(9, 0x22);
+    map.insert(22, 0x2c);
+    map.insert(33, 0x46);
+    map.insert(34, 0x47);
+    map.insert(35, 0x48);
+    map.insert(36, 0x49);
+    map.insert(-1, 0x0);
+
+    return map;
+}
