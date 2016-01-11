@@ -517,6 +517,15 @@ int libambit_gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
 /**
+ * Write Custom mode displays
+ * \param object Object to get settings from
+ * \param data Data to be written
+ * \param datalen Length of data
+ * \return 0 on success, else -1
+ */
+int libambit_custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen);
+
+/**
  * Callback function for checking if a specific log entry should be read out or
  * skipped during log readouts
  * \param object Object reference

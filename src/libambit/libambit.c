@@ -272,6 +272,20 @@ int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datal
     return ret;
 }
 
+int libambit_custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen)
+{
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->custom_mode_write != NULL) {
+        ret = object->driver->custom_mode_write(object, data, datalen);
+    }
+    else {
+        LOG_WARNING("Driver does not support custom_mode_write");
+    }
+
+    return ret;
+}
+
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
 {
     int ret = -1;

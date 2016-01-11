@@ -49,6 +49,7 @@ static int personal_settings_get(ambit_object_t *object, ambit_personal_settings
 static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
 static int gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
+static int custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
 /*
  * Global variables
@@ -62,7 +63,8 @@ ambit_device_driver_t ambit_device_driver_ambit = {
     personal_settings_get,
     log_read,
     gps_orbit_header_read,
-    gps_orbit_write
+    gps_orbit_write,
+    custom_mode_write
 };
 
 /*
@@ -297,3 +299,15 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
+static int custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen)
+{
+    int ret = -1;
+
+    LOG_INFO("Writing Custom mode data");
+
+    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
+
+    ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, datalen, false);
+
+    return ret;
+}

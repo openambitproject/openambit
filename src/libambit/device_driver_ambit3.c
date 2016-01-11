@@ -91,7 +91,8 @@ ambit_device_driver_t ambit_device_driver_ambit3 = {
     personal_settings_get,
     log_read,
     gps_orbit_header_read,
-    gps_orbit_write
+    gps_orbit_write,
+    NULL
 };
 
 /*
