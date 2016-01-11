@@ -135,23 +135,23 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
             currentSyncPart++;
         }
 
-        if (/*syncMovescount &&*/ res != -1) {
+        if (syncMovescount && res != -1) {
             emit this->syncProgressInform(QString(tr("Fetching custom modes")), false, true, 100*currentSyncPart/syncParts);
 
             uint8_t *data = 0;
             int dataLen = 0;
             if ((dataLen = movesCount->getCustomModeData(&data)) != -1) {
-                QString debugStr;
-                for(int i = 0; i < dataLen; i++)
-                {
-//                   debugStr += QString(" ") + QString::number(data[i],16);
-                   debugStr += data[i] < 16 ?
-                               QString("0") + QString::number(data[i],16) :
-                               QString::number(data[i],16);
-                }
-                qDebug() << debugStr;
+//                QString debugStr;
+//                for(int i = 0; i < dataLen; i++)
+//                {
+//                   debugStr += data[i] < 16 ?
+//                               QString("0") + QString::number(data[i],16) :
+//                               QString::number(data[i],16);
+//                }
+//                qDebug() << debugStr;
+
+                res = libambit_custom_mode_write(this->deviceObject, data, dataLen);
             }
-            qDebug() << "CustomMode finnished with dataLen = " << dataLen << " and start of data at " << data;
 
             currentSyncPart++;
         }
