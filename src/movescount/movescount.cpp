@@ -306,12 +306,11 @@ int MovesCount::getCustomModeDataInThread(u_int8_t **data)
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
-        MovescountSettings *settings = new MovescountSettings();
+        MovescountSettings settings = MovescountSettings();
 
         if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
-            ret = settings->serializeCustomMode(data);
+            ret = settings.serializeCustomMode(data);
         }
-//        settings->deleteLater();
     }
 
     return ret;

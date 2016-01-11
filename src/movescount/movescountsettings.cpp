@@ -47,10 +47,9 @@ MovescountSettings& MovescountSettings::operator=(MovescountSettings &rhs)
 uint MovescountSettings::serializeCustomMode(u_int8_t **data)
 {
     u_int8_t *writePosition;
-
-    *data = (u_int8_t*)malloc(6000);
     writePosition = *data + 4; //Save space for header.
 
+    // TODO Check for every write that it is inside the range.
     writePosition += serializeCustomModes(writePosition);
 
     writePosition += serializeCustomModeGroups(writePosition);

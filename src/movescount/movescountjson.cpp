@@ -101,7 +101,7 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     return -1;
 }
 
-int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettings *movescountSettings)
+int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettings movescountSettings)
 {
     QJson::Parser parser;
 
@@ -115,7 +115,7 @@ int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettin
 
     if (ok) {
         QVariantMap settingsMap = entry["Settings"].toMap();
-        movescountSettings->parse(settingsMap);
+        movescountSettings.parse(settingsMap);
 
         return 0;
     }
