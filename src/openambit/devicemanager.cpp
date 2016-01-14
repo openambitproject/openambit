@@ -79,7 +79,7 @@ void DeviceManager::detect()
     }
 }
 
-void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncMovescount = false)
+void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncSportMode = false, bool syncMovescount = false)
 {
     int res = -1;
     time_t current_time;
@@ -93,6 +93,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     syncParts = 2;
     if (syncTime) syncParts++;
     if (syncOrbit) syncParts+=2;
+    if (syncSportMode) syncParts++;
 
     if (this->deviceObject != NULL) {
         emit this->syncProgressInform(QString(tr("Reading personal settings")), false, true, 0);
@@ -135,11 +136,12 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
             currentSyncPart++;
         }
 
-        if (syncMovescount && res != -1) {
-            emit this->syncProgressInform(QString(tr("Fetching custom modes")), false, true, 100*currentSyncPart/syncParts);
+        if (syncSportMode && res != -1) {
+            emit this->syncProgressInform(QString(tr("Fetching sport modes")), false, true, 100*currentSyncPart/syncParts);
 
             ambit_device_settings_t *ambitDeviceSettings = ambit_malloc_device_settings();
             if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
+                emit this->syncProgressInform(QString(tr("Write sport modes")), false, true, 100*currentSyncPart/syncParts);
                 res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
                 libambit_device_settings_free(ambitDeviceSettings);
             }

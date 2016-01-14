@@ -76,6 +76,7 @@ void SettingsDialog::readSettings()
     ui->checkBoxSyncAutomatically->setChecked(settings.value("syncAutomatically", false).toBool());
     ui->checkBoxSyncTime->setChecked(settings.value("syncTime", true).toBool());
     ui->checkBoxSyncOrbit->setChecked(settings.value("syncOrbit", true).toBool());
+    ui->checkBoxSyncSportsMode->setChecked(settings.value("syncSportMode", true).toBool());
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
@@ -97,6 +98,7 @@ void SettingsDialog::writeSettings()
     settings.setValue("syncAutomatically", ui->checkBoxSyncAutomatically->isChecked());
     settings.setValue("syncTime", ui->checkBoxSyncTime->isChecked());
     settings.setValue("syncOrbit", ui->checkBoxSyncOrbit->isChecked());
+    settings.setValue("syncSportMode", ui->checkBoxSyncSportsMode->isChecked());
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");

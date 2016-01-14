@@ -53,7 +53,7 @@ signals:
     void syncProgressInform(QString message, bool error, bool newRow, quint8 percentDone);
 public slots:
     void detect(void);
-    void startSync(bool readAllLogs, bool syncTime, bool syncOrbit, bool syncMovescount);
+    void startSync(bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncMovescount);
 
 private slots:
     void chargeTimerHit();

@@ -99,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(deviceManager, SIGNAL(syncProgressInform(QString,bool,bool,quint8)), this, SLOT(syncProgressInform(QString,bool,bool,quint8)), Qt::QueuedConnection);
     connect(ui->buttonDeviceReload, SIGNAL(clicked()), deviceManager, SLOT(detect()));
     connect(ui->buttonSyncNow, SIGNAL(clicked()), this, SLOT(syncNowClicked()));
-    connect(this, SIGNAL(syncNow(bool,bool,bool,bool)), deviceManager, SLOT(startSync(bool,bool,bool,bool)));
+    connect(this, SIGNAL(syncNow(bool,bool,bool,bool,bool)), deviceManager, SLOT(startSync(bool,bool,bool,bool,bool)));
     deviceWorkerThread.start();
     deviceManager->start();
     deviceManager->detect();
@@ -447,7 +447,7 @@ void MainWindow::updateLogList()
 
 void MainWindow::startSync()
 {
-    bool syncTime, syncOrbit, syncMovescount;
+    bool syncTime, syncOrbit, syncSportMode, syncMovescount;
 
     ui->checkBoxResyncAll->setEnabled(false);
     ui->buttonSyncNow->setEnabled(false);
@@ -464,6 +464,7 @@ void MainWindow::startSync()
     settings.beginGroup("syncSettings");
     syncTime = settings.value("syncTime", true).toBool();
     syncOrbit = settings.value("syncOrbit", true).toBool();
+    syncSportMode = settings.value("syncSportMode", true).toBool();
     settings.endGroup();
     settings.beginGroup("movescountSettings");
     syncMovescount = settings.value("movescountEnable", false).toBool();
@@ -474,21 +475,23 @@ void MainWindow::startSync()
         trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation started"));
     }
 
-    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncMovescount);
+    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncSportMode, syncMovescount);
 }
 
 void MainWindow::movesCountSetup()
 {
     bool syncOrbit = false;
+    bool syncSportMode = false;
     bool movescountEnable = false;
 
     settings.beginGroup("syncSettings");
     syncOrbit = settings.value("syncOrbit", true).toBool();
+    syncSportMode = settings.value("syncSportMode", true).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
     movescountEnable = settings.value("movescountEnable", false).toBool();
-    if (syncOrbit || movescountEnable) {
+    if (syncOrbit || syncSportMode || movescountEnable) {
         if (movesCount == NULL) {
             movesCount = MovesCount::instance();
             movesCount->setAppkey(APPKEY);
