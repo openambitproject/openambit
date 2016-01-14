@@ -32,13 +32,6 @@ const QString CustomMode::BACKLIGHT_MODE = "BacklightMode";
 const QString CustomMode::DISPLAY_IS_NEGATIVE = "DisplayIsNegative";
 const QString CustomMode::SHOW_NAVIGATION_SELECTION = "ShowNavigationSelection";
 
-const u_int8_t CustomMode::UNKNOWN_DISPLAYES[] =
-        {0x06,0x01,0x3e,0x00,0x07,0x01,0x04,0x00,0x11,0x01,0x04,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x08,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x08,0x00,0x08,0x01,0x1a,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x10,0x00,0x0a,0x01,0x02,0x00,0x01,0x00,0x0a,0x01,0x02,0x00,0xfe,0xff
-        ,0x06,0x01,0x44,0x00,0x07,0x01,0x04,0x00,0x23,0x01,0x05,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x08,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x28,0x00,0x08,0x01,0x20,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x10,0x00,0x0a,0x01,0x02,0x00,0x08,0x00,0x0a,0x01,0x02,0x00,0x01,0x00,0x0a,0x01,0x02,0x00,0xfe,0xff
-        ,0x06,0x01,0x3e,0x00,0x07,0x01,0x04,0x00,0x22,0x01,0x06,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x18,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x19,0x00,0x08,0x01,0x1a,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x32,0x00,0x0a,0x01,0x02,0x00,0x1a,0x00,0x0a,0x01,0x02,0x00,0x10,0x00
-        ,0x06,0x01,0x08,0x00,0x07,0x01,0x04,0x00,0x50,0x01,0x07,0x00
-        ,0x06,0x01,0x4a,0x00,0x07,0x01,0x04,0x00,0x04,0x01,0x32,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x00,0x00,0x3e,0x00,0x08,0x01,0x08,0x00,0x09,0x01,0x04,0x00,0x01,0x00,0x3d,0x00,0x08,0x01,0x26,0x00,0x09,0x01,0x04,0x00,0x02,0x00,0x00,0x00,0x0a,0x01,0x02,0x00,0x05,0x00,0x0a,0x01,0x02,0x00,0x0a,0x00,0x0a,0x01,0x02,0x00,0x15,0x00,0x0a,0x01,0x02,0x00,0x0b,0x00,0x0a,0x01,0x02,0x00,0x1c,0x00};
-
 
 CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
     QObject(parent)
@@ -164,32 +157,26 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     return *this;
 }
 
-/*
-void CustomMode::serializeStartHeader(u_int16_t length ,u_int8_t *data)
+void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode)
 {
-    ambit_write_data_t *header = (ambit_write_data_t*)data;
-    header->header = START_HEADER;
-    header->length = length;
-}
-*/
-uint CustomMode::serialize(u_int8_t *data)
-{
-    u_int8_t *dataWrite = data + HEADER_SIZE;
+    // Copy settings
+    ambit_custom_mode_settings_t *ambitSettings = &(ambitCustomMode->settings);
+    toAmbitSettings(ambitSettings);
 
-    dataWrite += serializeSettings(dataWrite);
-    dataWrite += serializeDisplays(dataWrite);
+    // Copy displays
+    if (ambit_malloc_custom_mode_displays(displays.count(), ambitCustomMode)) {
+        ambit_custom_mode_display_t *ambitDisplays = ambitCustomMode->display;
 
-    serializeHeader(CUSTOM_MODE_HEADER, dataWrite - data - HEADER_SIZE, data);
-
-    return dataWrite - data;
+        foreach (CustomModeDisplay display, displays) {
+            display.toAmbitCustomModeData(ambitDisplays);
+            ambitDisplays++;
+        }
+    }
 }
 
-uint CustomMode::serializeSettings(u_int8_t *data)
+void CustomMode::toAmbitSettings(ambit_custom_mode_settings_t *settings)
 {
-    serializeHeader(0x0102, SETTINGS_SIZE, data);
-
-    ambit_custom_mode_settings_t *settings = (ambit_custom_mode_settings_t *)(data + HEADER_SIZE);
-    serializeName(settings);
+    toAmbitName(settings->activity_name);
     settings->activity_id = (uint16_t)activityId;
     settings->custom_mode_id = (uint16_t)custommodeId;
     memset(settings->unknown1, 0, sizeof(settings->unknown1));
@@ -217,58 +204,14 @@ uint CustomMode::serializeSettings(u_int8_t *data)
     settings->backlight_mode = backlightMode;
     settings->display_mode = displayIsNegative;
     settings->quick_navigation = showNavigationSelection;
-
-    return SETTINGS_SIZE + HEADER_SIZE;
 }
 
-void CustomMode::serializeName(ambit_custom_mode_settings_s *settings)
+void CustomMode::toAmbitName(char ambitName[NAME_SIZE])
 {
     const char *source = activityName.toStdString().c_str();
     int strLen = activityName.length() < NAME_SIZE ? activityName.length() : NAME_SIZE;
-    memset(settings->activity_name, 0x00, NAME_SIZE);
-    memcpy(settings->activity_name, source, strLen);
-}
-
-uint CustomMode::serializeDisplays(u_int8_t *data)
-{
-    u_int8_t *writePosition;
-    writePosition = data + HEADER_SIZE; //Save space for header.
-
-    foreach (CustomModeDisplay display, displays) {
-        int writtenData = serializeDisplay(display, writePosition);
-        writePosition += writtenData;
-    }
-
-    memcpy(writePosition, UNKNOWN_DISPLAYES, sizeof(UNKNOWN_DISPLAYES));
-    writePosition += sizeof(UNKNOWN_DISPLAYES);
-
-    serializeHeader(0x0105, writePosition - data - HEADER_SIZE, data);
-
-    return writePosition - data;
-}
-
-uint CustomMode::serializeDisplay(CustomModeDisplay display, u_int8_t *data)
-{
-    u_int8_t *writePosition;
-    writePosition = data + HEADER_SIZE; //Save space for header.
-
-    writePosition += display.serializeDisplayLayout(writePosition);
-
-    for (u_int16_t row = 0; row < 3; row++)
-    {
-        writePosition += display.serializeRow(row, writePosition);
-    }
-
-    serializeHeader(0x0106, writePosition - data - HEADER_SIZE, data);
-
-    return writePosition - data;
-}
-
-void CustomMode::serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite)
-{
-    ambit_write_header_t *header = (ambit_write_header_t*)dataWrite;
-    header->header = header_nbr;
-    header->length = length;
+    memset(ambitName, 0x00, NAME_SIZE);
+    memcpy(ambitName, source, strLen);
 }
 
 u_int16_t CustomMode::hrbeltAndPods()
@@ -278,7 +221,7 @@ u_int16_t CustomMode::hrbeltAndPods()
     if (useHrBelt)          { retVal |= 0x0003; }
     if (useAccelerometer)   { retVal |= 0x0004; }
     if (usePowerPod)        { retVal |= 0x0042; }
-    if (useCadencePod)       { retVal |= 0x0082; }
+    if (useCadencePod)      { retVal |= 0x0082; }
     if (useFootPod)         { retVal |= 0x0102; }
     if (useBikePod)         { retVal |= 0x0802; }
 
@@ -288,18 +231,6 @@ u_int16_t CustomMode::hrbeltAndPods()
 uint CustomMode::getCustomModeId() const
 {
     return custommodeId;
-}
-
-QString CustomMode::toString()
-{
-    QString returnStr = QString("Activity ID [") + QString::number(activityId) +
-            QString("]   Alti Baro Mode [") + QString::number(altiBaroMode) +
-                        QString("]");
-    foreach (CustomModeDisplay display, displays) {
-        returnStr += QString(" ") + display.toString();
-    }
-
-    return returnStr;
 }
 
 const QString CustomModeDisplay::REQUIRES_HR_BELT = "RequiresHRBelt";
@@ -350,96 +281,21 @@ CustomModeDisplay &CustomModeDisplay::operator=(const CustomModeDisplay &rhs)
     return *this;
 }
 
-uint CustomModeDisplay::serializeDisplayLayout(u_int8_t *data)
+void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambitDisplay)
 {
-    ambit_custom_mode_display_layout_t *layout = (ambit_custom_mode_display_layout_t *)data;
-    layout->header = 0x0107;
-    layout->length = 4;
-    layout->display_layout = ambitDisplayType();
-    layout->unknown[0] = 0x0a;
-    layout->unknown[1] = 0;
+    ambitDisplay->type = ambitDisplayType();
+    ambitDisplay->requiresHRBelt = requiresHRBelt;
+    ambitDisplay->row1 = movescount2ambitConverter.value(row1);
+    ambitDisplay->row2 = movescount2ambitConverter.value(row2);
 
-    return 4 + HEADER_SIZE;
-}
+    if (ambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
+        uint16_t *ambitViews = ambitDisplay->view;
 
-uint CustomModeDisplay::serializeRow(u_int16_t row, u_int8_t *data)
-{
-    if (type == 4 && row > 0) return 0; // Type 4 is one row display type.
-    if (type == 6 && row > 1) return 0; // Type 6 is two row display type.
-
-    uint lastRowNbr = 2;
-    if (type == 6)
-    {
-        lastRowNbr = 1;
-    }
-
-    u_int8_t *writePosition;
-    writePosition = data + HEADER_SIZE; //Save space for header.
-
-    writePosition += serializeRowEntry(row, writePosition);
-
-    if (row == lastRowNbr)
-    {
-        foreach (int view_data, views) {
-            ambit_custom_mode_view_t *view = (ambit_custom_mode_view_t *)writePosition;
-            view->header = 0x010a;
-            view->length = 2;
-            view->display_type = movescount2ambitConverter.value(view_data);
-            writePosition += sizeof(ambit_custom_mode_view_t);
+        foreach (int view, views) {
+            *ambitViews = movescount2ambitConverter.value(view);
+            ambitViews++;
         }
     }
-
-    ambit_write_header_t *header = (ambit_write_header_t*)data;
-    header->header = 0x0108;
-    header->length = writePosition - data - HEADER_SIZE;
-
-    return writePosition - data;
-}
-
-uint CustomModeDisplay::serializeRowEntry(u_int16_t row_nbr, u_int8_t *data)
-{
-    ambit_custom_mode_row_t *row = (ambit_custom_mode_row_t *)data;
-    row->header = 0x0109;
-    row->length = 4;
-    row->row_nbr = row_nbr;
-
-    switch (row_nbr) {
-        case 0:
-            row->display_type = movescount2ambitConverter.value(row1);
-            break;
-        case 1:
-            if (type == 1 && row2 == -1) {
-                row->display_type = 0x20;
-            }
-            else {
-                row->display_type = movescount2ambitConverter.value(row2);
-            }
-            break;
-        default:
-            if (type == 1) {
-                row->display_type = 5;
-            }
-            else {
-                row->display_type = 0;
-            }
-            break;
-    }
-
-    return 8;
-}
-
-QString CustomModeDisplay::toString()
-{
-    QString returnStr = QString("Required HR Belt [") + QString::number(requiresHRBelt) +
-                        QString("] Row1 [") + QString::number(row1) +
-                        QString("] Row2 [") + QString::number(row2) +
-                        QString("] Type [") + QString::number(type) +
-                        QString("]");
-    foreach (int view, views) {
-        returnStr += QString(" view [") + QString::number(view) + QString("]");
-    }
-
-    return returnStr;
 }
 
 u_int16_t CustomModeDisplay::ambitDisplayType()

@@ -138,26 +138,11 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         if (syncMovescount && res != -1) {
             emit this->syncProgressInform(QString(tr("Fetching custom modes")), false, true, 100*currentSyncPart/syncParts);
 
-            uint8_t *data = 0;
-            int dataBufferSize = 6000;
-            data = (u_int8_t*)malloc(dataBufferSize);
-
-            int dataLen = 0;
-            if ((dataLen = movesCount->getCustomModeData(&data)) != -1) {
-//                QString debugStr;
-//                for(int i = 0; i < dataLen; i++)
-//                {
-//                   debugStr += data[i] < 16 ?
-//                               QString("0") + QString::number(data[i],16) :
-//                               QString::number(data[i],16);
-//                }
-//                qDebug() << debugStr;
-
-                res = libambit_custom_mode_write(this->deviceObject, data, dataLen);
+            ambit_device_settings_t *ambitDeviceSettings = ambit_malloc_device_settings();
+            if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
+                res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
+                libambit_device_settings_free(ambitDeviceSettings);
             }
-
-            free(data);
-
             currentSyncPart++;
         }
 

@@ -1111,21 +1111,21 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
         }
 
         if (libambit_protocol_command(object, ambit_command_data_write, send_data, send_data_len, &reply, &replylen, 0) == 0) {
-//            static int itt = 0;
-//            if ( itt < 10) {
+            static int itt = 0;
+            if ( itt < 10) {
 //                printf("ambit_command_data_write\n");
-//                int i, j = 1;
-//                for (i = 0; i < send_data_len; i++) {
-//                    printf("%.2x ", send_data[i]);
+                int i, j = 1;
+                for (i = 0; i < send_data_len; i++) {
+                    printf("%.2x", send_data[i]);
 //                    if (j > 15) {
 //                        printf("\n");
 //                        j = 0;
 //                    }
-//                    j++;
-//                }
-//                printf("\n");
-//            }
-//            itt++;
+                    j++;
+                }
+                printf("\n");
+            }
+            itt++;
             ret = 0;
         }
 

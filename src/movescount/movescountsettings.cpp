@@ -44,63 +44,27 @@ MovescountSettings& MovescountSettings::operator=(MovescountSettings &rhs)
     return *this;
 }
 
-uint MovescountSettings::serializeCustomMode(u_int8_t **data)
+void MovescountSettings::toAmbitData(ambit_device_settings_t *ambitSettings)
 {
-    u_int8_t *writePosition;
-    writePosition = *data + 4; //Save space for header.
+    // Copy Custom modes
+    if (ambit_malloc_custom_modes(customModes.count(), ambitSettings)) {
+        ambit_custom_mode_t *ambitCustomModes = ambitSettings->custom_modes;
 
-    // TODO Check for every write that it is inside the range.
-    writePosition += serializeCustomModes(writePosition);
-
-    writePosition += serializeCustomModeGroups(writePosition);
-
-    serializeHeader(0x0003, writePosition - *data - 4, *data);
-
-    return writePosition - *data;
-}
-
-uint MovescountSettings::serializeCustomModes(u_int8_t *data)
-{
-    u_int8_t *writePosition = data + 4; //Save space for header.
-
-    writePosition += serializeUnknownDataField(writePosition);
-
-    foreach (CustomMode customMode, customModes) {
-        writePosition += customMode.serialize(writePosition);
+        foreach(CustomMode customMode, customModes)
+        {
+            customMode.toAmbitCustomModeData(ambitCustomModes);
+            ambitCustomModes++;
+        }
     }
 
-    // Write header at the end, when total data size is known.
-    serializeHeader(CustomMode::START_HEADER, writePosition - data - 4, data);
+    // Copy Custom mode Groups
+    if (ambit_malloc_custom_mode_groups(customModeGroups.count(), ambitSettings)) {
+        ambit_custom_mode_group_t *ambitCustomModeGroups = ambitSettings->custom_mode_groups;
 
-    return writePosition - data;
-}
-
-uint MovescountSettings::serializeCustomModeGroups(u_int8_t *data)
-{
-    u_int8_t *writePosition = data + 4; //Save space for section header.
-
-    foreach (CustomModeGroup customModeGroup, customModeGroups) {
-        writePosition += customModeGroup.serialize(writePosition);
+        foreach(CustomModeGroup customModeGroup, customModeGroups)
+        {
+            customModeGroup.toAmbitData(ambitCustomModeGroups);
+            ambitCustomModeGroups++;
+        }
     }
-
-    // Write header at the end, when total data size is known.
-    CustomModeGroup::serializeStartHeader(writePosition - data - 4, data);
-
-    return writePosition - data;
-}
-
-void MovescountSettings::serializeHeader(u_int16_t header_nbr, u_int16_t length ,u_int8_t *data)
-{
-    ambit_write_header_t *header = (ambit_write_header_t*)data;
-    header->header = header_nbr;
-    header->length = length;
-}
-
-uint MovescountSettings::serializeUnknownDataField(u_int8_t *data)
-{
-    serializeHeader(0x010b, 2, data);
-    data += 4;
-    *(u_int16_t *)data = 2;
-
-    return 4 + 2;
 }

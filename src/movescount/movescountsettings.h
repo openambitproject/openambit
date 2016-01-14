@@ -18,17 +18,12 @@ public:
 
     MovescountSettings& operator=(MovescountSettings &rhs);
 
-    uint serializeCustomMode(u_int8_t **data);
+    void toAmbitData(ambit_device_settings_t *ambitSettings);
 signals:
 
 public slots:
 
 private:
-    uint serializeCustomModeGroups(u_int8_t *data);
-    uint serializeCustomModes(u_int8_t *data);
-    void serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *data);
-    uint serializeUnknownDataField(u_int8_t *data);
-
     QList<CustomModeGroup> customModeGroups;
     QList<CustomMode> customModes;
 };

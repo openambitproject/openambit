@@ -416,19 +416,50 @@ typedef struct ambit_custom_mode_row_s {
     uint16_t header;
     uint16_t length;
     uint16_t row_nbr;
-    uint16_t display_type;
+    uint16_t item;
 } ambit_custom_mode_row_t;
 
 typedef struct ambit_custom_mode_view_s {
     uint16_t header;
     uint16_t length;
-    uint16_t display_type;
+    uint16_t item;
 } ambit_custom_mode_view_t;
 
 typedef struct ambit_write_header_s {
     uint16_t header;
     uint16_t length;
 } ambit_write_header_t;
+
+typedef struct ambit_custom_mode_display_s {
+    uint16_t requiresHRBelt;
+    uint16_t type;
+    uint16_t row1;
+    uint16_t row2;
+    uint32_t views_count;
+    uint16_t *view;
+} ambit_custom_mode_display_t;
+
+typedef struct ambit_custom_mode_group_s {
+    uint16_t activity_id;
+    uint16_t custom_mode_group_id;
+    bool is_visible;
+    char activity_name[24];
+    uint32_t custom_mode_index_count;
+    uint16_t *custom_mode_index;
+} ambit_custom_mode_group_t;
+
+typedef struct ambit_custom_mode_s {
+    ambit_custom_mode_settings_t settings;
+    uint32_t displays_count;
+    ambit_custom_mode_display_t *display;
+} ambit_custom_mode_t;
+
+typedef struct ambit_device_settings_s {
+    uint32_t custom_modes_count;
+    ambit_custom_mode_t *custom_modes;
+    uint32_t custom_mode_groups_count;
+    ambit_custom_mode_group_t *custom_mode_groups;
+} ambit_device_settings_t;
 
 /** \brief Create a list of all known Ambit clocks on the system
  *
@@ -519,11 +550,10 @@ int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datal
 /**
  * Write Custom mode displays
  * \param object Object to get settings from
- * \param data Data to be written
- * \param datalen Length of data
+ * \param ambit_custom_modes settings object to be written
  * \return 0 on success, else -1
  */
-int libambit_custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen);
+int libambit_custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes);
 
 /**
  * Callback function for checking if a specific log entry should be read out or
@@ -568,6 +598,69 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
  * \param log_entry Log entry to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
+
+/**
+ * Allocates memmory for device settings structure and
+ * initiate pointer in the structure to NULL and custom_modes_count and custom_mode_groups_count to 0.
+ * \note Caller is responsible of freeing the struct with libambit_device_settings_free()
+ * \return pointer to allocated data struct.
+ */
+ambit_device_settings_t *ambit_malloc_device_settings(void);
+
+/**
+ * Allocates memmory for a number of custom mode structures and
+ * initiate display pointer in the structures to NULL and displays_count to 0.
+ * \param count number of custom modes that will be allocated.
+ * \param ambit_settings structure where these custom modes belongs to.
+ * The ambit_settings will be updated to point at the allocated data and the custom modes count will be set to count.
+ * \return true if allocation was succesfull.
+ */
+bool ambit_malloc_custom_modes(uint16_t count, ambit_device_settings_t *ambit_settings);
+
+/**
+ * Allocates memmory for a number of custom mode group structures and
+ * initiate structure pointers to NULL and index_count to 0.
+ * \param count number of custom mode groups that will be allocated.
+ * \param ambit_settings structure where these custom mode groups belongs to.
+ * The ambit_settings will be updated to point at the allocated data and the custom mode groups count will be set to count.
+ * \return true if allocation was succesfull.
+ */
+bool ambit_malloc_custom_mode_groups(uint16_t count, ambit_device_settings_t *ambit_settings);
+
+/**
+ * Allocates memmory for a number of display structures and
+ * initiate structure pointers to NULL and view_count to 0.
+ * \param count number of displays that will be allocated.
+ * \param ambit_custom_mode structure where these displays belongs to.
+ * The ambit_custom_mode will be updated to point at the allocated data and the display count will be set to count.
+ * \return true if allocation was succesfull.
+ */
+bool ambit_malloc_custom_mode_displays(uint16_t count, ambit_custom_mode_t *ambit_custom_mode);
+
+/**
+ * Allocates memmory for a number of views.
+ * \param count number of views that will be allocated.
+ * \param ambit_displays structure where these views belongs to.
+ * The ambit_displays will be updated to point at the allocated data and the views count will be set to count.
+ * \return true if allocation was succesfull.
+ */
+bool ambit_malloc_custom_mode_view(uint16_t count, ambit_custom_mode_display_t *ambit_displays);
+
+/**
+ * Allocates memmory for a number of custom mode index.
+ * \param count number of custom mode index that will be allocated.
+ * \param ambit_custom_mode_group structure where these custom mode index belongs to.
+ * The ambit_custom_mode_group will be updated to point at the allocated data and the custom mode index count will be set to count.
+ * \return true if allocation was succesfull.
+ */
+bool ambit_malloc_custom_mode_index(uint16_t count, ambit_custom_mode_group_t *ambit_custom_mode_group);
+
+/**
+ * Free device setting and under laying data structures,
+ * allocated by ambit_maloc_*
+ * \param settings Device settings to free
+ */
+void libambit_device_settings_free(ambit_device_settings_t *settings);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }

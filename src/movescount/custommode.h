@@ -20,11 +20,7 @@ public:
 
     CustomModeDisplay& operator=(const CustomModeDisplay &rhs);
 
-    uint serializeDisplayLayout(u_int8_t *data);
-    uint serializeRow(u_int16_t row, u_int8_t *data);
-    uint serializeRowEntry(u_int16_t row_nbr, u_int8_t *data);
-
-    QString toString();
+    void toAmbitCustomModeData(ambit_custom_mode_display_t *ambitDisplay);
 
 private:
     u_int16_t ambitDisplayType();
@@ -56,19 +52,15 @@ public:
 
     uint getCustomModeId() const;
 
-    uint serialize(u_int8_t *data);
+    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode);
+    void toAmbitSettings(ambit_custom_mode_settings_t *settings);
+    void toAmbitName(char ambitName[]);
 
-    QString toString();
 signals:
 
 public slots:
 
 private:
-    uint serializeSettings(u_int8_t *data);
-    void serializeName(ambit_custom_mode_settings_s *settings);
-    void serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite);
-    uint serializeDisplays(u_int8_t *data);
-    uint serializeDisplay(CustomModeDisplay display, u_int8_t *data);
     u_int16_t hrbeltAndPods();
 
     uint activityId;
@@ -136,15 +128,8 @@ public:
     static const QString DISPLAY_IS_NEGATIVE;
     static const QString SHOW_NAVIGATION_SELECTION;
 
-    static const int HEADER_SIZE = 4;
     static const int NAME_SIZE = 16;
-    static const int SETTINGS_SIZE = 90;
 
-    static const int START_HEADER = 0x0100;
-    static const int CUSTOM_MODE_HEADER = 0x0101;
-    static const int SETTINGS_HEADER = 0x0102;
-
-    static const u_int8_t UNKNOWN_DISPLAYES[];
 };
 
 #endif // CUSTOMMODE_H

@@ -149,17 +149,17 @@ void MovesCount::getDeviceSettings()
     QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
 }
 
-int MovesCount::getCustomModeData(u_int8_t **data)
+int MovesCount::getCustomModeData(ambit_device_settings_t* ambitCustomModes)
 {
     int ret = -1;
 
     if (&workerThread == QThread::currentThread()) {
-        ret = getCustomModeDataInThread(data);
+        ret = getCustomModeDataInThread(ambitCustomModes);
     }
     else {
         QMetaObject::invokeMethod(this, "getCustomModeDataInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
-                                  Q_ARG(u_int8_t **, data));
+                                  Q_ARG(ambit_device_settings_t*, ambitCustomModes));
     }
 
     return ret;
@@ -297,7 +297,7 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
-int MovesCount::getCustomModeDataInThread(u_int8_t **data)
+int MovesCount::getCustomModeDataInThread(ambit_device_settings_t *ambitSettings)
 {
     int ret = -1;
     QNetworkReply *reply;
@@ -309,7 +309,8 @@ int MovesCount::getCustomModeDataInThread(u_int8_t **data)
         MovescountSettings settings = MovescountSettings();
 
         if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
-            ret = settings.serializeCustomMode(data);
+            settings.toAmbitData(ambitSettings);
+            ret = 0;
         }
     }
 

@@ -52,70 +52,28 @@ void CustomModeGroup::setCustomModeIndex(const QList<u_int16_t> &customModesList
     }
 }
 
-void CustomModeGroup::serializeStartHeader(u_int16_t length ,u_int8_t *data)
+void CustomModeGroup::toAmbitData(ambit_custom_mode_group_t *ambitCustomModeGroups)
 {
-    ambit_write_header_t *header = (ambit_write_header_t*)data;
-    header->header = START_HEADER;
-    header->length = length;
-}
+    ambitCustomModeGroups->activity_id = activityId;
+    ambitCustomModeGroups->custom_mode_group_id = customModeGroupsId;
+    ambitCustomModeGroups->is_visible = isVisible;
+    toAmbitName(ambitCustomModeGroups->activity_name);
 
-uint CustomModeGroup::serialize(u_int8_t *data)
-{
-    u_int8_t *dataWrite = data + HEADER_SIZE;
+    if (ambit_malloc_custom_mode_index(customModeIndex.count(), ambitCustomModeGroups)) {
+        uint16_t *ambitCustomModeIndex = ambitCustomModeGroups->custom_mode_index;
 
-    dataWrite += serializeName(dataWrite);
-    dataWrite += serializeActivityId(dataWrite);
-    dataWrite += serializeModesId(dataWrite);
-
-    serializeHeader(GROUP_HEADER, dataWrite - data - HEADER_SIZE, data);
-
-    return dataWrite - data;
-}
-
-void CustomModeGroup::serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite)
-{
-    ambit_write_header_t *header = (ambit_write_header_t*)dataWrite;
-    header->header = header_nbr;
-    header->length = length;
-}
-
-uint CustomModeGroup::serializeName(u_int8_t *data)
-{
-    u_int8_t *dataWrite = data + HEADER_SIZE;
-
-    char *str = (char*)dataWrite;
-    const char *source = activityName.toStdString().c_str();
-    int strLen = activityName.length() < NAME_PAYLOAD_SIZE ? activityName.length() : NAME_PAYLOAD_SIZE;
-    memset(str, 0, NAME_PAYLOAD_SIZE);
-    memcpy(str, source, strLen);
-
-    serializeHeader(NAME_HEADER, NAME_PAYLOAD_SIZE, data);
-
-    return NAME_PAYLOAD_SIZE + HEADER_SIZE;
-}
-
-uint CustomModeGroup::serializeActivityId(u_int8_t *data)
-{
-    u_int8_t *dataWrite = data + HEADER_SIZE;
-
-    *(u_int16_t*)dataWrite = activityId;
-    serializeHeader(ACTIVITY_ID_HEADER, ACTIVITY_ID_PAYLOAD_SIZE, data);
-
-    return ACTIVITY_ID_PAYLOAD_SIZE + HEADER_SIZE;
-}
-
-uint CustomModeGroup::serializeModesId(u_int8_t *data)
-{
-    u_int8_t *dataWrite = data;// + HEADER_SIZE;
-
-    foreach (u_int16_t index, customModeIndex) {
-        serializeHeader(MODES_ID_HEADER, MODES_ID_PAYLOAD_SIZE, dataWrite);
-        dataWrite += HEADER_SIZE;
-
-        // Write the IDs/position/index for all the custom mode that is in this group.
-        *(u_int16_t*)dataWrite = index;
-        dataWrite += 2;
+        foreach (u_int16_t index, customModeIndex) {
+            // Write the IDs/position/index for all the custom mode that is in this group.
+            *ambitCustomModeIndex = index;
+            ambitCustomModeIndex++;
+        }
     }
+}
 
-    return dataWrite - data;
+void CustomModeGroup::toAmbitName(char ambitName[GROUP_NAME_SIZE])
+{
+    const char *source = activityName.toStdString().c_str();
+    int strLen = activityName.length() < GROUP_NAME_SIZE ? activityName.length() : GROUP_NAME_SIZE;
+    memset(ambitName, 0x00, GROUP_NAME_SIZE);
+    memcpy(ambitName, source, strLen);
 }

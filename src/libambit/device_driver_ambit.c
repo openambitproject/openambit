@@ -25,6 +25,7 @@
 #include "protocol.h"
 #include "pmem20.h"
 #include "personal.h"
+#include "custom_mode_serialize.h"
 #include "debug.h"
 
 #include <stdlib.h>
@@ -49,7 +50,8 @@ static int personal_settings_get(ambit_object_t *object, ambit_personal_settings
 static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
 static int gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
-static int custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen);
+
+static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes);
 
 /*
  * Global variables
@@ -299,7 +301,7 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
-static int custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datalen)
+static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes)
 {
     int ret = -1;
 
@@ -307,7 +309,14 @@ static int custom_mode_write(ambit_object_t *object, uint8_t *data, size_t datal
 
     libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
 
-    ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, datalen, false);
+    uint8_t *data = 0;
+    int dataBufferSize = 6000;
+    data = (u_int8_t*)malloc(dataBufferSize);
+
+    int dataLen = 0;
+    if ((dataLen = custom_mode_serialize(ambit_custom_modes, data)) != -1) {  // TODO: -1 ??
+        ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
+    }
 
     return ret;
 }

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVariantMap>
 #include <QList>
+#include "libambit.h"
 
 class CustomModeGroup : public QObject
 {
@@ -16,17 +17,14 @@ public:
 
     void setCustomModeIndex(const QList<u_int16_t> &customModesList);
 
-    uint serialize(u_int8_t *data);
-    static void serializeStartHeader(u_int16_t length, u_int8_t *data);
+    void toAmbitData(ambit_custom_mode_group_t *ambitCustomModeGroups);
+
 signals:
 
 public slots:
 
 private:
-    uint serializeName(u_int8_t *data);
-    void serializeHeader(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite);
-    uint serializeActivityId(u_int8_t *data);
-    uint serializeModesId(u_int8_t *data);
+    void toAmbitName(char ambitName[]);
 
     int activityId;
     int customModeGroupsId;
@@ -42,16 +40,7 @@ private:
     static const QString IS_VISIBLE;
     static const QString ACTIVITY_NAME;
 
-    static const int HEADER_SIZE = 4;
-    static const int NAME_PAYLOAD_SIZE = 24;
-    static const int ACTIVITY_ID_PAYLOAD_SIZE = 2;
-    static const int MODES_ID_PAYLOAD_SIZE = 2;
-
-    static const int START_HEADER = 0x0200;
-    static const int GROUP_HEADER = 0x0210;
-    static const int NAME_HEADER = 0x0212;
-    static const int ACTIVITY_ID_HEADER = 0x0213;
-    static const int MODES_ID_HEADER = 0x0214;
+    static const int GROUP_NAME_SIZE = 24;
 };
 
 #endif // CUSTOMMODEGROUP_H
