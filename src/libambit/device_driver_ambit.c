@@ -301,7 +301,7 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
-static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes)
+static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_device_settings)
 {
     int ret = -1;
 
@@ -309,12 +309,11 @@ static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *am
 
     libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
 
-    uint8_t *data = 0;
-    int dataBufferSize = 6000;
-    data = (u_int8_t*)malloc(dataBufferSize);
+    int dataBufferSize = calculate_size_for_serialize_device_settings(ambit_device_settings);
+    uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
     int dataLen = 0;
-    if ((dataLen = custom_mode_serialize(ambit_custom_modes, data)) != -1) {  // TODO: -1 ??
+    if ((dataLen = serialize_device_settings(ambit_device_settings, data)) != -1) {  // TODO: -1 ??
         ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
     }
 

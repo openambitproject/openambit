@@ -45,7 +45,8 @@ static const int NAME_HEADER = 0x0212;
 static const int ACTIVITY_ID_HEADER = 0x0213;
 static const int MODES_ID_HEADER = 0x0214;
 
-int custom_mode_serialize(ambit_device_settings_t *ambit_settings, uint8_t *data);
+int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings);
+int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data);
 
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */

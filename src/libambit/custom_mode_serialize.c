@@ -30,12 +30,45 @@ static int serialize_activity_id(uint16_t activity_id, u_int8_t *data);
 static int serialize_modes_id(u_int16_t index, u_int8_t *data);
 
 
-int custom_mode_serialize(ambit_device_settings_t *ambit_settings, uint8_t *data)
+int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings)
+{
+    int serialize_buffer_size = 0;
+    int i, j;
+
+    serialize_buffer_size += HEADER_SIZE * 2;
+    serialize_buffer_size += 6; // For unknown data field;
+
+    // Add size for custom modes
+    for (i = 0; i < ambit_device_settings->custom_modes_count; i++) {
+        serialize_buffer_size += HEADER_SIZE;
+        serialize_buffer_size += HEADER_SIZE + sizeof(ambit_custom_mode_settings_t);
+
+        serialize_buffer_size += HEADER_SIZE;
+        // Add size for all displays
+        for (j = 0; j < ambit_device_settings->custom_modes[i].displays_count; j++) {
+            // Add size for type, row1 and row2 (including headers). (The needed space for some display types can be smaler).
+            serialize_buffer_size += 48;
+            // Add size for all views.
+            serialize_buffer_size += 6 * ambit_device_settings->custom_modes[i].display[j].views_count;
+        }
+        serialize_buffer_size += sizeof(UNKNOWN_DISPLAYES);
+    }
+
+    // Add size for custom mode groups
+    serialize_buffer_size += HEADER_SIZE;
+    for (i=0; i<ambit_device_settings->custom_mode_groups_count; i++) {
+        serialize_buffer_size += 38;
+        serialize_buffer_size += 6 * ambit_device_settings->custom_mode_groups[i].custom_mode_index_count;
+    }
+
+    return serialize_buffer_size;
+}
+
+int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data)
 {
     u_int8_t *writePosition;
     writePosition = data + HEADER_SIZE; //Save space for header.
 
-    // TODO Check for every write that it is inside the range.
     writePosition += serialize_custom_modes(ambit_settings, writePosition);
 
     writePosition += serialize_custom_mode_groups(ambit_settings, writePosition);
@@ -128,8 +161,7 @@ static int serialize_display(ambit_custom_mode_display_t *display, u_int8_t *dat
     writePosition += serialize_display_layout(display->type, writePosition);
 
     u_int16_t row;
-    for (row = 0; row < 3; row++)
-    {
+    for (row = 0; row < 3; row++) {
         writePosition += serialize_row(row, display, writePosition);
     }
 
