@@ -141,7 +141,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
 
             ambit_device_settings_t *ambitDeviceSettings = ambit_malloc_device_settings();
             if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
-                emit this->syncProgressInform(QString(tr("Write sport modes")), false, true, 100*currentSyncPart/syncParts);
+                emit this->syncProgressInform(QString(tr("Write sport modes")), false, false, 100*currentSyncPart/syncParts);
                 res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
                 libambit_device_settings_free(ambitDeviceSettings);
             }

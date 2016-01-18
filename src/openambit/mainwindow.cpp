@@ -464,7 +464,7 @@ void MainWindow::startSync()
     settings.beginGroup("syncSettings");
     syncTime = settings.value("syncTime", true).toBool();
     syncOrbit = settings.value("syncOrbit", true).toBool();
-    syncSportMode = settings.value("syncSportMode", true).toBool();
+    syncSportMode = settings.value("syncSportMode", false).toBool();
     settings.endGroup();
     settings.beginGroup("movescountSettings");
     syncMovescount = settings.value("movescountEnable", false).toBool();
@@ -486,7 +486,7 @@ void MainWindow::movesCountSetup()
 
     settings.beginGroup("syncSettings");
     syncOrbit = settings.value("syncOrbit", true).toBool();
-    syncSportMode = settings.value("syncSportMode", true).toBool();
+    syncSportMode = settings.value("syncSportMode", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
