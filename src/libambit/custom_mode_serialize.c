@@ -19,8 +19,9 @@ static u_int8_t serialize_settings(ambit_custom_mode_settings_t *settings, u_int
 static int serialize_displays(ambit_custom_mode_t *ambit_custom_mode, u_int8_t *data);
 static int serialize_display(ambit_custom_mode_display_t *display, u_int8_t *data);
 static int serialize_display_layout(uint16_t displayType, u_int8_t *data);
-static int serialize_row(u_int16_t row_nbr, ambit_custom_mode_display_t *display, u_int8_t *data);
-static int serialize_row_entry(u_int16_t row_nbr, ambit_custom_mode_display_t *display, u_int8_t *data);
+static int serialize_rows(ambit_custom_mode_display_t *display, u_int8_t *data);
+static int serialize_row_entry(u_int16_t row_nbr, u_int16_t row_item, u_int8_t *data);
+static int serialize_views(ambit_custom_mode_display_t *display, u_int8_t *data);
 static int serialize_view_entry(uint16_t view, u_int8_t *data);
 
 static int serialize_custom_mode_groups(ambit_device_settings_t *ambit_settings, u_int8_t *data);
@@ -148,7 +149,7 @@ static int serialize_displays(ambit_custom_mode_t *ambit_custom_mode, u_int8_t *
     memcpy(writePosition, UNKNOWN_DISPLAYES, sizeof(UNKNOWN_DISPLAYES));
     writePosition += sizeof(UNKNOWN_DISPLAYES);
 
-    serialize_header(0x0105, writePosition - data - HEADER_SIZE, data);
+    serialize_header(DISPLAYS_HEADER, writePosition - data - HEADER_SIZE, data);
 
     return writePosition - data;
 }
@@ -159,13 +160,9 @@ static int serialize_display(ambit_custom_mode_display_t *display, u_int8_t *dat
     writePosition = data + HEADER_SIZE; //Save space for header.
 
     writePosition += serialize_display_layout(display->type, writePosition);
+    writePosition += serialize_rows(display, writePosition);
 
-    u_int16_t row;
-    for (row = 0; row < 3; row++) {
-        writePosition += serialize_row(row, display, writePosition);
-    }
-
-    serialize_header(0x0106, writePosition - data - HEADER_SIZE, data);
+    serialize_header(DISPLAY_HEADER, writePosition - data - HEADER_SIZE, data);
 
     return writePosition - data;
 }
@@ -173,7 +170,7 @@ static int serialize_display(ambit_custom_mode_display_t *display, u_int8_t *dat
 static int serialize_display_layout(uint16_t displayType, u_int8_t *data)
 {
     ambit_custom_mode_display_layout_t *layout = (ambit_custom_mode_display_layout_t *)data;
-    layout->header = 0x0107;
+    layout->header = DISPLAY_LAYOUT_HEADER;
     layout->length = 4;
     layout->display_layout = displayType;
     layout->unknown[0] = 0x0a;
@@ -182,73 +179,83 @@ static int serialize_display_layout(uint16_t displayType, u_int8_t *data)
     return sizeof(ambit_custom_mode_display_layout_t);
 }
 
-static int serialize_row(u_int16_t row_nbr, ambit_custom_mode_display_t *display, u_int8_t *data)
+static int serialize_rows(ambit_custom_mode_display_t *display, u_int8_t *data)
 {
-    if (display->type == 0x0106 && row_nbr > 0) return 0; // Type 0x0106 is one row display type.
-    if (display->type == 0x0105 && row_nbr > 1) return 0; // Type 0x0105 is two row display type.
+    u_int8_t *writePosition = data + HEADER_SIZE; //Save space for header.
 
-    uint lastRowNbr = 2;
-    if (display->type == 0x0105)
+    switch (display->type) {
+    case SINGLE_ROW_DISPLAY_TYPE:
     {
-        lastRowNbr = 1;
+        writePosition += serialize_row_entry(0, display->row1, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - data - HEADER_SIZE, data);
+        break;
     }
-
-    u_int8_t *writePosition;
-    writePosition = data + HEADER_SIZE; //Save space for header.
-
-    writePosition += serialize_row_entry(row_nbr, display, writePosition);
-
-    if (row_nbr == lastRowNbr)
+    case DOUBLE_ROWS_DISPLAY_TYPE:
     {
-        int i;
-        uint16_t *view = display->view;
-        for (i = 0; i < display->views_count; i++) {
-            writePosition += serialize_view_entry(*view, writePosition);
-            view++;
-        }
-    }
+        writePosition += serialize_row_entry(0, display->row1, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - data - HEADER_SIZE, data);
 
-    serialize_header(0x0108, writePosition - data - HEADER_SIZE, data);
+        u_int8_t *headerPosition = writePosition;
+        writePosition += HEADER_SIZE; //Save space for second line header.
+        writePosition += serialize_row_entry(1, display->row2, writePosition);
+        writePosition += serialize_views(display, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - headerPosition - HEADER_SIZE, headerPosition);
+        break;
+    }
+    case TRIPLE_ROWS_DISPLAY_TYPE:
+    case BAROGRAPH_DISPLAY_TYPE:
+    {
+        writePosition += serialize_row_entry(0, display->row1, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - data - HEADER_SIZE, data);
+
+        u_int8_t *headerPosition = writePosition;
+        writePosition += HEADER_SIZE; //Save space for second line header.
+        writePosition += serialize_row_entry(1, display->row2, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - headerPosition - HEADER_SIZE, headerPosition);
+
+        headerPosition = writePosition;
+        writePosition += HEADER_SIZE; //Save space for third line header.
+        writePosition += serialize_row_entry(2, display->row3, writePosition);
+        writePosition += serialize_views(display, writePosition);
+        serialize_header(ROWS_HEADER, writePosition - headerPosition - HEADER_SIZE, headerPosition);
+        break;
+    }
+    default:
+        break;
+    }
 
     return writePosition - data;
 }
 
-static int serialize_row_entry(u_int16_t row_nbr, ambit_custom_mode_display_t *display, u_int8_t *data)
+static int serialize_row_entry(u_int16_t row_nbr, u_int16_t row_item, u_int8_t *data)
 {
     ambit_custom_mode_row_t *row = (ambit_custom_mode_row_t *)data;
-    row->header = 0x0109;
+    row->header = ROW_HEADER;
     row->length = 4;
     row->row_nbr = row_nbr;
-
-    switch (row_nbr) {
-        case 0:
-            row->item = display->row1;
-            break;
-        case 1:
-            if (display->type == 0x0101 && display->row2 == -1) {
-                row->item = 0x20;
-            }
-            else {
-                row->item = display->row2;
-            }
-            break;
-        default:
-            if (display->type == 0x0101) {
-                row->item = 5;
-            }
-            else {
-                row->item = 0;
-            }
-            break;
-    }
+    row->item = row_item;
 
     return sizeof(ambit_custom_mode_row_t);
+}
+
+static int serialize_views(ambit_custom_mode_display_t *display, u_int8_t *data)
+{
+    u_int8_t *writePosition = data;
+    uint16_t *view = display->view;
+
+    int i;
+    for (i = 0; i < display->views_count; i++) {
+        writePosition += serialize_view_entry(*view, writePosition);
+        view++;
+    }
+
+    return writePosition - data;
 }
 
 static int serialize_view_entry(uint16_t view, u_int8_t *data)
 {
     ambit_custom_mode_view_t *ambitView = (ambit_custom_mode_view_t *)data;
-    ambitView->header = 0x010a;
+    ambitView->header = VIEW_HEADER;
     ambitView->length = 2;
     ambitView->item = view;
 

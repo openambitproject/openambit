@@ -435,6 +435,7 @@ typedef struct ambit_custom_mode_display_s {
     uint16_t type;
     uint16_t row1;
     uint16_t row2;
+    uint16_t row3;
     uint32_t views_count;
     uint16_t *view;
 } ambit_custom_mode_display_t;

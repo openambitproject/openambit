@@ -287,6 +287,12 @@ void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambit
     ambitDisplay->requiresHRBelt = requiresHRBelt;
     ambitDisplay->row1 = movescount2ambitConverter.value(row1);
     ambitDisplay->row2 = movescount2ambitConverter.value(row2);
+    ambitDisplay->row3 = 0;
+
+    if (type == MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE) {
+        ambitDisplay->row2 = 0x20;
+        ambitDisplay->row3 = 0x05;
+    }
 
     if (ambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
         uint16_t *ambitViews = ambitDisplay->view;
@@ -301,17 +307,17 @@ void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambit
 u_int16_t CustomModeDisplay::ambitDisplayType()
 {
     switch (type) {
-    case 5: // 3 rows display
-        return 0x0104;
+    case MOVESCOUNT_TRIPLE_ROW_DISPLAY_TYPE:
+        return AMBIT_TRIPLE_ROW_DISPLAY_TYPE;
         break;
-    case 6: // 2 rows display
-        return 0x0105;
+    case MOVESCOUNT_DOUBLE_ROWS_DISPLAY_TYPE:
+        return AMBIT_DOUBLE_ROWS_DISPLAY_TYPE;
         break;
-    case 1: // barograph display
-        return 0x0101;
+    case MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE:
+        return AMBIT_BAROGRAPH_DISPLAY_TYPE;
         break;
-    case 4: // 1 row display
-        return 0x0106;
+    case MOVESCOUNT_SINGLE_ROW_DISPLAY_TYPE:
+        return AMBIT_SINGLE_ROW_DISPLAY_TYPE;
     default:
         break;
     }

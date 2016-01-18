@@ -38,12 +38,23 @@ static const int SETTINGS_SIZE = 90;
 static const int CUSTOM_MODE_START_HEADER = 0x0100;
 static const int CUSTOM_MODE_HEADER = 0x0101;
 static const int SETTINGS_HEADER = 0x0102;
+static const int DISPLAYS_HEADER = 0x0105;
+static const int DISPLAY_HEADER = 0x0106;
+static const int DISPLAY_LAYOUT_HEADER = 0x0107;
+static const int ROWS_HEADER = 0x0108;
+static const int ROW_HEADER = 0x0109;
+static const int VIEW_HEADER = 0x010a;
 
 static const int CUSTOM_MODE_GROUP_START_HEADER = 0x0200;
 static const int CUSTOM_MODE_GROUP_HEADER = 0x0210;
 static const int NAME_HEADER = 0x0212;
 static const int ACTIVITY_ID_HEADER = 0x0213;
 static const int MODES_ID_HEADER = 0x0214;
+
+#define SINGLE_ROW_DISPLAY_TYPE 0x0106
+#define DOUBLE_ROWS_DISPLAY_TYPE 0x0105
+#define TRIPLE_ROWS_DISPLAY_TYPE 0x0104
+#define BAROGRAPH_DISPLAY_TYPE 0x0101
 
 int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings);
 int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data);

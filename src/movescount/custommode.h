@@ -38,7 +38,15 @@ private:
     static const QString TYPE;
     static const QString VIEWS;
 
-    static const int HEADER_SIZE = 4;
+    static const int AMBIT_SINGLE_ROW_DISPLAY_TYPE = 0x0106;
+    static const int AMBIT_DOUBLE_ROWS_DISPLAY_TYPE = 0x0105;
+    static const int AMBIT_TRIPLE_ROW_DISPLAY_TYPE = 0x0104;
+    static const int AMBIT_BAROGRAPH_DISPLAY_TYPE = 0x0101;
+
+    static const int MOVESCOUNT_SINGLE_ROW_DISPLAY_TYPE = 4;
+    static const int MOVESCOUNT_DOUBLE_ROWS_DISPLAY_TYPE = 6;
+    static const int MOVESCOUNT_TRIPLE_ROW_DISPLAY_TYPE = 5;
+    static const int MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE = 1;
 };
 
 class CustomMode : public QObject
@@ -96,8 +104,6 @@ private:
     uint showNavigationSelection;
     QList<CustomModeDisplay> displays;
 
-    QList<CustomModeDisplay> unknownDisplays;
-
 public:
     static const QString ACTIVITY_ID;
     static const QString ALTI_BARO_MODE;
@@ -129,7 +135,6 @@ public:
     static const QString SHOW_NAVIGATION_SELECTION;
 
     static const int NAME_SIZE = 16;
-
 };
 
 #endif // CUSTOMMODE_H

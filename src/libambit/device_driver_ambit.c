@@ -312,10 +312,8 @@ static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *am
     int dataBufferSize = calculate_size_for_serialize_device_settings(ambit_device_settings);
     uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
-    int dataLen = 0;
-    if ((dataLen = serialize_device_settings(ambit_device_settings, data)) != -1) {  // TODO: -1 ??
-        ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
-    }
+    int dataLen = serialize_device_settings(ambit_device_settings, data);
+    ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
 
     return ret;
 }
