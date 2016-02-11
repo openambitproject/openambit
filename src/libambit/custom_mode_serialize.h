@@ -58,6 +58,8 @@ static const int MODES_ID_HEADER = 0x0214;
 
 int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings);
 int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data);
+int calculate_size_for_serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_t *ambit_apps);
+int serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_t *ambit_apps, uint8_t *data);
 
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */

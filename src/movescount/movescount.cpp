@@ -165,6 +165,22 @@ int MovesCount::getCustomModeData(ambit_device_settings_t* ambitCustomModes)
     return ret;
 }
 
+int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getAppsDataInThread(ambitApps);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getAppsDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_app_rules_t*, ambitApps));
+    }
+
+    return ret;
+}
+
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, QDate endTime)
 {
     QList<MovesCountLogDirEntry> retList;
@@ -310,6 +326,24 @@ int MovesCount::getCustomModeDataInThread(ambit_device_settings_t *ambitSettings
 
         if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
             settings.toAmbitData(ambitSettings);
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
+int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/rules/private", "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
             ret = 0;
         }
     }

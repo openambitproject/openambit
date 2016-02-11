@@ -38,6 +38,7 @@
 
 #define PMEM20_GPS_ORBIT_START            0x000704e0
 #define PMEM20_CUSTOM_MODE_START          0x00002000
+#define PMEM20_APP_START                  0x000927c0
 
 typedef struct __attribute__((__packed__)) periodic_sample_spec_s {
     uint16_t type;
@@ -56,6 +57,8 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
 static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_t *outtime);
 static int is_leap(unsigned int y);
 static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval);
+
+static int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_address, const uint8_t *data, size_t datalen);
 
 /*
  * Static variables
@@ -549,59 +552,43 @@ int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *da
     return ret;
 }
 
-int libambit_pmem20_custom_mode_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash)
+int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_address, const uint8_t *data, size_t datalen)
 {
     int ret = -1;
     const uint8_t *bufptrs[1];
-    size_t bufsizes[1];
-    uint32_t address = PMEM20_CUSTOM_MODE_START;
+    size_t bufsizes;
+    uint32_t address = start_address;
     size_t offset = 0;
 
     bufptrs[0] = data;
-    bufsizes[0] = object->chunk_size;
+    bufsizes = object->chunk_size;
 
     // Write first chunk
-    ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, bufsizes);
-    offset += bufsizes[0];
+    ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, &bufsizes);
+    offset += bufsizes;
     address += object->chunk_size;
 
     // Write rest of the chunks
     while (ret == 0 && offset < datalen) {
         bufptrs[0] = data + offset;
-        bufsizes[0] = (datalen - offset > object->chunk_size ? object->chunk_size : datalen - offset);
+        bufsizes = (datalen - offset > object->chunk_size ? object->chunk_size : datalen - offset);
 
-        ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, bufsizes);
-        offset += bufsizes[0];
-        address += bufsizes[0];
+        ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, &bufsizes);
+        offset += bufsizes;
+        address += bufsizes;
     }
 
-    // Write tail length (or what is really!?)
-//    if (ret == 0) {
-//        uint8_t *tailbuf;
-//        size_t tail_datalen = 8;
-//        // Handle hash (if wanted)
-//        if (include_sha256_hash) {
-//            sha256_init(&ctx);
-//            sha256_update(&ctx, startheader, sizeof(startheader));
-//            sha256_update(&ctx, data, datalen);
-//            sha256_final(&ctx, hash);
-//            tail_datalen += 64;
-//        }
-//        if ((tailbuf = malloc(tail_datalen + 1)) != NULL) {
-//            *((uint32_t*)(&tailbuf[0])) = htole32(PMEM20_CUSTOM_MODE_START);
-//            *((uint32_t*)(&tailbuf[4])) = htole32(bufsizes[0]);
-//            if (include_sha256_hash) {
-//                int i;
-//                for (i=0; i<32; i++) {
-//                    sprintf((char*)tailbuf+8+i*2, "%02X", hash[i]);
-//                }
-//            }
-//            ret = libambit_protocol_command(object->ambit_object, ambit_command_data_tail_len, tailbuf, tail_datalen, NULL, NULL, 0);
-//            free(tailbuf);
-//        }
-//    }
-
     return ret;
+}
+
+int libambit_pmem20_custom_mode_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash)
+{
+    return libambit_pmem20_data_write(object, PMEM20_CUSTOM_MODE_START, data, datalen);
+}
+
+int libambit_pmem20_app_data_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash)
+{
+    return libambit_pmem20_data_write(object, PMEM20_APP_START, data, datalen);
 }
 
 /**

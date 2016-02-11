@@ -123,6 +123,50 @@ int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettin
     return -1;
 }
 
+int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* ambitApps)
+{
+    QJson::Parser parser;
+
+    bool ok;
+
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    QVariantList appRulesList = parser.parse(input, &ok).toList();
+
+    if (ok) {
+
+        QList<uint> appRulesId;
+        QList<QByteArray> appRulesData;
+        foreach(QVariant entryVar, appRulesList) {
+            QVariantMap entry = entryVar.toMap();
+            appRulesId.append(entry["RuleID"].toUInt());
+            QByteArray binary;
+            foreach (QVariant binaryVar, entry["Binary"].toList()) {
+                binary.append(binaryVar.toChar());
+            }
+            appRulesData.append(binary);
+        }
+
+        if (ambit_malloc_app_rule(appRulesId.count(), ambitApps)) {
+            int i = 0;
+            for (i=0; i<appRulesId.count(); i++) {
+                ambitApps->app_rules[i].app_id = appRulesId.at(i);
+                ambitApps->app_rules[i].app_rule_data_length = appRulesData.at(i).count();
+
+                ambitApps->app_rules[i].app_rule_data = (uint8_t*)malloc(appRulesData.at(i).count());
+                if (ambitApps->app_rules[i].app_rule_data != NULL) {
+                    memcpy(ambitApps->app_rules[i].app_rule_data, appRulesData.at(i).data(), appRulesData.at(i).count());
+                }
+            }
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 /**
  * @brief MovesCountJSON::generateLogData
  * @param logEntry

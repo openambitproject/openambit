@@ -57,6 +57,7 @@ public:
     int getPersonalSettings(ambit_personal_settings_t *settings);
     void getDeviceSettings();
     int getCustomModeData(ambit_device_settings_t *ambitCustomModes);
+    int getAppsData(ambit_app_rules_t *ambitApps);
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
     void checkAuthorization();
@@ -79,6 +80,7 @@ private slots:
     int getPersonalSettingsInThread(ambit_personal_settings_t *settings);
     void getDeviceSettingsInThread();
     int getCustomModeDataInThread(ambit_device_settings_t *ambitSettings);
+    int getAppsDataInThread(ambit_app_rules_t *ambitApps);
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 
     void checkAuthorizationInThread();

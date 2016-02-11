@@ -1,8 +1,6 @@
 #include "custommode.h"
 #include "libambit.h"
 
-#include <qdebug.h>
-
 const QString CustomMode::ACTIVITY_ID = "ActivityID";
 const QString CustomMode::ALTI_BARO_MODE = "AltiBaroMode";
 const QString CustomMode::AUTOLAP_DISTANCE = "AutolapDistance";
@@ -31,6 +29,8 @@ const QString CustomMode::AUTO_PAUSE_SPEED = "AutoPauseSpeed";
 const QString CustomMode::BACKLIGHT_MODE = "BacklightMode";
 const QString CustomMode::DISPLAY_IS_NEGATIVE = "DisplayIsNegative";
 const QString CustomMode::SHOW_NAVIGATION_SELECTION = "ShowNavigationSelection";
+const QString CustomMode::DISPLAY = "Displays";
+const QString CustomMode::DISPLAYED_RULE_IDS = "DisplayedRuleIDs";
 
 
 CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
@@ -80,11 +80,16 @@ CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
     }
     showNavigationSelection = customModeMap[SHOW_NAVIGATION_SELECTION].toUInt();
 
-    foreach (QVariant displayVar, customModeMap["Displays"].toList()) {
+    foreach (QVariant displayVar, customModeMap[DISPLAY].toList()) {
         QVariantMap displayMap = displayVar.toMap();
 
         CustomModeDisplay display(displayMap, this->parent());
         displays.append(display);
+    }
+
+    foreach (QVariant ruleIdsVar, customModeMap[DISPLAYED_RULE_IDS].toList()) {
+        int ruleId = ruleIdsVar.toInt();
+        appRuleIds.append(ruleId);
     }
 }
 
@@ -118,7 +123,8 @@ CustomMode::CustomMode(const CustomMode &other) :
     backlightMode(other.backlightMode),
     displayIsNegative(other.displayIsNegative),
     showNavigationSelection(other.showNavigationSelection),
-    displays(other.displays)
+    displays(other.displays),
+    appRuleIds(other.appRuleIds)
 {
 }
 
@@ -153,6 +159,7 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     displayIsNegative = rhs.displayIsNegative;
     showNavigationSelection = rhs.showNavigationSelection;
     displays = rhs.displays;
+    appRuleIds = rhs.appRuleIds;
 
     return *this;
 }
@@ -170,6 +177,12 @@ void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode)
         foreach (CustomModeDisplay display, displays) {
             display.toAmbitCustomModeData(ambitDisplays);
             ambitDisplays++;
+        }
+    }
+
+    if (ambit_malloc_custom_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
+        for(int i = 0; i < appRuleIds.count(); i++) {
+            ambitCustomMode->apps_ids[i] = appRuleIds.at(i);
         }
     }
 }
@@ -365,6 +378,11 @@ QMap<int, int> qmapInit() {
     map.insert(34, 0x47);
     map.insert(35, 0x48);
     map.insert(36, 0x49);
+    map.insert(100,0x33); // App index
+    map.insert(101,0x34); // App index
+    map.insert(102,0x35); // App index
+    map.insert(103,0x6b); // App index
+    map.insert(104,0x6c); // App index
     map.insert(-1, 0x0);
 
     return map;

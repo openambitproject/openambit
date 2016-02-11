@@ -42,6 +42,8 @@ public:
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
     int parseDeviceSettingsReply(QByteArray &input, MovescountSettings &movescountSettings);
 
+    int parseAppRulesReply(QByteArray &input, ambit_app_rules_t* ambitApps); // QList<uint> &appRulesId, QList<QByteArray> &appRulesData);
+
     int generateLogData(LogEntry *logEntry, QByteArray &output);
     
 signals:

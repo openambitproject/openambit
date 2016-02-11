@@ -24,8 +24,6 @@
 #include <QTimer>
 #include <libambit.h>
 
-#include <QDebug>
-
 DeviceManager::DeviceManager(QObject *parent) :
     QObject(parent), deviceObject(NULL), udevListener(NULL)
 {
@@ -139,12 +137,20 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         if (syncSportMode && res != -1) {
             emit this->syncProgressInform(QString(tr("Fetching sport modes")), false, true, 100*currentSyncPart/syncParts);
 
+            ambit_app_rules_t* ambitApps = ambit_malloc_app_rules();
+            movesCount->getAppsData(ambitApps);
+
             ambit_device_settings_t *ambitDeviceSettings = ambit_malloc_device_settings();
             if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
                 emit this->syncProgressInform(QString(tr("Write sport modes")), false, false, 100*currentSyncPart/syncParts);
                 res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
-                libambit_device_settings_free(ambitDeviceSettings);
+
+                emit this->syncProgressInform(QString(tr("Write apps")), false, true, 100*currentSyncPart/syncParts);
+                res = libambit_app_data_write(this->deviceObject, ambitDeviceSettings, ambitApps);
             }
+            libambit_device_settings_free(ambitDeviceSettings);
+            libambit_app_rules_free(ambitApps);
+
             currentSyncPart++;
         }
 

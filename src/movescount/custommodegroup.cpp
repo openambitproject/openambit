@@ -1,8 +1,6 @@
 #include "custommodegroup.h"
 #include "libambit.h"
 
-#include <QDebug>
-
 const QString CustomModeGroup::ACTIVITY_ID = "ActivityID";
 const QString CustomModeGroup::CUSTOM_MODE_GROUPS_ID = "CustomModeGroupsID";
 const QString CustomModeGroup::CUSTOM_MODE_IDS = "CustomModeIDs";

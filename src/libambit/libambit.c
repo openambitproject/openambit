@@ -286,6 +286,20 @@ int libambit_custom_mode_write(ambit_object_t *object, ambit_device_settings_t *
     return ret;
 }
 
+int libambit_app_data_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes, ambit_app_rules_t* ambit_apps)
+{
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->app_data_write != NULL) {
+        ret = object->driver->app_data_write(object, ambit_custom_modes, ambit_apps);
+    }
+    else {
+        LOG_WARNING("Driver does not support app_data_write");
+    }
+
+    return ret;
+}
+
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
 {
     int ret = -1;
@@ -344,6 +358,9 @@ void libambit_device_settings_free(ambit_device_settings_t *settings)
                 }
                 free(settings->custom_modes[i].display);
             }
+            if (settings->custom_modes[i].apps_ids != NULL) {
+                free(settings->custom_modes[i].apps_ids);
+            }
         }
         free(settings->custom_modes);
     }
@@ -380,6 +397,7 @@ bool ambit_malloc_custom_modes(uint16_t count, ambit_device_settings_t *ambit_se
         for (i=0; i<count; i++) {
             ambit_settings->custom_modes[i].display = NULL;
             ambit_settings->custom_modes[i].displays_count = 0;
+            ambit_settings->custom_modes[i].apps_ids_count = 0;
         }
     }
     else {
@@ -409,6 +427,20 @@ bool ambit_malloc_custom_mode_groups(uint16_t count, ambit_device_settings_t *am
     }
 
     return ambit_custom_mode_groups != NULL;
+}
+
+bool ambit_malloc_custom_mode_app_ids(uint16_t count, ambit_custom_mode_t *ambit_custom_mode)
+{
+    uint32_t *ambit_app_ids = (uint32_t *)malloc(sizeof(uint32_t) * count);
+    if (ambit_app_ids != NULL) {
+        ambit_custom_mode->apps_ids = ambit_app_ids;
+        ambit_custom_mode->apps_ids_count = count;
+    }
+    else {
+        ambit_custom_mode->apps_ids = NULL;
+        ambit_custom_mode->apps_ids_count = 0;
+    }
+    return ambit_app_ids != NULL;
 }
 
 bool ambit_malloc_custom_mode_displays(uint16_t count, ambit_custom_mode_t *ambit_custom_mode)
@@ -460,6 +492,50 @@ bool ambit_malloc_custom_mode_index(uint16_t count, ambit_custom_mode_group_t *a
     }
 
     return ambit_custom_mode_index != NULL;
+}
+
+void libambit_app_rules_free(ambit_app_rules_t *app_rules)
+{
+    int i;
+
+    if (app_rules->app_rules != NULL) {
+        for (i=0; i<app_rules->app_rules_count; i++) {
+            free(app_rules->app_rules[i].app_rule_data);
+        }
+        free(app_rules->app_rules);
+    }
+    free(app_rules);
+}
+
+ambit_app_rules_t *ambit_malloc_app_rules(void)
+{
+    ambit_app_rules_t *ambit_app_rules = (ambit_app_rules_t *)malloc(sizeof(ambit_app_rules_t));
+    ambit_app_rules->app_rules = NULL;
+    ambit_app_rules->app_rules_count = 0;
+
+    return ambit_app_rules;
+}
+
+bool ambit_malloc_app_rule(uint16_t count, ambit_app_rules_t *ambit_app_rules)
+{
+    ambit_app_rule_t *ambit_app_rule = (ambit_app_rule_t *)malloc(sizeof(ambit_app_rule_t) * count);
+    if (ambit_app_rule != NULL) {
+        ambit_app_rules->app_rules = ambit_app_rule;
+        ambit_app_rules->app_rules_count = count;
+
+        int i;
+        for (i=0; i<count; i++) {
+            ambit_app_rules->app_rules[i].app_rule_data = NULL;
+            ambit_app_rules->app_rules[i].app_rule_data_length = 0;
+            ambit_app_rules->app_rules[i].app_id = 0;
+        }
+    }
+    else {
+        ambit_app_rules->app_rules = NULL;
+        ambit_app_rules->app_rules_count = 0;
+    }
+
+    return ambit_app_rule != NULL;
 }
 
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)

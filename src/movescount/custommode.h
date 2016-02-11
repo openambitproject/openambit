@@ -103,6 +103,7 @@ private:
     uint displayIsNegative;
     uint showNavigationSelection;
     QList<CustomModeDisplay> displays;
+    QList<uint> appRuleIds;
 
 public:
     static const QString ACTIVITY_ID;
@@ -133,6 +134,8 @@ public:
     static const QString BACKLIGHT_MODE;
     static const QString DISPLAY_IS_NEGATIVE;
     static const QString SHOW_NAVIGATION_SELECTION;
+    static const QString DISPLAY;
+    static const QString DISPLAYED_RULE_IDS;
 
     static const int NAME_SIZE = 16;
 };
