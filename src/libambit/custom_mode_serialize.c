@@ -461,12 +461,11 @@ static int serialize_activity_id(uint16_t activity_id, u_int8_t *data)
 
 static int serialize_modes_id(u_int16_t index, u_int8_t *data)
 {
-    u_int8_t *dataWrite = data + HEADER_SIZE;
+    serialize_header(MODES_ID_HEADER, sizeof(u_int16_t), data);
+    data += HEADER_SIZE;
 
     // Write the IDs/position/index for all the custom mode that is in this group.
-    *dataWrite = index;
-
-    serialize_header(MODES_ID_HEADER, sizeof(u_int16_t), data);
+    *(u_int16_t*)data = index;
 
     return sizeof(u_int16_t) + HEADER_SIZE;
 }
