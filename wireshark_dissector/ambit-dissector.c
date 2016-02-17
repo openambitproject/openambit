@@ -79,6 +79,7 @@ static uint dissect_ambit_data_write_read_data_0107(tvbuff_t *tvb, packet_info *
 static uint dissect_ambit_data_write_read_data_0108(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength);
 static uint dissect_ambit_data_write_read_data_0109(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength);
 static uint dissect_ambit_data_write_read_data_010a(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength);
+static uint dissect_ambit_data_write_read_data_010c(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength);
 
 static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
@@ -315,6 +316,7 @@ static gint hf_ambit_write_data_apps_header_len = -1;
 static gint hf_ambit_write_data_apps_end_pos = -1;
 static gint hf_ambit_write_data_app_data = -1;
 static gint hf_ambit_write_data_app_checksum = -1;
+static gint hf_ambit_write_data_app_index = -1;
 
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
@@ -1813,11 +1815,9 @@ static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     guint32 address = tvb_get_letohl(tvb, 0);
     guint32 length = tvb_get_letohl(tvb, 4);
 
-    g_print("dissect_ambit_data_write() address = 0x%x   length = %d\n", address, length);
-
     proto_tree_add_item(tree, hf_ambit_log_data_address, tvb, 0, 4, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ambit_log_data_length, tvb, 4, 4, ENC_LITTLE_ENDIAN);
-
+/*
     if (address >= 0x2000 && address <= 0x3800) { // Custom sport modes address.
         dissect_ambit_data_write_sport_modes(tvb, pinfo, tree, address, length + 8);
     }
@@ -1826,6 +1826,15 @@ static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     }
     else {
         proto_tree_add_text(tree, tvb, 8, length, "Payload");
+    }
+*/
+    if ((address >= 0x2000 && address <= 0x3800) || (address >= 0x927c0 && address <= 0x9a7c0)) { // Custom sport modes address.
+        int i;
+        for (i=0; i<length+8; i++) {
+            g_printf("%.2x", tvb_get_guint8(tvb,i));
+        }
+        g_printf("\n");
+
     }
 }
 
@@ -1840,7 +1849,6 @@ static gint dissect_ambit_data_write_sport_modes(tvbuff_t *tvb, packet_info *pin
 
     if (leftToRead)
     {
-        g_print("Read left bytes %d", leftToRead);
         dissect_ambit_add_unknown(tvb, pinfo, tree, offset, leftToRead);
         offset += leftToRead;
     }
@@ -1871,8 +1879,6 @@ static gint dissect_ambit_data_write_sport_modes(tvbuff_t *tvb, packet_info *pin
     }
 
     leftToRead = dissect_ambit_data_write_content(tvb, pinfo, tree, &offset, length);
-    g_print("New leftToRead = %d\n", leftToRead);
-
     leftToReadArray[index + 1] = leftToRead;
 }
 
@@ -1885,6 +1891,7 @@ static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, pro
     int arrayIndex = (address - 0x927c0) / 0x400;
     uint leftToRead = leftToReadArray[arrayIndex];
     uint currentAppIndex = currentAppIndexArray[arrayIndex];
+    uint header_len = 0;
 
     guint32 offset = 8;
 
@@ -1896,7 +1903,7 @@ static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, pro
         offset += 1;
 
         proto_tree_add_item(tree, hf_ambit_write_data_apps_header_len, tvb, offset, 2, ENC_LITTLE_ENDIAN);
-        uint header_len = tvb_get_letohs(tvb, offset);
+        header_len = tvb_get_letohs(tvb, offset);
         offset += 2;
 
         dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 2);
@@ -1906,30 +1913,32 @@ static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, pro
         for (i=0; i*4<header_len-7; i++)
         {
             proto_tree_add_item(tree, hf_ambit_write_data_apps_end_pos, tvb, offset, 4, ENC_LITTLE_ENDIAN);
-            apps_length[i] = tvb_get_letohl(tvb, offset) - header_len - 1;
+            apps_length[i] = tvb_get_letohl(tvb, offset) - header_len;
             offset += 4;
-
-            if (i>0) {
-                apps_length[i] -= apps_length[i-1];
-            }
-
-            g_print("App len read [%d] = %d\n", i, apps_length[i]);
         }
+    }
+    else {
+        proto_tree_add_item(tree, hf_ambit_write_data_app_data, tvb, offset, leftToRead, ENC_LITTLE_ENDIAN);
+        offset += leftToRead;
+
+        proto_tree_add_item(tree, hf_ambit_write_data_app_checksum, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+        offset += 1;
+        currentAppIndex++;
     }
 
     int i = currentAppIndex;
     while (offset < length) {
-        uint read_len = apps_length[i];
-        if (apps_length[i] > (length-offset) ) {
-            leftToReadArray[arrayIndex+1] = apps_length[i] - (length-offset);
+
+        uint read_len = i==0 ? apps_length[i]-1 : apps_length[i]-apps_length[i-1]-1;
+
+        if (read_len > (length-offset) ) {
+            leftToReadArray[arrayIndex+1] = read_len-(length-offset);
             currentAppIndexArray[arrayIndex+1] = i;
             read_len = length-offset;
         }
 
         proto_tree_add_item(tree, hf_ambit_write_data_app_data, tvb, offset, read_len, ENC_LITTLE_ENDIAN);
         offset += read_len;
-
-        g_print("Apps data read. Nbr of bytes = %d\n", read_len);
 
         if (offset < length) {
             proto_tree_add_item(tree, hf_ambit_write_data_app_checksum, tvb, offset, 1, ENC_LITTLE_ENDIAN);
@@ -1943,8 +1952,6 @@ static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, pro
 
         i++;
     }
-
-    g_print("Left to read = %d for app index %d\n", leftToReadArray[arrayIndex+1], currentAppIndexArray[arrayIndex+1]);
 }
 
 static gint dissect_ambit_data_write_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length)
@@ -1953,10 +1960,9 @@ static gint dissect_ambit_data_write_content(tvbuff_t *tvb, packet_info *pinfo, 
 
     while (*offset < length)
     {
-        g_print("New mode:: offset = %d", *offset);
         if (*offset + 2 >= length) return *offset;
         proto_tree_add_item(tree, hf_ambit_write_data_header, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
-        uint dataHeader = tvb_get_letohs(tvb, *offset);
+//        uint dataHeader = tvb_get_letohs(tvb, *offset);
         *offset += 2;
 
         if (*offset + 2 >= length) return *offset;
@@ -1964,22 +1970,21 @@ static gint dissect_ambit_data_write_content(tvbuff_t *tvb, packet_info *pinfo, 
         uint dataLength = tvb_get_letohs(tvb, *offset);
         *offset += 2;
 
-        g_print(" with header 0x%x and length = %d\n", dataHeader, dataLength);
-
+        uint startOffset = *offset;
         dissect_ambit_data_write_read_data_0101(tvb, pinfo, tree, offset, length, dataLength);
+        leftToRead = dataLength - (*offset - startOffset);
     }
+
+    return leftToRead;
 }
 
 static uint dissect_ambit_data_write_read_data_0101(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
 {
-    g_print("New 0x0105:: offset = %d", *offset);
-
     uint leftToRead = 0;
     uint startOffset = *offset;
 
     while (*offset < length && *offset - startOffset < packageLength)
     {
-        g_print("New loop:: offset = %d", *offset);
         if (*offset + 2 >= length) return *offset;
         proto_tree_add_item(tree, hf_ambit_write_data_header, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
         guint16 dataHeader = tvb_get_letohs(tvb, *offset);
@@ -1990,14 +1995,15 @@ static uint dissect_ambit_data_write_read_data_0101(tvbuff_t *tvb, packet_info *
         guint16 dataLength2 = tvb_get_letohs(tvb, *offset);
         *offset += 2;
 
-        g_print(" with header 0x%x and length = %d\n", dataHeader, dataLength2);
-
         switch(dataHeader) {
           case 0x0102:
             leftToRead = dissect_ambit_data_write_read_data_0102(tvb, pinfo, tree, offset, length, dataLength2);
             break;
           case 0x0105:
             leftToRead = dissect_ambit_data_write_read_data_0105(tvb, pinfo, tree, offset, length, dataLength2);
+            break;
+          case 0x010c:
+            leftToRead = dissect_ambit_data_write_read_data_010c(tvb, pinfo, tree, offset, length, dataLength2);
             break;
         }
     }
@@ -2007,8 +2013,6 @@ static uint dissect_ambit_data_write_read_data_0101(tvbuff_t *tvb, packet_info *
 
 static uint dissect_ambit_data_write_read_data_0105(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
 {
-    g_print("New 0x0105:: offset = %d", *offset);
-
     uint leftToRead = 0;
     uint startOffset = *offset;
     while (*offset < length && *offset - startOffset < packageLength)
@@ -2024,8 +2028,6 @@ static uint dissect_ambit_data_write_read_data_0105(tvbuff_t *tvb, packet_info *
         guint16 dataLength = tvb_get_letohs(tvb, *offset);
         *offset += 2;
 
-        g_print(" with header 0x%x and length = %d\n", dataHeader, dataLength);
-
         switch(dataHeader) {
           case 0x0106:
             leftToRead = dissect_ambit_data_write_read_data_0106(tvb, pinfo, tree, offset, length, dataLength);
@@ -2038,8 +2040,6 @@ static uint dissect_ambit_data_write_read_data_0105(tvbuff_t *tvb, packet_info *
 
 static uint dissect_ambit_data_write_read_data_0106(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
 {
-    g_print("New 0x0106:: offset = %d", *offset);
-
     uint leftToRead = 0;
     uint startOffset = *offset;
     while (*offset < length && *offset - startOffset < packageLength)
@@ -2058,8 +2058,6 @@ static uint dissect_ambit_data_write_read_data_0106(tvbuff_t *tvb, packet_info *
         guint16 dataLength = tvb_get_letohs(tvb, *offset);
         *offset += 2;
 
-        g_print(" with header 0x%x and length = %d\n", dataHeader, dataLength);
-
         switch(dataHeader) {
           case 0x0107:
             leftToRead = dissect_ambit_data_write_read_data_0107(tvb, pinfo, tree, offset, length, dataLength);
@@ -2075,8 +2073,6 @@ static uint dissect_ambit_data_write_read_data_0106(tvbuff_t *tvb, packet_info *
 
 static uint dissect_ambit_data_write_read_data_0107(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
 {
-    g_print("New 0x0107:: offset = %d", *offset);
-
     uint leftToRead = 0;
     uint startOffset = *offset;
     while (*offset < length && *offset - startOffset < packageLength)
@@ -2095,8 +2091,6 @@ static uint dissect_ambit_data_write_read_data_0107(tvbuff_t *tvb, packet_info *
 
 static uint dissect_ambit_data_write_read_data_0108(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
 {
-    g_print("New 0x0108:: offset = %d", *offset);
-
     uint leftToRead = 0;
     uint startOffset = *offset;
     while (*offset < length && *offset - startOffset < packageLength)
@@ -2111,8 +2105,6 @@ static uint dissect_ambit_data_write_read_data_0108(tvbuff_t *tvb, packet_info *
         proto_tree_add_item(tree, hf_ambit_write_data_length, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
         guint16 dataLength = tvb_get_letohs(tvb, *offset);
         *offset += 2;
-
-        g_print(" with header 0x%x and length = %d\n", dataHeader, dataLength);
 
         switch(dataHeader) {
           case 0x0109:
@@ -2158,6 +2150,33 @@ static uint dissect_ambit_data_get_length_to_read(guint32 *offset, guint32 lengt
         return (length - *offset);
     }
     return packageLength;
+}
+
+static uint dissect_ambit_data_write_read_data_010c(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
+{
+    uint startOffset = *offset;
+    while (*offset < length && *offset - startOffset < packageLength)
+    {
+        if (*offset + 2 > length) return packageLength;
+        proto_tree_add_item(tree, hf_ambit_write_data_header, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
+        guint16 dataHeader = tvb_get_letohs(tvb, *offset);
+        *offset += 2;
+
+        if (*offset + 2 > length) return packageLength - (*offset - startOffset);
+        proto_tree_add_item(tree, hf_ambit_write_data_length, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
+        guint16 dataLength = tvb_get_letohs(tvb, *offset);
+        *offset += 2;
+
+        switch(dataHeader) {
+          case 0x010d:
+            if (*offset + dataLength > length) return packageLength - (*offset - startOffset);
+            proto_tree_add_item(tree, hf_ambit_write_data_app_index, tvb, *offset, dataLength, ENC_LITTLE_ENDIAN);
+            *offset += dataLength;
+            break;
+        }
+    }
+
+    return 0;
 }
 
 static uint dissect_ambit_data_write_read_data_0102(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
@@ -3126,7 +3145,9 @@ proto_register_ambit(void)
         { &hf_ambit_write_data_app_data,
           { "App data", "ambit.write_data.apps.data", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_write_data_app_checksum,
-          { "App checksum (xor of app data)", "ambit.write_data.apps.checksum", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+          { "App checksum (xor of app data + app data length)", "ambit.write_data.apps.checksum", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_write_data_app_index,
+          { "App index", "ambit.write_data.apps.index", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
     };
 
     static gint *ett[] = {
