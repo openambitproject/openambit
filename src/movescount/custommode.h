@@ -60,7 +60,7 @@ public:
 
     uint getCustomModeId() const;
 
-    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode);
+    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_device_settings_t *ambitSettings);
     void toAmbitSettings(ambit_custom_mode_settings_t *settings);
     void toAmbitName(char ambitName[]);
 
@@ -104,6 +104,7 @@ private:
     uint showNavigationSelection;
     QList<CustomModeDisplay> displays;
     QList<uint> appRuleIds;
+    QList<uint> loggedAppRuleIds;
 
 public:
     static const QString ACTIVITY_ID;
@@ -136,6 +137,7 @@ public:
     static const QString SHOW_NAVIGATION_SELECTION;
     static const QString DISPLAY;
     static const QString DISPLAYED_RULE_IDS;
+    static const QString LOGGED_RULE_IDS;
 
     static const int NAME_SIZE = 16;
 };

@@ -440,6 +440,11 @@ typedef struct ambit_custom_mode_display_s {
     uint16_t *view;
 } ambit_custom_mode_display_t;
 
+typedef struct ambit_app_index_s {
+    uint16_t index;
+    uint16_t logging;
+} ambit_apps_list_t;
+
 typedef struct ambit_custom_mode_group_s {
     uint16_t activity_id;
     uint16_t custom_mode_group_id;
@@ -453,8 +458,8 @@ typedef struct ambit_custom_mode_s {
     ambit_custom_mode_settings_t settings;
     uint32_t displays_count;
     ambit_custom_mode_display_t *display;
-    uint16_t apps_ids_count;
-    uint32_t *apps_ids;
+    uint16_t apps_list_count;
+    ambit_apps_list_t *apps_list;
 } ambit_custom_mode_t;
 
 typedef struct ambit_device_settings_s {
@@ -462,6 +467,8 @@ typedef struct ambit_device_settings_s {
     ambit_custom_mode_t *custom_modes;
     uint32_t custom_mode_groups_count;
     ambit_custom_mode_group_t *custom_mode_groups;
+    uint32_t app_ids_count;
+    uint32_t app_ids[40];
 } ambit_device_settings_t;
 
 typedef struct ambit_app_rule_s {

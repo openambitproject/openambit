@@ -52,7 +52,7 @@ void MovescountSettings::toAmbitData(ambit_device_settings_t *ambitSettings)
 
         foreach(CustomMode customMode, customModes)
         {
-            customMode.toAmbitCustomModeData(ambitCustomModes);
+            customMode.toAmbitCustomModeData(ambitCustomModes, ambitSettings);
             ambitCustomModes++;
         }
     }

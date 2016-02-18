@@ -358,8 +358,8 @@ void libambit_device_settings_free(ambit_device_settings_t *settings)
                 }
                 free(settings->custom_modes[i].display);
             }
-            if (settings->custom_modes[i].apps_ids != NULL) {
-                free(settings->custom_modes[i].apps_ids);
+            if (settings->custom_modes[i].apps_list != NULL) {
+                free(settings->custom_modes[i].apps_list);
             }
         }
         free(settings->custom_modes);
@@ -382,6 +382,7 @@ ambit_device_settings_t *ambit_malloc_device_settings(void)
     ambit_device_settings->custom_modes_count = 0;
     ambit_device_settings->custom_mode_groups = NULL;
     ambit_device_settings->custom_mode_groups_count = 0;
+    ambit_device_settings->app_ids_count = 0;
 
     return ambit_device_settings;
 }
@@ -397,7 +398,8 @@ bool ambit_malloc_custom_modes(uint16_t count, ambit_device_settings_t *ambit_se
         for (i=0; i<count; i++) {
             ambit_settings->custom_modes[i].display = NULL;
             ambit_settings->custom_modes[i].displays_count = 0;
-            ambit_settings->custom_modes[i].apps_ids_count = 0;
+            ambit_settings->custom_modes[i].apps_list = NULL;
+            ambit_settings->custom_modes[i].apps_list_count = 0;
         }
     }
     else {
@@ -431,14 +433,14 @@ bool ambit_malloc_custom_mode_groups(uint16_t count, ambit_device_settings_t *am
 
 bool ambit_malloc_custom_mode_app_ids(uint16_t count, ambit_custom_mode_t *ambit_custom_mode)
 {
-    uint32_t *ambit_app_ids = (uint32_t *)malloc(sizeof(uint32_t) * count);
+    ambit_apps_list_t *ambit_app_ids = (ambit_apps_list_t *)malloc(sizeof(ambit_apps_list_t) * count);
     if (ambit_app_ids != NULL) {
-        ambit_custom_mode->apps_ids = ambit_app_ids;
-        ambit_custom_mode->apps_ids_count = count;
+        ambit_custom_mode->apps_list = ambit_app_ids;
+        ambit_custom_mode->apps_list_count = count;
     }
     else {
-        ambit_custom_mode->apps_ids = NULL;
-        ambit_custom_mode->apps_ids_count = 0;
+        ambit_custom_mode->apps_list = NULL;
+        ambit_custom_mode->apps_list_count = 0;
     }
     return ambit_app_ids != NULL;
 }

@@ -31,6 +31,7 @@ const QString CustomMode::DISPLAY_IS_NEGATIVE = "DisplayIsNegative";
 const QString CustomMode::SHOW_NAVIGATION_SELECTION = "ShowNavigationSelection";
 const QString CustomMode::DISPLAY = "Displays";
 const QString CustomMode::DISPLAYED_RULE_IDS = "DisplayedRuleIDs";
+const QString CustomMode::LOGGED_RULE_IDS = "LoggedRuleIDs";
 
 
 CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
@@ -91,6 +92,11 @@ CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
         int ruleId = ruleIdsVar.toInt();
         appRuleIds.append(ruleId);
     }
+
+    foreach (QVariant loggedRuleIdsVar, customModeMap[LOGGED_RULE_IDS].toList()) {
+        int ruleId = loggedRuleIdsVar.toInt();
+        loggedAppRuleIds.append(ruleId);
+    }
 }
 
 CustomMode::CustomMode(const CustomMode &other) :
@@ -124,7 +130,8 @@ CustomMode::CustomMode(const CustomMode &other) :
     displayIsNegative(other.displayIsNegative),
     showNavigationSelection(other.showNavigationSelection),
     displays(other.displays),
-    appRuleIds(other.appRuleIds)
+    appRuleIds(other.appRuleIds),
+    loggedAppRuleIds(other.loggedAppRuleIds)
 {
 }
 
@@ -160,15 +167,16 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     showNavigationSelection = rhs.showNavigationSelection;
     displays = rhs.displays;
     appRuleIds = rhs.appRuleIds;
+    loggedAppRuleIds = rhs.loggedAppRuleIds;
 
     return *this;
 }
 
-void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode)
+void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_device_settings_t *ambitSettings)
 {
     // Copy settings
-    ambit_custom_mode_settings_t *ambitSettings = &(ambitCustomMode->settings);
-    toAmbitSettings(ambitSettings);
+    ambit_custom_mode_settings_t *ambitCustomModeSettings = &(ambitCustomMode->settings);
+    toAmbitSettings(ambitCustomModeSettings);
 
     // Copy displays
     if (ambit_malloc_custom_mode_displays(displays.count(), ambitCustomMode)) {
@@ -182,7 +190,11 @@ void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode)
 
     if (ambit_malloc_custom_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
         for(int i = 0; i < appRuleIds.count(); i++) {
-            ambitCustomMode->apps_ids[i] = appRuleIds.at(i);
+            ambitCustomMode->apps_list[i].index = ambitSettings->app_ids_count;
+            ambitCustomMode->apps_list[i].logging = (loggedAppRuleIds.at(i) != 0);
+
+            ambitSettings->app_ids[ambitSettings->app_ids_count] = appRuleIds.at(i);
+            ambitSettings->app_ids_count++;
         }
     }
 }
