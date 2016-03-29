@@ -69,6 +69,10 @@ int calculate_size_for_serialize_app_data(ambit_device_settings_t *ambit_setting
 {
     u_int16_t nbr_of_apps = ambit_settings->app_ids_count;
 
+    if (nbr_of_apps==0) {
+        return 0;
+    }
+
     // Add header size
     u_int32_t serialize_buffer_size = sizeof(u_int32_t) * nbr_of_apps +7;
 
@@ -86,6 +90,9 @@ int calculate_size_for_serialize_app_data(ambit_device_settings_t *ambit_setting
 int serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_t* ambit_apps, uint8_t *data)
 {
     u_int16_t nbr_of_apps = ambit_settings->app_ids_count;
+    if (nbr_of_apps==0) {
+        return 0;
+    }
 
     u_int16_t header_length = sizeof(u_int32_t) * nbr_of_apps +7;
     u_int8_t *writePosition = data;

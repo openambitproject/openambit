@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 /*
  * Local definitions
  */
@@ -312,10 +313,16 @@ static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *am
 //    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
 
     int dataBufferSize = calculate_size_for_serialize_device_settings(ambit_device_settings);
+    if (dataBufferSize==0) {
+        return 0;
+    }
+
     uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
-    int dataLen = serialize_device_settings(ambit_device_settings, data);
-    ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
+    if (data != NULL) {
+        int dataLen = serialize_device_settings(ambit_device_settings, data);
+        ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
+    }
 
     return ret;
 }
@@ -329,10 +336,16 @@ static int app_data_write(ambit_object_t *object, ambit_device_settings_t *ambit
 //    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
 
     int dataBufferSize = calculate_size_for_serialize_app_data(ambit_device_settings, ambit_apps);
+    if (dataBufferSize==0) {
+        return 0;
+    }
+
     uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
-    int dataLen = serialize_app_data(ambit_device_settings, ambit_apps, data);
-    ret = libambit_pmem20_app_data_write(&object->driver_data->pmem20, data, dataLen, false);
+    if (data != NULL) {
+        int dataLen = serialize_app_data(ambit_device_settings, ambit_apps, data);
+        ret = libambit_pmem20_app_data_write(&object->driver_data->pmem20, data, dataLen, false);
+    }
 
     return ret;
 }
