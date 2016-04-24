@@ -52,7 +52,8 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 /*
  * Static variables
  */
-static uint8_t komposti_version[] = { 0x02, 0x00, 0x2d, 0x00 };
+static uint8_t komposti_version_default[] = { 0x02, 0x00, 0x2d, 0x00 };
+static uint8_t komposti_version_ambit3[] = { 0x02, 0x03, 0x06, 0x00 };
 
 /*
  * Public functions
@@ -320,13 +321,27 @@ void libambit_log_entry_free(ambit_log_entry_t *log_entry)
 
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 {
+    uint8_t *komposti_version;
+    size_t komposti_version_size;
     uint8_t *reply_data = NULL;
     size_t replylen;
     int ret = -1;
 
     LOG_INFO("Reading device info");
 
-    if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(komposti_version), &reply_data, &replylen, 1) == 0) {
+    switch (info->product_id) {
+      case 0x001c:
+      case 0x001b:
+        komposti_version = komposti_version_ambit3;
+        komposti_version_size = sizeof(komposti_version_ambit3);
+        break;
+      default:
+        komposti_version = komposti_version_default;
+        komposti_version_size = sizeof(komposti_version_default);
+        break;
+    }
+
+    if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, komposti_version_size, &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
             const char *p = (char *)reply_data;
 

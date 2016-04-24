@@ -21,6 +21,7 @@
  */
 #include "device_driver.h"
 #include "device_driver_common.h"
+#include "device_support.h"
 #include "libambit_int.h"
 #include "protocol.h"
 #include "pmem20.h"
@@ -37,6 +38,12 @@
 /*
  * Local definitions
  */
+
+enum ambit3_fw_gen {
+    AMBIT3_FW_GEN1,
+    AMBIT3_FW_GEN2,
+};
+
 typedef struct memory_map_entry_s {
     uint32_t start;
     uint32_t size;
@@ -77,7 +84,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
 static int gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
-static int parse_log_header(const uint8_t *data, ambit3_log_header_t *log_header);
+static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header);
 static int get_memory_maps(ambit_object_t *object);
 
 /*
@@ -94,6 +101,25 @@ ambit_device_driver_t ambit_device_driver_ambit3 = {
     gps_orbit_header_read,
     gps_orbit_write
 };
+
+static enum ambit3_fw_gen get_ambit3_fw_gen(ambit_device_info_t *device_info)
+{
+    struct generation {
+        uint8_t fw_version[4];
+        enum ambit3_fw_gen gen;
+    } generations[] = {
+        {{2, 0, 4, 0}, AMBIT3_FW_GEN2},
+        {{0, 0, 0, 0}, AMBIT3_FW_GEN1},
+    };
+    struct generation *generation;
+
+    ARRAY_FOR_EACH(generations, generation) {
+        if (libambit_fw_version_number(generation->fw_version) <= libambit_fw_version_number(device_info->fw_version))
+            return generation->gen;
+    }
+
+    abort();
+}
 
 /*
  * Static functions implementation
@@ -253,55 +279,51 @@ static int personal_settings_get(ambit_object_t *object, ambit_personal_settings
     return 0;
 }
 
-static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
+static void init_log_read_send_data_object_gen1(libambit_sbem0102_data_t *send_data_object)
 {
+    libambit_sbem0102_data_init(send_data_object);
+    libambit_sbem0102_data_add(send_data_object, 0x81, NULL, 0);
+}
+
+static void init_log_read_send_data_object_gen2(libambit_sbem0102_data_t *send_data_object)
+{
+    libambit_sbem0102_data_init(send_data_object);
+    libambit_sbem0102_data_add(send_data_object, 0x8d, NULL, 0);
+}
+
+static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
+                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
+{
+    ambit3_log_header_t log_header;
+    ambit_log_entry_t *log_entry;
+
     int entries_read = 0;
 
     uint16_t log_entries_total = 0;
     uint16_t log_entries_walked = 0;
     uint16_t log_entries_notsynced = 0;
 
-    ambit3_log_header_t log_header;
-    ambit_log_entry_t *log_entry;
-
-    libambit_sbem0102_data_t send_data_object, reply_data_object;
-
-    LOG_INFO("Reading log headers");
     log_header.header.activity_name = NULL;
-    
-    libambit_sbem0102_data_init(&send_data_object);
-    libambit_sbem0102_data_init(&reply_data_object);
-    libambit_sbem0102_data_add(&send_data_object, 0x81, NULL, 0);
-    if (libambit_sbem0102_command_request(&object->driver_data->sbem0102, ambit_command_ambit3_log_headers, &send_data_object, &reply_data_object) != 0) {
-        LOG_WARNING("Failed to read log headers");
-        return -1;
-    }
 
-    if (object->driver_data->memory_maps.initialized == 0) {
-        if (get_memory_maps(object) != 0) {
-            return -1;
-        }
-    }
-
-    // Initialize PMEM20 log before starting to read logs
-    libambit_pmem20_log_init(&object->driver_data->pmem20, object->driver_data->memory_maps.excercise_log.start, object->driver_data->memory_maps.excercise_log.size);
-
-    while (libambit_sbem0102_data_next(&reply_data_object) == 0) {
-        switch (libambit_sbem0102_data_id(&reply_data_object)) {
+    while (libambit_sbem0102_data_next(reply_data_object) == 0) {
+        switch (libambit_sbem0102_data_id(reply_data_object)) {
           case 0x4e:
-            log_entries_total = read16(libambit_sbem0102_data_ptr(&reply_data_object), 0);
+            log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
             LOG_INFO("Number of logs=%d", log_entries_total);
             break;
           case 0x4f:
-            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(&reply_data_object), 0);
-            LOG_INFO("Number of logs marked as not syncronized=%d", log_entries_notsynced);
+            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
             break;
           case 0x7e:
-            if (parse_log_header(libambit_sbem0102_data_ptr(&reply_data_object), &log_header) == 0) {
+            if (parse_log_header(reply_data_object, &log_header) == 0) {
                 LOG_INFO("Log header parsed successfully");
                 if (skip_cb(userref, &log_header.header) != 0) {
                     LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
-                    log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20, log_header.address, log_header.end_address - log_header.address);
+                    log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
+                                                                       log_header.address,
+                                                                       log_header.end_address - log_header.address,
+                                                                       LIBAMBIT_PMEM20_FLAGS_NONE);
                     if (log_entry != NULL) {
                         if (push_cb != NULL) {
                             push_cb(userref, log_entry);
@@ -324,6 +346,112 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
           default:
             break;
         }
+    }
+
+    return entries_read;
+}
+
+static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
+                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
+{
+    ambit3_log_header_t log_header;
+    ambit_log_entry_t *log_entry;
+
+    int entries_read = 0;
+
+    uint16_t log_entries_total = 0;
+    uint16_t log_entries_walked = 0;
+    uint16_t log_entries_notsynced = 0;
+
+    log_header.header.activity_name = NULL;
+
+    while (libambit_sbem0102_data_next(reply_data_object) == 0) {
+        switch (libambit_sbem0102_data_id(reply_data_object)) {
+          case 0x5a:
+            log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs=%d", log_entries_total);
+            break;
+          case 0x5b:
+            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
+            break;
+          case 0x8a:
+          case 0x7a:
+            if (parse_log_header(reply_data_object, &log_header) == 0) {
+                LOG_INFO("Log header parsed successfully");
+                if (skip_cb(userref, &log_header.header) != 0) {
+                    LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
+                    log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
+                                                                       log_header.address,
+                                                                       log_header.end_address - log_header.address,
+                                                                       LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48);
+                    if (log_entry != NULL) {
+                        if (push_cb != NULL) {
+                            push_cb(userref, log_entry);
+                        }
+                        entries_read++;
+                    }
+                }
+                else {
+                    LOG_INFO("Log entry already exists, skipping");
+                }
+            }
+            else {
+                LOG_INFO("Failed to parse log header");
+            }
+            log_entries_walked++;
+            if (progress_cb != NULL) {
+                progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
+            }
+            break;
+          default:
+            LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
+            break;
+        }
+    }
+
+    return entries_read;
+}
+
+static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
+{
+    int entries_read;
+    libambit_sbem0102_data_t send_data_object, reply_data_object;
+
+    LOG_INFO("Reading log headers");
+
+    libambit_sbem0102_data_init(&reply_data_object);
+
+    switch (get_ambit3_fw_gen(&object->device_info)) {
+      case AMBIT3_FW_GEN1:
+        init_log_read_send_data_object_gen1(&send_data_object);
+        break;
+      case AMBIT3_FW_GEN2:
+        init_log_read_send_data_object_gen2(&send_data_object);
+        break;
+    }
+
+    if (libambit_sbem0102_command_request(&object->driver_data->sbem0102, ambit_command_ambit3_log_headers, &send_data_object, &reply_data_object) != 0) {
+        LOG_WARNING("Failed to read log headers");
+        return -1;
+    }
+
+    if (object->driver_data->memory_maps.initialized == 0) {
+        if (get_memory_maps(object) != 0) {
+            return -1;
+        }
+    }
+
+    // Initialize PMEM20 log before starting to read logs
+    libambit_pmem20_log_init(&object->driver_data->pmem20, object->driver_data->memory_maps.excercise_log.start, object->driver_data->memory_maps.excercise_log.size);
+
+    switch (get_ambit3_fw_gen(&object->device_info)) {
+      case AMBIT3_FW_GEN1:
+        entries_read = process_log_read_replies_gen1(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
+        break;
+      case AMBIT3_FW_GEN2:
+        entries_read = process_log_read_replies_gen2(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
+        break;
     }
 
     libambit_sbem0102_data_free(&send_data_object);
@@ -383,11 +511,27 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
-static int parse_log_header(const uint8_t *data, ambit3_log_header_t *log_header)
+static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header)
 {
+    uint8_t log_type;
     struct tm tm;
     char *ptr;
+    const uint8_t *data;
     size_t offset = 0;
+
+    data = libambit_sbem0102_data_ptr(reply_data_object);
+
+    log_type = libambit_sbem0102_data_id(reply_data_object);
+    switch (log_type) {
+      case 0x7e: /* gen1 fw */
+        break;
+      case 0x7a: /* gen2 fw */
+        data += 14;
+        break;
+      case 0x8a: /* gen2 fw */
+        data += 4;
+        break;
+    }
 
     // Start with parsing the time
     if ((ptr = libambit_strptime((const char *)data, "%Y-%m-%dT%H:%M:%S", &tm)) == NULL) {
@@ -438,6 +582,14 @@ static int parse_log_header(const uint8_t *data, ambit3_log_header_t *log_header
         free(log_header->header.activity_name);
     }
     log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "ISO-8859-15");
+    switch (log_type) {
+      case 0x7e: /* gen1 fw */
+        break;
+      case 0x7a: /* gen2 fw */
+      case 0x8a: /* gen2 fw */
+        offset += (strlen(log_header->header.activity_name)+1);
+        break;
+    }
     log_header->header.distance = read32inc(data, &offset);
     log_header->header.energy_consumption = read16inc(data, &offset);
 
@@ -446,14 +598,24 @@ static int parse_log_header(const uint8_t *data, ambit3_log_header_t *log_header
 
 static int get_memory_maps(ambit_object_t *object)
 {
+    uint8_t legacy_format;
     uint8_t *reply_data = NULL;
     size_t replylen = 0;
     uint8_t send_data[4] = { 0x00, 0x00, 0x00, 0x00 };
     libambit_sbem0102_data_t reply_data_object;
+    uint8_t mm_entry_data_id;
     memory_map_entry_t *mm_entry;
     const uint8_t *ptr;
 
-    if (libambit_protocol_command(object, ambit_command_unknown2, NULL, 0, &reply_data, &replylen, 2) != 0 || replylen < 4) {
+    switch (get_ambit3_fw_gen(&object->device_info)) {
+      case AMBIT3_FW_GEN1:
+        legacy_format = 2;
+        break;
+      case AMBIT3_FW_GEN2:
+        legacy_format = 3;
+        break;
+    }
+    if (libambit_protocol_command(object, ambit_command_unknown2, NULL, 0, &reply_data, &replylen, legacy_format) != 0 || replylen < 4) {
         libambit_protocol_free(reply_data);
         LOG_WARNING("Failed to read memory map key");
         return -1;
@@ -466,9 +628,18 @@ static int get_memory_maps(ambit_object_t *object)
         return -1;
     }
 
+    switch (get_ambit3_fw_gen(&object->device_info)) {
+      case AMBIT3_FW_GEN1:
+        mm_entry_data_id = 0x3f;
+        break;
+      case AMBIT3_FW_GEN2:
+        mm_entry_data_id = 0x4b;
+        break;
+    }
     while (libambit_sbem0102_data_next(&reply_data_object) == 0) {
-        if (libambit_sbem0102_data_id(&reply_data_object) == 0x3f) {
+        if (libambit_sbem0102_data_id(&reply_data_object) == mm_entry_data_id) {
             ptr = libambit_sbem0102_data_ptr(&reply_data_object);
+            LOG_INFO("Memory map entry \"%s\"", ptr);
             mm_entry = NULL;
             if (strcmp((char*)ptr, "Waypoints") == 0) {
                 mm_entry = &object->driver_data->memory_maps.waypoints;
@@ -497,6 +668,7 @@ static int get_memory_maps(ambit_object_t *object)
             else if (strcmp((char*)ptr, "BlePairingInfo") == 0) {
                 mm_entry = &object->driver_data->memory_maps.ble_pairing;
             }
+            /* TODO: add Apps memory map  */
             else {
                 LOG_WARNING("Unknown memory map type \"%s\"", (char*)ptr);
             }

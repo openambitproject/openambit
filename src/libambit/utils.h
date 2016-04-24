@@ -24,6 +24,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include <wchar.h>
 
@@ -90,5 +91,26 @@ static inline uint32_t read32inc(const uint8_t *buf, size_t *offset)
     *offset += 4;
     return (buf[(*offset)-4] | (buf[(*offset)-3] << 8) | (buf[(*offset)-2] << 16) | (buf[(*offset)-1] << 24));
 }
+
+static inline uint8_t *find_sequence(uint8_t *buf, size_t size, const uint8_t *seq, size_t seq_len)
+{
+    size_t i = 0;
+
+    while (1) {
+        if (i - size < seq_len)
+           return NULL;
+
+        if (memcmp((char *) buf + i, (const char *) seq, seq_len) == 0)
+            return buf + i;
+
+        i++;
+    }
+
+    return NULL;
+}
+
+#define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
+#define ARRAY_FOR_EACH(_arr, _elem) \
+    for (size_t _i = 0; _i < ARRAY_LENGTH(_arr) && (_elem = &_arr[_i]); _i++)
 
 #endif /* __UTILS_H__ */

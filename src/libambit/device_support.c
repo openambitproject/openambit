@@ -40,7 +40,6 @@ typedef struct int_known_device_s {
 /*
  * Static functions
  */
-static uint32_t version_number(const uint8_t version[4]);
 
 /*
  * Static variables
@@ -86,7 +85,7 @@ const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uin
         if (vendor_id == known_devices[i].vid &&
             product_id == known_devices[i].pid &&
             strcmp(model, known_devices[i].model) == 0 &&
-            (version_number (fw_version) >= version_number (known_devices[i].min_sw_version))) {
+            (libambit_fw_version_number (fw_version) >= libambit_fw_version_number (known_devices[i].min_sw_version))) {
             // Found matching entry, reset to this one!
             device = &known_devices[i].public_info;
             break;
@@ -96,7 +95,7 @@ const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uin
     return device;
 }
 
-static uint32_t version_number(const uint8_t version[4])
+uint32_t libambit_fw_version_number(const uint8_t version[4])
 {
     return (  (version[0] << 24)
             | (version[1] << 16)
