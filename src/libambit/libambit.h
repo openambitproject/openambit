@@ -22,13 +22,13 @@
 #ifndef __LIBAMBIT_H__
 #define __LIBAMBIT_H__
 
-#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
+
+#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+extern "C" {
+#endif
 
 typedef struct ambit_object_s ambit_object_t;
 
