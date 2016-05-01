@@ -22,6 +22,7 @@
 #include "device_driver_common.h"
 #include "protocol.h"
 #include "debug.h"
+#include "libambit-structs.h"
 
 #include <stdlib.h>
 #include <string.h>

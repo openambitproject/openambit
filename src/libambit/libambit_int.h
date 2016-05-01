@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include "hidapi/hidapi.h"
 #include "libambit.h"
+#include "libambit-structs.h"
 
 struct ambit_object_s {
     hid_device *handle;

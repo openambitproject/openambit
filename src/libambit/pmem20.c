@@ -24,6 +24,7 @@
 #include "sha256.h"
 #include "utils.h"
 #include "debug.h"
+#include "libambit-structs.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -738,11 +739,11 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             break;
           case 0x07:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_ttff;
-            log_entry->samples[*sample_count].u.ttff = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.ttff.value = read16inc(buf, &int_offset);
             break;
           case 0x08:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_distance_source;
-            log_entry->samples[*sample_count].u.distance_source = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.distance_source.value = read8inc(buf, &int_offset);
             break;
           case 0x09:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_lapinfo;
@@ -836,7 +837,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             break;
           case 0x1a:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_cadence_source;
-            log_entry->samples[*sample_count].u.cadence_source = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.cadence_source.value = read8inc(buf, &int_offset);
             break;
           case 0x1b:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_position;

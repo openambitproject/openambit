@@ -21,6 +21,7 @@
  */
 #include "personal.h"
 #include "utils.h"
+#include "libambit-structs.h"
 
 #include <stdlib.h>
 #include <string.h>

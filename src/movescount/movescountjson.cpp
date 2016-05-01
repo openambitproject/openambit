@@ -20,6 +20,7 @@
  *
  */
 #include "movescountjson.h"
+#include <libambit-structs.h>
 
 #include <QRegExp>
 #include <QVariantMap>

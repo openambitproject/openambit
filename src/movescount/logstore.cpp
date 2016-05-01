@@ -20,6 +20,7 @@
  *
  */
 #include "logstore.h"
+#include <libambit-structs.h>
 
 #include <QFile>
 #include <QStringList>
@@ -847,12 +848,12 @@ void LogStore::XMLReader::readLogSamples()
                         }
                         break;
                     case ambit_log_sample_type_ttff:
-                        logEntry->logEntry->samples[sampleCount].u.ttff = xml.readElementText().toUInt();
+                        logEntry->logEntry->samples[sampleCount].u.ttff.value = xml.readElementText().toUInt();
                         break;
                     case ambit_log_sample_type_distance_source:
                         if (xml.name() == "DistanceSource") {
                             int distanceId = xml.attributes().value("id").toString().toUInt();
-                            logEntry->logEntry->samples[sampleCount].u.distance_source = distanceId;
+                            logEntry->logEntry->samples[sampleCount].u.distance_source.value = distanceId;
                             xml.skipCurrentElement();
                         }
                         else {
@@ -1087,7 +1088,7 @@ void LogStore::XMLReader::readLogSamples()
                     case ambit_log_sample_type_cadence_source:
                         if (xml.name() == "CadenceSource") {
                             int cadenceId = xml.attributes().value("id").toString().toUInt();
-                            logEntry->logEntry->samples[sampleCount].u.cadence_source = cadenceId;
+                            logEntry->logEntry->samples[sampleCount].u.cadence_source.value = cadenceId;
                             xml.skipCurrentElement();
                         }
                         else {
@@ -1605,14 +1606,14 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
         }
         break;
     case ambit_log_sample_type_ttff:
-        xml.writeTextElement("ttff", QString("%1").arg(sample->u.ttff));
+        xml.writeTextElement("ttff", QString("%1").arg(sample->u.ttff.value));
         break;
     case ambit_log_sample_type_distance_source:
     {
         xml.writeStartElement("DistanceSource");
-        xml.writeAttribute("id", QString("%1").arg(sample->u.distance_source));
+        xml.writeAttribute("id", QString("%1").arg(sample->u.distance_source.value));
         for (distance_source_name = &sampleDistanceSourceNames[0]; distance_source_name->XMLName != ""; distance_source_name++) {
-            if (distance_source_name->source_id == sample->u.distance_source) {
+            if (distance_source_name->source_id == sample->u.distance_source.value) {
                 xml.writeCharacters(QString(distance_source_name->XMLName));
                 break;
             }
@@ -1734,9 +1735,9 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
     case ambit_log_sample_type_cadence_source:
     {
         xml.writeStartElement("CadenceSource");
-        xml.writeAttribute("id", QString("%1").arg(sample->u.cadence_source));
+        xml.writeAttribute("id", QString("%1").arg(sample->u.cadence_source.value));
         for (cadence_source_name = &sampleCadenceSourceNames[0]; cadence_source_name->XMLName != ""; cadence_source_name++) {
-            if (cadence_source_name->source_id == sample->u.cadence_source) {
+            if (cadence_source_name->source_id == sample->u.cadence_source.value) {
                 xml.writeCharacters(QString(cadence_source_name->XMLName));
                 break;
             }

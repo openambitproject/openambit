@@ -20,6 +20,7 @@
  *
  */
 #include "logentry.h"
+#include <libambit-structs.h>
 
 LogEntry::LogEntry() :
     personalSettings(NULL),
