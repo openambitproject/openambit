@@ -218,11 +218,11 @@ void CustomMode::toAmbitSettings(ambit_custom_mode_settings_t *settings)
     settings->auto_scroll = autoScrolingSpeed;
     settings->use_interval_timer = useIntervals ? 1 : 0;
     settings->interval_repetitions = intervalRepetitions;
-    settings->interval_timer_max_unit = interval1time ? 1 : 0;
+    settings->interval_timer_max_unit = interval1time ? 0x0100 : 0;
     memset(settings->unknown3, 0, sizeof(settings->unknown3));
     settings->interval_timer_max = interval1distance ? interval1distance : interval1time;
     memset(settings->unknown4, 0, sizeof(settings->unknown4));
-    settings->interval_timer_min_unit = interval2time ? 1 : 0;
+    settings->interval_timer_min_unit = interval2time ? 0x0100 : 0;
     memset(settings->unknown5, 0, sizeof(settings->unknown5));
     settings->interval_timer_min = interval2distance ? interval2distance : interval2time;
     memset(settings->unknown6, 0, sizeof(settings->unknown6));
@@ -315,7 +315,14 @@ void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambit
     ambitDisplay->row3 = 0;
 
     if (type == MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE) {
-        ambitDisplay->row2 = 0x20;
+        if (ambitDisplay->row1 == 6) {
+            // Display altitude, use bar-like graph.
+            ambitDisplay->row2 = 0x20;
+        }
+        else {
+            // Display data, use line mode graph.
+            ambitDisplay->row2 = 0x16;
+        }
         ambitDisplay->row3 = 0x05;
     }
 
