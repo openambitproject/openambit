@@ -310,21 +310,53 @@ void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambit
 {
     ambitDisplay->type = ambitDisplayType();
     ambitDisplay->requiresHRBelt = requiresHRBelt;
+
+    if (type == MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE) {
+        toAmbitBarographDisplay(ambitDisplay);
+    }
+    else if (type == MOVESCOUNT_LINEGRAPH_DISPLAY_TYPE) {
+        toAmbitLinegraphDisplay(ambitDisplay);
+    }
+    else {
+        toAmbitTextDisplay(ambitDisplay);
+    }
+}
+
+void CustomModeDisplay::toAmbitBarographDisplay(ambit_custom_mode_display_t *ambitDisplay)
+{
+    ambitDisplay->row1 = 0x07;  // pressure
+    ambitDisplay->row2 = 0x0e;
+    ambitDisplay->row3 = 0x00;
+
+    ambit_malloc_custom_mode_view(3, ambitDisplay);
+    ambitDisplay->view[0] = 0x0d;   // Temperature
+    ambitDisplay->view[1] = 0x01;   // Day time
+    ambitDisplay->view[2] = 0x12;   // Ref hight
+}
+
+void CustomModeDisplay::toAmbitLinegraphDisplay(ambit_custom_mode_display_t *ambitDisplay)
+{
+    ambitDisplay->row1 = movescount2ambitConverter.value(row1);
+    switch (row1) {
+    case 0:
+        ambitDisplay->row2 = 0x20;
+        break;
+    case 11:
+        ambitDisplay->row2 = 0x16;
+        break;
+    default:
+        ambitDisplay->row2 = 0x6d;
+        break;
+    }
+
+    ambitDisplay->row3 = 0x05; // Chrono
+}
+
+void CustomModeDisplay::toAmbitTextDisplay(ambit_custom_mode_display_t *ambitDisplay)
+{
     ambitDisplay->row1 = movescount2ambitConverter.value(row1);
     ambitDisplay->row2 = movescount2ambitConverter.value(row2);
     ambitDisplay->row3 = 0;
-
-    if (type == MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE) {
-        if (ambitDisplay->row1 == 6) {
-            // Display altitude, use bar-like graph.
-            ambitDisplay->row2 = 0x20;
-        }
-        else {
-            // Display data, use line mode graph.
-            ambitDisplay->row2 = 0x16;
-        }
-        ambitDisplay->row3 = 0x05;
-    }
 
     if (ambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
         uint16_t *ambitViews = ambitDisplay->view;
@@ -346,7 +378,10 @@ u_int16_t CustomModeDisplay::ambitDisplayType()
         return AMBIT_DOUBLE_ROWS_DISPLAY_TYPE;
         break;
     case MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE:
-        return AMBIT_BAROGRAPH_DISPLAY_TYPE;
+        return AMBIT_GRAPH_DISPLAY_TYPE;
+        break;
+    case MOVESCOUNT_LINEGRAPH_DISPLAY_TYPE:
+        return AMBIT_GRAPH_DISPLAY_TYPE;
         break;
     case MOVESCOUNT_SINGLE_ROW_DISPLAY_TYPE:
         return AMBIT_SINGLE_ROW_DISPLAY_TYPE;
@@ -359,24 +394,24 @@ u_int16_t CustomModeDisplay::ambitDisplayType()
 
 QMap<int, int> qmapInit() {
     QMap<int, int> map;
-    map.insert(17, 0xb);
+    map.insert(17, 0xb);    // Speed
     map.insert(3, 0xc);
     map.insert(15, 0x31);
-    map.insert(16, 0x1c);
+    map.insert(16, 0x1c);   // Pace
     map.insert(25, 0x1d);
     map.insert(4, 0x7);
-    map.insert(7, 0x5);
+    map.insert(7, 0x5);     // Chrono
     map.insert(10, 0x1b);
-    map.insert(19, 0xd);
-    map.insert(20, 0x1);
-    map.insert(31, 0x30);
+    map.insert(19, 0xd);    // Temperature
+    map.insert(20, 0x1);    // Day time
+    map.insert(31, 0x30);   // Lap avg pace
     map.insert(12, 0x2d);
-    map.insert(13, 0x2e);
+    map.insert(13, 0x2e);   // Lap time
     map.insert(23, 0xfffe);
-    map.insert(32, 0x44);
+    map.insert(32, 0x44);   // Battery charge
     map.insert(60, 0x43);
-    map.insert(8, 0xa);
-    map.insert(14, 0x2f);
+    map.insert(8, 0xa);     // Distance
+    map.insert(14, 0x2f);   // Lap distance
     map.insert(61, 0x4a);
     map.insert(62, 0x4b);
     map.insert(63, 0x4c);
@@ -384,16 +419,16 @@ QMap<int, int> qmapInit() {
     map.insert(65, 0x4e);
     map.insert(66, 0x4f);
     map.insert(67, 0x50);
-    map.insert(11, 0x15);
-    map.insert(2, 0x9);
+    map.insert(11, 0x15);   // Heart beat
+    map.insert(2, 0x9);     // Average heart rate
     map.insert(5, 0x17);
-    map.insert(21, 0x1f);
-    map.insert(6, 0x11);
-    map.insert(0, 0x6);
+    map.insert(21, 0x1f);   // Peak Training Effect
+    map.insert(6, 0x11);    // Calories
+    map.insert(0, 0x6);     // Altitude
     map.insert(1, 0x21);
     map.insert(9, 0x22);
     map.insert(22, 0x2c);
-    map.insert(33, 0x46);
+    map.insert(33, 0x46);   // Current activity duration
     map.insert(34, 0x47);
     map.insert(35, 0x48);
     map.insert(36, 0x49);

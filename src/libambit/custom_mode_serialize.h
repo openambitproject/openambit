@@ -54,7 +54,7 @@ static const int MODES_ID_HEADER = 0x0214;
 #define SINGLE_ROW_DISPLAY_TYPE 0x0106
 #define DOUBLE_ROWS_DISPLAY_TYPE 0x0105
 #define TRIPLE_ROWS_DISPLAY_TYPE 0x0104
-#define BAROGRAPH_DISPLAY_TYPE 0x0101
+#define GRAPH_DISPLAY_TYPE 0x0101
 
 int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings);
 int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data);

@@ -330,7 +330,7 @@ static int serialize_rows(ambit_custom_mode_display_t *display, u_int8_t *data)
         break;
     }
     case TRIPLE_ROWS_DISPLAY_TYPE:
-    case BAROGRAPH_DISPLAY_TYPE:
+    case GRAPH_DISPLAY_TYPE:
     {
         writePosition += serialize_row_entry(0, display->row1, writePosition);
         serialize_header(ROWS_HEADER, writePosition - data - HEADER_SIZE, data);
