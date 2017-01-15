@@ -91,6 +91,8 @@ static int hf_ambit_pktseqno = -1;
 static int hf_ambit_pktlen = -1;
 static int hf_ambit_payloadchksum = -1;
 
+static int hf_ambit_data = -1;
+static int hf_ambit_padding = -1;
 static int hf_ambit_unknown = -1;
 
 static int hf_ambit_date = -1;
@@ -130,6 +132,8 @@ static int hf_ambit_personal_lock_sports_mode = -1;
 static int hf_ambit_personal_lock_time_mode = -1;
 static int hf_ambit_personal_tones = -1;
 
+static int hf_ambit_log_headers = -1;
+static int hf_ambit_log_header = -1;
 static int hf_ambit_log_header_seq = -1;
 static int hf_ambit_log_header_length = -1;
 static int hf_ambit_log_header_sample_desc = -1;
@@ -179,6 +183,8 @@ static int hf_ambit_log_header_more = -1;
 static int hf_ambit_log_count = -1;
 static int hf_ambit_unsynced_log_count = -1;
 
+static int hf_ambit_logs = -1;
+static int hf_ambit_log = -1;
 static int hf_ambit_log_data_addr_frame_ref = -1;
 static int hf_ambit_log_data_address = -1;
 static int hf_ambit_log_data_length = -1;
@@ -189,10 +195,15 @@ static int hf_ambit_log_data_entry_count = -1;
 static int hf_ambit_log_data_next_free_addr = -1;
 static int hf_ambit_log_data_next_addr = -1;
 static int hf_ambit_log_data_prev_addr = -1;
+static int hf_ambit_log_data_payload = -1;
 
+static int hf_ambit_log_samples = -1;
+static int hf_ambit_log_sample = -1;
 static int hf_ambit_log_sample_length = -1;
 static int hf_ambit_log_sample_peri_spec_count = -1;
 static int hf_ambit_log_sample_type = -1;
+static int hf_ambit_log_sample_peris = -1;
+static int hf_ambit_log_sample_peri = -1;
 static int hf_ambit_log_sample_peri_spec_id = -1;
 static int hf_ambit_log_sample_peri_spec_offset = -1;
 static int hf_ambit_log_sample_peri_spec_length = -1;
@@ -227,6 +238,8 @@ static int hf_ambit_log_gps_base_heading = -1;
 static int hf_ambit_log_gps_base_ehpe = -1;
 static int hf_ambit_log_gps_base_satelite_no = -1;
 static int hf_ambit_log_gps_base_hdop = -1;
+static int hf_ambit_log_gps_base_satellite = -1;
+static int hf_ambit_log_gps_base_satellites = -1;
 static int hf_ambit_log_gps_base_sv = -1;
 static int hf_ambit_log_gps_base_state = -1;
 static int hf_ambit_log_gps_base_snr = -1;
@@ -277,7 +290,7 @@ static gint ett_ambit3_log_header = -1;
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
 
-static guint32 address_to_frame_lookup[4096];
+static guint32 address_to_frame_lookup[8192];
 
 static const value_string msgpart_index_vals[] = {
     { 0x5d, "First part" },
@@ -412,11 +425,7 @@ static void dissect_ambit_add_unknown(tvbuff_t *tvb, packet_info *pinfo, proto_t
 {
     proto_item *unknown_item = NULL;
     unknown_item = proto_tree_add_item(tree, hf_ambit_unknown, tvb, offset, len, ENC_LITTLE_ENDIAN);
-#if VERSION_MAJOR >= 1 && VERSION_MINOR >= 11
     /* TODO port to new expert info API */
-#else
-    expert_add_info_format(pinfo, unknown_item, PI_UNDECODED, PI_WARN, "Not dissected yet");
-#endif
 }
 
 static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1162,7 +1171,7 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
         }
     }
 
-    sample_ti = proto_tree_add_text(tree, tvb, 0, 0, "Samples");
+    sample_ti = proto_tree_add_string(tree, hf_ambit_log_samples, tvb, 0, 0, "Samples");
     samples_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_samples);
 
     guint16 sample_len;
@@ -1199,7 +1208,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
     switch(sample_type) {
       case 0:
         *periodic_sample_specifier = offset;
-        sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Period sample specifier");
+        sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Period sample specifier");
         sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
         proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
@@ -1208,10 +1217,10 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
         proto_tree_add_item(sample_tree, hf_ambit_log_sample_peri_spec_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         count = tvb_get_letohs(tvb, offset);
         offset += 2;
-        sample_ti = proto_tree_add_text(sample_tree, tvb, offset, count*6, "Values");
+        sample_ti = proto_tree_add_string(sample_tree, hf_ambit_log_sample_peris, tvb, offset, count*6, "Values");
         subtree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
         for (i=0; i<count; i++) {
-            sample_ti = proto_tree_add_text(subtree, tvb, offset, 6, "Value %d", i+1);
+            sample_ti = proto_tree_add_string_format_value(subtree, hf_ambit_log_sample_peri, tvb, offset, 6, "Value", "Value %d", i+1);
             subsubtree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(subsubtree, hf_ambit_log_sample_peri_spec_id, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1222,7 +1231,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
         }
         break;
       case 2:
-        sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Periodic sample)", (*sampleno)++);
+        sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Periodic sample)", (*sampleno)++);
         sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
         proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
         offset += 2;
@@ -1269,7 +1278,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
         inner_type = tvb_get_guint8(tvb, offset + 7);
         switch(inner_type) {
           case 0x04:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Pause)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Pause)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1281,7 +1290,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 1;
             break;
           case 0x05:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Restart)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Restart)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1294,7 +1303,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             break;
             break;
           case 0x06:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (IBI)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (IBI)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1310,7 +1319,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x07:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (TTFF)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (TTFF)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1324,7 +1333,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 2;
             break;
           case 0x08:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Distance source)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Distance source)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1341,7 +1350,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x09:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Time event)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Time event)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1372,7 +1381,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             dissect_ambit_add_unknown(tvb, pinfo, sample_tree, offset, sample_len - 22);
             break;
           case 0x0d:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Altitude source)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Altitude source)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1393,7 +1402,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x0f:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (gps-base)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (gps-base)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1439,10 +1448,10 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 1;
             proto_tree_add_item(sample_tree, hf_ambit_log_gps_base_hdop, tvb, offset, 1, ENC_LITTLE_ENDIAN);
             offset += 1;
-            sample_ti = proto_tree_add_text(sample_tree, tvb, offset, sample_len-40, "Satellites");
+            sample_ti = proto_tree_add_string(sample_tree, hf_ambit_log_gps_base_satellites, tvb, offset, sample_len-40, "Satellites");
             subtree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             for(i=0; i<sample_len-40; i+=6) {
-                sample_ti = proto_tree_add_text(subtree, tvb, offset, 6, "Satellite");
+                sample_ti = proto_tree_add_string(subtree, hf_ambit_log_gps_base_satellite, tvb, offset, 6, "Satellite");
                 subsubtree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
                 proto_tree_add_item(subsubtree, hf_ambit_log_gps_base_sv, tvb, offset, 1, ENC_LITTLE_ENDIAN);
                 offset += 1;
@@ -1455,7 +1464,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x10:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (gps-small)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (gps-small)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1484,7 +1493,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x11:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (gps-tiny)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (gps-tiny)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1514,7 +1523,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x12:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Time)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Time)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1536,7 +1545,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x14:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Swimming turn)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Swimming turn)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1580,7 +1589,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 4;
             break;
           case 0x15:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Swimming stroke)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Swimming stroke)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1594,7 +1603,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             offset += 2;
             break;
           case 0x18:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Activity)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Activity)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1613,7 +1622,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x1a:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Cadence source)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Cadence source)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1630,7 +1639,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x1b:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (lat-long)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (lat-long)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1653,7 +1662,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           case 0x1c:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Firmware info)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Firmware info)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1682,7 +1691,7 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
             }
             break;
           default:
-            sample_ti = proto_tree_add_text(tree, tvb, offset, sample_len + 2, "Sample #%u (Unknown)", (*sampleno)++);
+            sample_ti = proto_tree_add_string_format_value(tree, hf_ambit_log_sample, tvb, offset, sample_len + 2, "Sample", "Sample #%u (Unknown)", (*sampleno)++);
             sample_tree = proto_item_add_subtree(sample_ti, ett_ambit_log_sample);
             proto_tree_add_item(sample_tree, hf_ambit_log_sample_length, tvb, offset, 2, ENC_LITTLE_ENDIAN);
             offset += 2;
@@ -1735,7 +1744,7 @@ static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     proto_tree_add_item(tree, hf_ambit_log_data_address, tvb, 0, 4, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ambit_log_data_length, tvb, 4, 4, ENC_LITTLE_ENDIAN);
 
-    proto_tree_add_text(tree, tvb, 8, length, "Payload");
+    proto_tree_add_string(tree, hf_ambit_log_data_payload, tvb, 8, length, "Payload");
 }
 
 static gint dissect_ambit_data_write_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1779,7 +1788,7 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
     offset += 2;
     proto_tree_add_item(tree, hf_ambit_unsynced_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
-    logs_ti = proto_tree_add_text(tree, tvb, 0, 0, "Logs");
+    logs_ti = proto_tree_add_string(tree, hf_ambit_logs, tvb, 0, 0, "Logs");
     logs_tree = proto_item_add_subtree(logs_ti, ett_ambit3_log_headers);
 
     int adder = 0;
@@ -1791,7 +1800,7 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
     while (offset + adder < length) {
         header_len = tvb_get_guint8(tvb, offset+1);
         log_cntr++;
-        log_ti = proto_tree_add_text(logs_tree, tvb, offset, header_len + 2, "Header #%u", log_cntr);
+        log_ti = proto_tree_add_string_format_value(logs_tree, hf_ambit_log_header, tvb, offset, header_len + 2, "Header", "Header #%u", log_cntr);
         log_tree = proto_item_add_subtree(log_ti, ett_ambit3_log_header);
         dissect_ambit_add_unknown(tvb, pinfo, log_tree, offset, 1);
         offset += 1;
@@ -2142,10 +2151,10 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
 
             if (new_tvb != NULL) {
                 if (subdissector != NULL) {
-                    data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "%s", subdissector->name);
+                    data_ti = proto_tree_add_string_format_value(ambit_tree, hf_ambit_data, new_tvb, 0, pkt_len, "%s", subdissector->name);
                 }
                 else {
-                    data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "Payload");
+                    data_ti = proto_tree_add_string(ambit_tree, hf_ambit_data, new_tvb, 0, pkt_len, "Payload");
                 }
                 data_tree = proto_item_add_subtree(data_ti, ett_ambit_data);
 
@@ -2155,13 +2164,13 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             }
 
             if (log_tvb != NULL) {
-                data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "Full log entry");
+                data_ti = proto_tree_add_string(ambit_tree, hf_ambit_log, new_tvb, 0, pkt_len, "Full log entry");
                 data_tree = proto_item_add_subtree(data_ti, ett_ambit_log_data);
                 dissect_ambit_log_data_content(log_tvb, pinfo, data_tree, data, 0, reassembly_entries[reassembly_entries[pinfo->fd->num].log.start_frame].log.entry_size);
             }
 
             if (log_header_tvb != NULL) {
-                data_ti = proto_tree_add_text(ambit_tree, new_tvb, 0, pkt_len, "Full log headers");
+                data_ti = proto_tree_add_string(ambit_tree, hf_ambit_log_headers, new_tvb, 0, pkt_len, "Full log headers");
                 data_tree = proto_item_add_subtree(data_ti, ett_ambit_log_data);
                 dissect_ambit3_log_headers_content(log_header_tvb, pinfo, data_tree, data, 0, reassembly_entries[reassembly_entries[pinfo->fd->num].log_header.start_frame].log_header.entry_size);
             }
@@ -2171,7 +2180,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             offset += 2;
 
             if (offset < 64) {
-                proto_tree_add_text(ambit_tree, tvb, offset, 64 - offset, "Padding");
+                proto_tree_add_string(ambit_tree, hf_ambit_padding, tvb, offset, 64 - offset, "Padding");
             }
         }
 
@@ -2284,6 +2293,18 @@ proto_register_ambit(void)
         { &hf_ambit_personal_tones,
           { "Tones", "ambit.personal.tones", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
+        { &hf_ambit_data,
+          { "Data", "ambit.data", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_padding,
+          { "Padding", "ambit.padding", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_logs,
+          { "Logs", "ambit.logs", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_headers,
+          { "Log headers", "ambit.log_headers", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_header,
+          { "Log header", "ambit.log_header", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+
         { &hf_ambit_log_header_seq,
           { "Header part", "ambit.log_header.header_part", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_header_length,
@@ -2374,10 +2395,16 @@ proto_register_ambit(void)
         { &hf_ambit_log_header_more,
           { "More values", "ambit.log_header.more", FT_UINT32, BASE_HEX, VALS(log_header_more_vals), 0, NULL, HFILL } },
 
+        { &hf_ambit_log,
+          { "Log", "ambit.log", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+
         { &hf_ambit_log_count,
           { "Log count", "ambit.log.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_unsynced_log_count,
           { "Not synced log count", "ambit.log.unsynced.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_log_data_payload,
+          { "Payload", "ambit.log_data.payload", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_data_addr_frame_ref,
           { "In frame", "ambit.log_data.inframe", FT_FRAMENUM, BASE_NONE, NULL, 0, NULL, HFILL } },
@@ -2400,6 +2427,11 @@ proto_register_ambit(void)
         { &hf_ambit_log_data_prev_addr,
           { "Previous entry address", "ambit.log_data.prev_addr", FT_UINT32, BASE_HEX, NULL, 0x0,NULL, HFILL } },
 
+        { &hf_ambit_log_samples,
+          { "Samples", "ambit.log_samples", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+
+        { &hf_ambit_log_sample,
+          { "Sample", "ambit.log_sample", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_sample_length,
           { "Sample length", "ambit.log_sample.length", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
@@ -2407,6 +2439,10 @@ proto_register_ambit(void)
           { "Sample type", "ambit.log_sample.type", FT_UINT8, BASE_HEX, VALS(log_samples_type_vals), 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_peri_spec_count,
           { "Value count", "ambit.log_sample.spec.count", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_sample_peris,
+          { "Specs", "ambit.log_sample.specs", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_sample_peri,
+          { "Spec", "ambit.log_sample.spec", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_peri_spec_id,
           { "Type", "ambit.log_sample.spec.type", FT_UINT16, BASE_DEC, VALS(log_samples_spec_type_vals), 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_peri_spec_offset,
@@ -2473,6 +2509,10 @@ proto_register_ambit(void)
           { "No of satellites", "ambit.log_sample.gps_base.satellite_no", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_gps_base_hdop,
           { "HDOP (1/5)", "ambit.log_sample.gps_base.hdop", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_gps_base_satellites,
+          { "Satellites", "ambit.log_sample.gps_base.satellites", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_gps_base_satellite,
+          { "Satellite", "ambit.log_sample.gps_base.satellite", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_gps_base_sv,
           { "SV", "ambit.log_sample.gps_base.sv", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_gps_base_state,
@@ -2567,7 +2607,7 @@ proto_reg_handoff_ambit(void)
     static dissector_handle_t ambit_handle;
 
     //ambit_handle = find_dissector("ambit");
-    ambit_handle = new_create_dissector_handle(dissect_ambit, proto_ambit);
+    ambit_handle = create_dissector_handle(dissect_ambit, proto_ambit);
     dissector_add_uint("usb.interrupt", IF_CLASS_UNKNOWN, ambit_handle);
     dissector_add_uint("usb.interrupt", IF_CLASS_HID, ambit_handle);
 }
