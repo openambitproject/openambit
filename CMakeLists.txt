@@ -22,6 +22,8 @@ cmake_minimum_required(VERSION 3.0)
 project(Openambit
   LANGUAGES NONE)
 
+set(USE_QT5 OFF CACHE PATH "Build against Qt5")
+
 add_subdirectory(src/libambit)
 add_subdirectory(src/movescount)
 add_subdirectory(src/openambit)

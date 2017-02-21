@@ -44,10 +44,6 @@ public:
     DeviceInfo deviceInfo;
     ambit_personal_settings_t *personalSettings;
     ambit_log_entry_t *logEntry;
-signals:
-    
-public slots:
-    
 };
 
 #endif // LOGENTRY_H

@@ -24,13 +24,17 @@ project(movescount CXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../openambit/cmake")
 
-find_package(Qt4 REQUIRED
-  COMPONENTS QtCore QtNetwork)
-find_package(QJSON 0.8.0 REQUIRED)
+if(USE_QT5)
+  find_package(Qt5Core REQUIRED)
+  find_package(Qt5Network REQUIRED)
+else(USE_QT5)
+  find_package(Qt4 REQUIRED
+    COMPONENTS QtCore QtNetwork)
+  find_package(QJSON 0.8.0 REQUIRED)
+endif(USE_QT5)
 find_package(ZLIB REQUIRED)
 find_package(libambit REQUIRED)
 
-include(${QT_USE_FILE})
 include(GNUInstallDirs)
 
 set(CMAKE_AUTOMOC ON)
@@ -40,13 +44,13 @@ include_directories(
   ../libambit/
   ${QJSON_INCLUDE_DIR}
   ${ZLIB_INCLUDE_DIRS}
-  )
+)
 
 link_directories(
   ../libambit/
-  )
+)
 
-add_library (
+add_library(
   movescount
   SHARED
   deviceinfo.cpp
@@ -59,24 +63,28 @@ add_library (
   movescountlogchecker.cpp
   )
 
+if(USE_QT5)
+  QT5_USE_MODULES(movescount Core Network)
+else(USE_QT5)
+  QT4_USE_MODULES(movescount Core Network)
+endif(USE_QT5)
+
 target_link_libraries(
   movescount
   ${LIBAMBIT_LIBS}
   ${QJSON_LIBRARIES}
   ${ZLIB_LIBRARIES}
-  Qt4::QtNetwork
-  Qt4::QtCore
-  )
+)
 
 set_target_properties(movescount
   PROPERTIES
   VERSION 0.3.0
   SOVERSION 0
-  )
+)
 install(TARGETS
   movescount
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
+)
 install(FILES
   deviceinfo.h
   logentry.h
@@ -84,4 +92,4 @@ install(FILES
   movescount.h
   movescountxml.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/movescount
-  )
+)

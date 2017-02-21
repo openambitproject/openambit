@@ -8,19 +8,21 @@ set(CMAKE_MODULE_PATH "${OPENAMBIT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-find_package(Qt4 REQUIRED)
+if(USE_QT5)
+  find_package(Qt5Widgets REQUIRED)
+  find_package(Qt5LinguistTools REQUIRED)
+else(USE_QT5)
+  find_package(Qt4 REQUIRED)
+endif(USE_QT5)
 find_package(libambit REQUIRED)
 find_package(Movescount REQUIRED)
 find_package(UDev REQUIRED)
 
-include(${QT_USE_FILE})
 include(GNUInstallDirs)
 
-include_directories (
-  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-  ${QT_QTCORE_INCLUDE_DIR}
-  ${QT_QTGUI_INCLUDE_DIR}
-  ${QT_QTNETWORK_INCLUDE_DIR}
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
   ${LIBAMBIT_INCLUDE_DIR}
   ..
 )
@@ -30,7 +32,19 @@ link_directories(
   ${MOVESCOUNT_LIBS_DIR}
 )
 
-set ( openambit_SRCS
+set(openambit_HDRS
+  confirmbetadialog.h
+  devicemanager.h
+  logview.h
+  mainwindow.h
+  settings.h
+  settingsdialog.h
+  signalhandler.h
+  single_application.h
+  udevlistener.h
+)
+
+set(openambit_SRCS
   confirmbetadialog.cpp
   devicemanager.cpp
   logview.cpp
@@ -43,41 +57,66 @@ set ( openambit_SRCS
   udevlistener.cpp
 )
 
-set ( openambit_UIS
+set(openambit_UIS
   confirmbetadialog.ui
   mainwindow.ui
   settingsdialog.ui
 )
 
-set ( openambit_RSCS
+set(openambit_RSCS
   resources.qrc
 )
 
-set ( openambit_MOCS
-  confirmbetadialog.h
-  devicemanager.h
-  logview.h
-  mainwindow.h
-  settings.h
-  settingsdialog.h
-  signalhandler.h
-  single_application.h
-  udevlistener.h
-)
+set(FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_MOCS})
 
-set (FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_MOCS})
+set(APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png)
 
-set ( APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png )
+if(USE_QT5)
+  QT5_WRAP_UI(UIS ${openambit_UIS})
+  QT5_ADD_RESOURCES(RSCS ${openambit_RSCS})
+else(USE_QT5)
+  QT4_WRAP_UI(UIS ${openambit_UIS})
+  QT4_ADD_RESOURCES(RSCS ${openambit_RSCS})
+endif(USE_QT5)
+
+set(CMAKE_AUTOMOC ON)
+
+add_definitions(-DAPP_VERSION="${OPENAMBIT_VERSION}")
+
+add_executable(openambit ${openambit_HDRS} ${openambit_SRCS} ${UIS} ${RSCS})
+
+if(USE_QT5)
+  QT5_USE_MODULES(openambit Core Widgets Network)
+else(USE_QT5)
+  QT4_USE_MODULES(openambit Core Gui Network)
+endif(USE_QT5)
+
+target_link_libraries(openambit ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} )
+
+install(TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+install(FILES ${APP_ICON}
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
+        RENAME openambit.png)
 
 ######### Translations
-file (GLOB TRANSLATIONS_FILES translations/*.ts)
+file(GLOB TRANSLATIONS_FILES translations/*.ts)
 
-option (UPDATE_TRANSLATIONS "Update source translation translations/*.ts")
-if (UPDATE_TRANSLATIONS)
-  qt4_create_translation(QM_FILES ${FILES_TO_TRANSLATE} ${TRANSLATIONS_FILES})
-else (UPDATE_TRANSLATIONS)
-  qt4_add_translation(QM_FILES ${TRANSLATIONS_FILES})
-endif (UPDATE_TRANSLATIONS)
+option(UPDATE_TRANSLATIONS "Update source translation translations/*.ts")
+if(USE_QT5)
+  if(UPDATE_TRANSLATIONS)
+    qt5_create_translation(QM_FILES ${FILES_TO_TRANSLATE} ${TRANSLATIONS_FILES})
+  else(UPDATE_TRANSLATIONS)
+    qt5_add_translation(QM_FILES ${TRANSLATIONS_FILES})
+  endif(UPDATE_TRANSLATIONS)
+else(USE_QT5)
+  if(UPDATE_TRANSLATIONS)
+    qt4_create_translation(QM_FILES ${FILES_TO_TRANSLATE} ${TRANSLATIONS_FILES})
+  else(UPDATE_TRANSLATIONS)
+    qt4_add_translation(QM_FILES ${TRANSLATIONS_FILES})
+  endif(UPDATE_TRANSLATIONS)
+endif(USE_QT5)
 
 # Create translations QRC file - ts.qrc
 set(TRANSLATIONS_QRC "${CMAKE_CURRENT_BINARY_DIR}/ts.qrc")
@@ -91,23 +130,3 @@ list(APPEND openambit_RSCS ${TRANSLATIONS_QRC})
 
 # prevent the generated files from being deleted during make clean
 set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM true)
-
-######### Translations
-
-QT4_WRAP_UI(UIS ${openambit_UIS})
-QT4_ADD_RESOURCES(RSCS ${openambit_RSCS})
-QT4_WRAP_CPP(MOCS ${openambit_MOCS})
-
-add_definitions( -DAPP_VERSION="${OPENAMBIT_VERSION}" )
-
-add_executable ( openambit ${openambit_SRCS} ${UIS} ${RSCS} ${MOCS} )
-
-target_link_libraries ( openambit  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY} ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} )
-
-install ( TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR} )
-install ( FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
-          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications )
-install ( FILES ${APP_ICON}
-          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
-          RENAME openambit.png )
-
