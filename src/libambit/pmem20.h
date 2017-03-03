@@ -58,7 +58,10 @@ int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint
 int libambit_pmem20_log_deinit(libambit_pmem20_t *object);
 int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_t *log_header, uint32_t flags);
 ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uint32_t flags);
-ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object, uint32_t address, uint32_t length, uint32_t flags);
+ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object,
+                                                          uint32_t address, uint32_t length,
+                                                          uint32_t address2, uint32_t length2,
+                                                          uint32_t flags);
 int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header, uint32_t flags);
 int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash);
 

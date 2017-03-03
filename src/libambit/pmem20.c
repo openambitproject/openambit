@@ -303,12 +303,45 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uin
     return log_entry;
 }
 
-ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object, uint32_t address, uint32_t length, uint32_t flags)
+static void libambit_pmem20_log_read_log_data_part(libambit_pmem20_t *object,
+                                                   uint32_t address, uint32_t length,
+                                                   uint8_t *buffer)
 {
-    uint8_t *buffer;
-    uint8_t *periodic_sample_spec;
     uint32_t next_address;
     uint32_t buffer_read = 0, read_length;
+
+    // Handle wrap in "the middle" of the log
+    next_address = address;
+    while (buffer_read < length) {
+        if (next_address >= object->log.mem_start + object->log.mem_size) {
+            next_address = object->log.mem_start + PMEM20_LOG_WRAP_START_OFFSET;
+        }
+        if (length - buffer_read >= object->chunk_size) {
+            read_length = object->chunk_size;
+        }
+        else {
+            read_length = length - buffer_read;
+        }
+        if (next_address + read_length > object->log.mem_start + object->log.mem_size) {
+            read_length = object->log.mem_start + object->log.mem_size - next_address;
+        }
+
+        LOG_INFO("Reading buffer region %p -> %p (%u bytes in total)", next_address, next_address + read_length, buffer_read);
+        read_log_chunk(object, next_address, read_length, buffer + buffer_read);
+
+        next_address += read_length;
+        buffer_read += read_length;
+    }
+}
+
+ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object,
+                                                          uint32_t address1, uint32_t length1,
+                                                          uint32_t address2, uint32_t length2,
+                                                          uint32_t flags)
+{
+    uint32_t length = length1 + length2;
+    uint8_t *buffer;
+    uint8_t *periodic_sample_spec;
     uint16_t tmp_len, sample_len;
     size_t buffer_offset, sample_count = 0;
     ambit_log_entry_t *log_entry;
@@ -327,29 +360,13 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         return NULL;
     }
 
-    LOG_INFO("Reading log entry from address=%08x", address);
     log_entry->header.activity_name = NULL;
 
-    // Handle wrap in "the middle" of the log
-    next_address = address;
-    while (buffer_read < length) {
-        if (next_address >= object->log.mem_start + object->log.mem_size) {
-            next_address = object->log.mem_start + PMEM20_LOG_WRAP_START_OFFSET;
-        }
-        if (length - buffer_read >= object->chunk_size) {
-            read_length = object->chunk_size;
-        }
-        else {
-            read_length = length - buffer_read;
-        }
-        if (next_address + read_length > object->log.mem_start + object->log.mem_size) {
-            read_length = object->log.mem_start + object->log.mem_size - next_address;
-        }
-
-        read_log_chunk(object, next_address, read_length, buffer + buffer_read);
-
-        next_address += read_length;
-        buffer_read += read_length;
+    LOG_INFO("Reading log entry from address1=%08x", address1);
+    libambit_pmem20_log_read_log_data_part(object, address1, length1, buffer);
+    if (address2) {
+        LOG_INFO("Reading log entry from address2=%08x", address2);
+        libambit_pmem20_log_read_log_data_part(object, address2, length2, buffer + length1);
     }
 
     buffer_offset = 12;

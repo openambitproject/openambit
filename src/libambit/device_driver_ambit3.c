@@ -71,6 +71,8 @@ typedef struct ambit3_log_header_s {
     ambit_log_header_t header;
     uint32_t address;
     uint32_t end_address;
+    uint32_t address2;
+    uint32_t end_address2;
     uint8_t synced;
 } ambit3_log_header_t;
 
@@ -323,6 +325,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
                     log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
                                                                        log_header.address,
                                                                        log_header.end_address - log_header.address,
+                                                                       0, 0,
                                                                        LIBAMBIT_PMEM20_FLAGS_NONE);
                     if (log_entry != NULL) {
                         if (push_cb != NULL) {
@@ -384,6 +387,8 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
                     log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
                                                                        log_header.address,
                                                                        log_header.end_address - log_header.address,
+                                                                       log_header.address2,
+                                                                       log_header.end_address2 - log_header.address2,
                                                                        LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48);
                     if (log_entry != NULL) {
                         if (push_cb != NULL) {
@@ -548,7 +553,8 @@ static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_
     log_header->synced = read8inc(data, &offset);
     log_header->address = read32inc(data, &offset);
     log_header->end_address = read32inc(data, &offset);
-    offset += 8; // Unknown bytes
+    log_header->address2 = read32inc(data, &offset);
+    log_header->end_address2 = read32inc(data, &offset);
     log_header->header.heartrate_min = read8inc(data, &offset);
     log_header->header.heartrate_avg = read8inc(data, &offset);
     log_header->header.heartrate_max = read8inc(data, &offset);
