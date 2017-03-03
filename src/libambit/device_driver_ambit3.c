@@ -318,7 +318,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
           case 0x7e:
             if (parse_log_header(reply_data_object, &log_header) == 0) {
                 LOG_INFO("Log header parsed successfully");
-                if (skip_cb(userref, &log_header.header) != 0) {
+                if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
                     LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
                     log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
                                                                        log_header.address,
@@ -379,7 +379,7 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
           case 0x7a:
             if (parse_log_header(reply_data_object, &log_header) == 0) {
                 LOG_INFO("Log header parsed successfully");
-                if (skip_cb(userref, &log_header.header) != 0) {
+                if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
                     LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
                     log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
                                                                        log_header.address,
