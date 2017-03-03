@@ -212,10 +212,12 @@ static int hf_ambit_log_sample_periodic_speed = -1;
 static int hf_ambit_log_sample_periodic_hr = -1;
 static int hf_ambit_log_sample_periodic_time = -1;
 static int hf_ambit_log_sample_periodic_altitude = -1;
+static int hf_ambit_log_sample_periodic_abspressure = -1;
 static int hf_ambit_log_sample_periodic_energy = -1;
 static int hf_ambit_log_sample_periodic_temp = -1;
 static int hf_ambit_log_sample_periodic_pressure = -1;
 static int hf_ambit_log_sample_periodic_vert_speed = -1;
+static int hf_ambit_log_sample_periodic_cadence = -1;
 
 static int hf_ambit_log_other_time_offset = -1;
 static int hf_ambit_log_other_type = -1;
@@ -317,10 +319,12 @@ static const value_string log_samples_spec_type_vals[] = {
     { 0x05, "HR" },
     { 0x06, "Time" },
     { 0x0c, "Altitude" },
+    { 0x0d, "Absolute pressure" },
     { 0x0e, "Energy consumption" },
     { 0x0f, "Temperature" },
     { 0x18, "Pressure" },
     { 0x19, "Vertical speed" },
+    { 0x1a, "Cadence" },
     { 0, NULL }
 };
 
@@ -1258,6 +1262,8 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 break;
               case 0x0c:
                 proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_altitude, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
+              case 0x0d:
+                proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_abspressure, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
                 break;
               case 0x0e:
                 proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_energy, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
@@ -1270,6 +1276,9 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
                 break;
               case 0x19:
                 proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_vert_speed, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
+                break;
+              case 0x1a:
+                proto_tree_add_item(sample_tree, hf_ambit_log_sample_periodic_cadence, tvb, offset + spec_offset, spec_len, ENC_LITTLE_ENDIAN);
                 break;
             }
         }
@@ -2459,6 +2468,8 @@ proto_register_ambit(void)
           { "Time", "ambit.log_sample.periodic.time", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_altitude,
           { "Altitude", "ambit.log_sample.periodic.altitude", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_sample_periodic_abspressure,
+          { "Absolute pressure", "ambit.log_sample.periodic.abspressure", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_energy,
           { "Energy consumption", "ambit.log_sample.periodic.energy", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_temp,
@@ -2467,6 +2478,8 @@ proto_register_ambit(void)
           { "Pressure", "ambit.log_sample.periodic.pressure", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_log_sample_periodic_vert_speed,
           { "Vertical speed", "ambit.log_sample.periodic.vert_speed", FT_UINT16, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_sample_periodic_cadence,
+          { "Cadence", "ambit.log_sample.periodic.cadence", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
 
         { &hf_ambit_log_other_time_offset,
           { "Time offset (from last periodic sample)", "ambit.log_sample.other.time", FT_UINT32, BASE_DEC, NULL, 0x0,NULL, HFILL } },
