@@ -15,11 +15,11 @@ Modules
 Openambit includes the following modules:
 
 src/libambit
-  a library that let's you computer communicate with your Ambit watch
+  a library that let's your computer communicate with your Ambit watch.
 
 src/openambit
   a Qt based GUI application to get data off your watch and push it to
-  Suunto's `Movescount`_ site
+  Suunto's `Movescount`_ site.
 
 src/example
   a very simple command-line application that reports on your watch's
@@ -29,7 +29,7 @@ src/example
 tools
   contains a few utilities that people thought useful.  One compares
   Openambit's XML log files with those from `Moveslink2`_ and another
-  converts the XML to `GPX`_
+  converts the XML to `GPX`_.
 
 wireshark_dissector
   a `Wireshark`_ packet dissector to help reverse engineer the Ambit
@@ -82,7 +82,7 @@ Build Procedure
 The simplest way to build from source is by means of the ``build.sh``
 script.  It will build all components needed to use Openambit.  Any
 command-line arguments you specify are passed on to ``cmake``.  That
-means you can set up a "Debug" build with
+means you can set up a "Debug" build with:
 
 .. code-block:: sh
 
@@ -90,14 +90,14 @@ means you can set up a "Debug" build with
    ./build.sh -DCMAKE_BUILD_TYPE=Debug
 
 Developer and otherwise inquisitive types may want to build some of
-the extras that are included.  To do so
+the extras that are included.  To do so:
 
 .. code-block:: sh
 
    cd /path/to/your/clone/of/openambit
    BUILD_EXTRAS=1 ./build.sh
 
-You can run the applications you built *without* installing as follows
+You can run the applications you built *without* installing as follows:
 
 .. code-block:: sh
 
@@ -107,7 +107,7 @@ You can run the applications you built *without* installing as follows
 
 If you are only interested in building a selected module, you can just
 use ``cmake`` directly.  For example, if all you really want to build
-is ``libambit`` and nothing else, you could (for example)
+is ``libambit`` and nothing else, you could (for example):
 
 .. code-block:: sh
 
@@ -118,7 +118,7 @@ is ``libambit`` and nothing else, you could (for example)
    make
 
 Actually, you can also build everything directly with ``cmake``.  The
-following ought to work
+following ought to work:
 
 .. code-block:: sh
 
@@ -134,14 +134,14 @@ Install Procedure
 If you have built from source with ``build.sh``, you can install with
 ``install.sh``.  This only installs the ``openambit`` application and
 the ``libambit`` library it needs.  When you have built only selected
-parts, simply install them with
+parts, simply install them with:
 
 .. code-block:: sh
 
    cd /path/to/your/build/directory
    sudo make install
 
-If you built directly with ``cmake``, installation is simply
+If you built directly with ``cmake``, installation is simply:
 
 .. code-block:: sh
 
@@ -152,7 +152,7 @@ If you built directly with ``cmake``, installation is simply
 To enable the Wireshark dissector, just copy the ``ambit.so`` file to
 your ``~/.wireshark/plugins/`` directory.  You can also put a symbolic
 link there pointing to the build result so your next ``wireshark`` run
-will use the latest, greatest(?) version.
+will use the latest and greatest(?) version.
 
 
 .. _Movescount: http://www.movescount.com/
