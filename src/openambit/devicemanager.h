@@ -68,7 +68,7 @@ private:
     UdevListener *udevListener;
 
     DeviceInfo currentDeviceInfo;
-    ambit_personal_settings_t currentPersonalSettings;
+    ambit_personal_settings_t *currentPersonalSettings;
 
     int syncParts;
     int currentSyncPart;

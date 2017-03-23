@@ -510,26 +510,93 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
     return device;
 }
 
-int libambit_navigation_waypoint_read(ambit_object_t *object, ambit_waypoint_t *waypoint_data, uint16_t *waypoint_count) {
+ambit_personal_settings_t* libambit_personal_settings_alloc() {
+    ambit_personal_settings_t *ps;
+    ps = (ambit_personal_settings_t*)calloc(1, sizeof(ambit_personal_settings_t));
+    ps->routes.uris = NULL;
+    ps->waypoints.data = NULL;
+    return ps;
+}
+
+void libambit_personal_settings_free(ambit_personal_settings_t *personal_settings) {
+    if(personal_settings->waypoints.data != NULL) {
+        free(personal_settings->waypoints.data);
+    }
+
+    free(personal_settings);
+}
+
+int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
+
+    //Todo: To make it driver independent, ambit_pack_waypoint data fill must happen inside the driver
 
     int ret = -1;
 
-    printf("libambit_navigation_poi_read\n");
+    if (object->driver != NULL && object->driver->navigation_read != NULL) {
+        ambit_pack_waypoint_t *pack_data = NULL;
+        uint16_t ambit_pack_count = 0;
+        ret = object->driver->navigation_read(object, &pack_data, &ambit_pack_count);
 
-    if (object->driver != NULL && object->driver->navigation_waypoint_read != NULL) {
-        ambit_pack_poi_t *pack_data = NULL;
-        uint16_t ambit_pack_count;
-        ret = object->driver->navigation_waypoint_read(object, pack_data, &ambit_pack_count);
-        printf("libambit.c ambit_pack_count %u\n", ambit_pack_count);
+        personal_settings->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ambit_pack_count);
+        personal_settings->waypoints.count = ambit_pack_count;
+
+        for(int x=0;x<ambit_pack_count;x++) {
+            personal_settings->waypoints.data[x].altitude = 0;
+            personal_settings->waypoints.data[x].index = le16toh(pack_data[x].index);
+            strncpy(personal_settings->waypoints.data[x].name, pack_data[x].name, 15);
+            strncpy(personal_settings->waypoints.data[x].route_name, pack_data[x].route_name, 15);
+            personal_settings->waypoints.data[x].ctime_second = pack_data[x].ctime_second;
+            personal_settings->waypoints.data[x].ctime_minute = pack_data[x].ctime_minute;
+            personal_settings->waypoints.data[x].ctime_hour = pack_data[x].ctime_hour;
+            personal_settings->waypoints.data[x].ctime_day = pack_data[x].ctime_day;
+            personal_settings->waypoints.data[x].ctime_month = pack_data[x].ctime_month;
+            personal_settings->waypoints.data[x].ctime_year = le16toh(pack_data[x].ctime_year);
+            personal_settings->waypoints.data[x].latitude = le32toh(pack_data[x].latitude);
+            personal_settings->waypoints.data[x].longitude = le32toh(pack_data[x].longitude);
+            personal_settings->waypoints.data[x].type = pack_data[x].type;
+            personal_settings->waypoints.data[x].status = pack_data[x].status;
+        }
 
         if(pack_data != NULL) {
             free(pack_data);
         }
     }
     else {
-        LOG_WARNING("Driver does not support navigation_poi_read");
+        LOG_WARNING("Driver does not support navigation_waypoint_read");
     }
 
+    return ret;
+}
+
+int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
+
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->navigation_write != NULL) {
+
+        if(personal_settings->waypoints.count>0) {
+            ambit_pack_waypoint_t *pack_data;
+            pack_data = (ambit_pack_waypoint_t*)calloc(personal_settings->waypoints.count,sizeof(ambit_pack_waypoint_t));
+
+            for(int x=0; x<personal_settings->waypoints.count; x++) {
+                pack_data[x].index = le16toh(pack_data[x].index);
+                strncpy(pack_data[x].name, personal_settings->waypoints.data[x].name, 15);
+                strncpy(pack_data[x].route_name, personal_settings->waypoints.data[x].route_name, 15);
+                pack_data[x].ctime_second = personal_settings->waypoints.data[x].ctime_second;
+                pack_data[x].ctime_minute = personal_settings->waypoints.data[x].ctime_minute;
+                pack_data[x].ctime_hour = personal_settings->waypoints.data[x].ctime_hour;
+                pack_data[x].ctime_day = personal_settings->waypoints.data[x].ctime_day;
+                pack_data[x].ctime_month = personal_settings->waypoints.data[x].ctime_month;
+                pack_data[x].ctime_year = htole16(personal_settings->waypoints.data[x].ctime_year);
+                pack_data[x].latitude = htole32(personal_settings->waypoints.data[x].latitude);
+                pack_data[x].longitude = htole32(personal_settings->waypoints.data[x].longitude);
+                pack_data[x].type = personal_settings->waypoints.data[x].type;
+                pack_data[x].status = personal_settings->waypoints.data[x].status;
+            }
+
+            ret = object->driver->navigation_write(object, pack_data, personal_settings->waypoints.count);
+        }
+    }
     return ret;
 }
 

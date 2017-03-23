@@ -31,73 +31,106 @@
 #include <stdlib.h>
 #include <string.h>
 
+const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT] = { 0,0,3,3,2,2,7,7,7,10,10,10,16,16,16,16,12,12,12,12,8,4,13,5,6,9,17,14,14,15,11,1 };
+const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT] = { 0,31,4,2,21,23,24,6,20,25,9,30,16,22,27,29,12,26 };
 
-int ambit_navigation_poi_read(ambit_object_t *object, ambit_pack_poi_t *pois_data, uint16_t *poi_count) {
+int ambit_navigation_read(ambit_object_t *object, ambit_pack_waypoint_t **waypoint_data, uint16_t *way_point_count) {
 
     uint8_t *reply_data = NULL;
     size_t replylen = 0;
-    ambit_pack_poi_t *poidata = NULL;
-    ambit_pack_poi_t *poi_return_list = NULL;
+    ambit_pack_waypoint_t *send_waypoint_data = NULL;
+    ambit_pack_waypoint_t *waypoint_return_list = NULL;
     uint8_t *send_data = NULL;
     size_t sendlen = 0;
     uint16_t x;
 
-    *poi_count = 0;
-    
-    //get number of POI
-    if( libambit_protocol_command(object, ambit_command_poi_count, NULL, 0, &reply_data, &replylen, 0) != 0) {
-        LOG_WARNING("Failed to read number of POI entries");
+    *way_point_count = 0;
+
+    //get number of waypoints
+    if( libambit_protocol_command(object, ambit_command_waypoint_count, NULL, 0, &reply_data, &replylen, 0) != 0) {
+        LOG_WARNING("Failed to read number of waypoints entries");
         libambit_protocol_free(reply_data);
         return -1;
     }
 
-    *poi_count = le16toh(*(uint16_t*)(reply_data));
-    poi_return_list = malloc(sizeof(ambit_pack_poi_t)*(*poi_count));
+    *way_point_count = le16toh(*(uint16_t*)(reply_data));
+    waypoint_return_list = malloc(sizeof(ambit_pack_waypoint_t)*(*way_point_count));
     
     libambit_protocol_free(reply_data);
 
-    printf("poi_count: %u\n", *poi_count);
+    sendlen = sizeof(ambit_pack_waypoint_t);
 
-    sendlen = sizeof(ambit_pack_poi_t);
+    for(x=0; x<(*way_point_count); ++x) {
 
-    for(x=0; x<(*poi_count); ++x) {
-    
-        poidata = malloc(sizeof(ambit_pack_poi_t));
-        send_data = malloc(sizeof(ambit_pack_poi_t));
-        
-        poidata->poi_index = htole16(x);
-        memcpy(send_data, poidata, sizeof(ambit_pack_poi_t));
+        send_waypoint_data = malloc(sizeof(ambit_pack_waypoint_t));
+        send_data = malloc(sizeof(ambit_pack_waypoint_t));
 
-        if( libambit_protocol_command(object, ambit_command_poi_read, send_data, sendlen, &reply_data ,&replylen , 0) == 0 ) {
+        send_waypoint_data->index = htole16(x);
+
+        memcpy(send_data, send_waypoint_data, sizeof(ambit_pack_waypoint_t));
+        free(send_waypoint_data);
+
+        if( libambit_protocol_command(object, ambit_command_waypoint_read, send_data, sendlen, &reply_data ,&replylen , 0) == 0 ) {
+            memcpy(&waypoint_return_list[x], reply_data, sizeof(ambit_pack_waypoint_t));
+
+            if(waypoint_return_list[x].type < NUM_WAYPOINTS_AMBIT) {
+                waypoint_return_list[x].type = ambit_waypoint_types_to_movescount[waypoint_return_list[x].type];
+            }
+
+            ambit_navigation_print_struct(&waypoint_return_list[x]);
             printf("\n");
-            printf("ambit_command_poi_read(%u) size: %zu\n", x, replylen);
-            memcpy(&poi_return_list[x], reply_data, sizeof(ambit_pack_poi_t));
-            ambit_navigation_print_struct(&poi_return_list[x]);
         } else {
-            printf("ambit_command_poi_read failed: %u\n", x);
+            LOG_WARNING("ambit_command_waypoint_read failed: %u\n", x);
         }
-        
-        pois_data = poidata;
+
         free(send_data);
         send_data = NULL;
         libambit_protocol_free(reply_data);
 
     }
 
+    *waypoint_data = waypoint_return_list;
+
     return 0;
 }
 
-int ambit_navigation_poi_write(ambit_object_t *object,ambit_pack_poi_t *poidata, uint16_t poi_count) {
-	return 0;
+int ambit_navigation_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoint_data, uint16_t waypoint_count) {
+
+    //Notify device, start write
+    if( libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0) != 0) {
+        LOG_WARNING("Device denied writing (navigation)");
+        return -1;
+    }
+
+
+    //Remove all device navigation elements before write
+    if( libambit_protocol_command(object, ambit_command_nav_memory_delete, NULL, 0, NULL, NULL, 0) != 0) {
+        LOG_WARNING("Failed to remove navigation points from memory");
+        return -1;
+    }
+
+    uint8_t *send_data = NULL;
+    ambit_pack_waypoint_t send_pack;
+    send_data = malloc(sizeof(ambit_pack_waypoint_t));
+
+    for(int x=0; x < waypoint_count; x++) {
+        send_pack = waypoint_data[x];
+        send_pack.type = ambit_waypoint_types_from_movescount[send_pack.type];
+        send_pack.status = 0;
+        memcpy(send_data, &send_pack, sizeof(ambit_pack_waypoint_t));
+        libambit_protocol_command(object, ambit_command_waypoint_write, send_data, sizeof(ambit_pack_waypoint_t), NULL, NULL, 0);
+    }
+
+    return 0;
 }
 
-void ambit_navigation_print_struct(ambit_pack_poi_t *str) {
-	
-	printf("poi_index: %u\n", le16toh(str->poi_index));
+void ambit_navigation_print_struct(ambit_pack_waypoint_t *str) {
+
+	printf("index: %u\n", le16toh(str->index));
 	printf("unknown: %u\n", str->unknown);
 	printf("name: %s\n", str->name);
 	printf("route_name: %s\n", str->route_name);
-	printf("ctime_second: %u\n", str->poi_index);
+	printf("ctime_second: %u\n", str->ctime_second);
 	printf("ctime_minute: %u\n", str->ctime_minute);
 	printf("ctime_hour: %u\n", str->ctime_hour);
 	printf("ctime_day: %u\n", str->ctime_day);
@@ -105,8 +138,8 @@ void ambit_navigation_print_struct(ambit_pack_poi_t *str) {
 	printf("ctime_year: %u\n", le16toh(str->ctime_year));
 	printf("latitude: %i\n", le16toh(str->latitude));
 	printf("longitude: %i\n", le16toh(str->longitude));
-	printf("poitype: %u\n", le16toh(str->poitype));
-	printf("poi_name_count: %u\n", str->poi_name_count);
+	printf("type: %u\n", le16toh(str->type));
+	printf("name_count: %u\n", str->name_count);
 	printf("status: %u\n", str->status);
 
 }

@@ -200,6 +200,41 @@ typedef enum ambit_log_sample_periodic_type_e {
     ambit_log_sample_periodic_type_ruleoutput5 = 0x68
 } ambit_log_sample_periodic_type_t;
 
+typedef enum movescount_waypoint_type_e {
+    movescount_waypoint_type_building = 0,
+    movescount_waypoint_type_home = 1,
+    movescount_waypoint_type_car = 2,
+    movescount_waypoint_type_parking = 3,
+    movescount_waypoint_type_camp = 4,
+    movescount_waypoint_type_camping = 5,
+    movescount_waypoint_type_food = 6,
+    movescount_waypoint_type_restaurant = 7,
+    movescount_waypoint_type_cafe = 8,
+    movescount_waypoint_type_lodging = 9,
+    movescount_waypoint_type_hostel = 10,
+    movescount_waypoint_type_hotel = 11,
+    movescount_waypoint_type_water = 12,
+    movescount_waypoint_type_river = 13,
+    movescount_waypoint_type_lake = 14,
+    movescount_waypoint_type_coast = 15,
+    movescount_waypoint_type_mouantain = 16,
+    movescount_waypoint_type_hill = 17,
+    movescount_waypoint_type_valley = 18,
+    movescount_waypoint_type_cliff = 19,
+    movescount_waypoint_type_forest = 20,
+    movescount_waypoint_type_crossroad = 21,
+    movescount_waypoint_type_sight = 22,
+    movescount_waypoint_type_beginning = 23,
+    movescount_waypoint_type_end = 24,
+    movescount_waypoint_type_geocache = 25,
+    movescount_waypoint_type_poi = 26,
+    movescount_waypoint_type_road = 27,
+    movescount_waypoint_type_trail = 28,
+    movescount_waypoint_type_rock = 29,
+    movescount_waypoint_type_meadow = 30,
+    movescount_waypoint_type_cave = 31
+} movescount_waypoint_type_t;
+
 typedef struct ambit_log_sample_periodic_value_s {
     ambit_log_sample_periodic_type_t type;
     union {
@@ -521,23 +556,32 @@ typedef void (*ambit_log_progress_cb)(void *userref, uint16_t log_count, uint16_
  * libambit_log_entry_free()
  */
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
-
 /**
- * Free log entry allocated by libambit_log_read
- * \param log_entry Log entry to free
- */
-void libambit_log_entry_free(ambit_log_entry_t *log_entry);
-/**
- * Free log entry allocated by libambit_log_read
- * \param log_entry Log entry to free
+ * Free struct allocated by libambit_alloc_personal_settings
+ * \param personal_settings Struct to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
 
 /**
- * Read POI entries 
+ * Init personal_settings struct
  */
-int libambit_navigation_waypoint_read(ambit_object_t *object, ambit_waypoint_t *waypoint_data, uint16_t *waypoint_count);
+ambit_personal_settings_t* libambit_personal_settings_alloc();
+/**
+ * Free struct allocated by libambit_personal_settings_alloc
+ * \param personal_settings Struct to free
+ */
 
+void libambit_personal_settings_free(ambit_personal_settings_t *personal_settings);
+
+/**
+ * Read Waypoint entries
+ */
+int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
+
+/**
+ * Write Waypoint entries
+ */
+int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
 
 void libambit_test(ambit_object_t *object);
 

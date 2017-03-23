@@ -65,8 +65,8 @@ ambit_device_driver_t ambit_device_driver_ambit = {
     log_read,
     gps_orbit_header_read,
     gps_orbit_write,
-    ambit_navigation_poi_read,
-    ambit_navigation_poi_write
+    ambit_navigation_read,
+    ambit_navigation_write
 };
 
 /*

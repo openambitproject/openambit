@@ -38,8 +38,8 @@ typedef struct ambit_device_driver_s {
     int (*log_read)(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
     int (*gps_orbit_header_read)(ambit_object_t *object, uint8_t data[8]);
     int (*gps_orbit_write)(ambit_object_t *object, uint8_t *data, size_t datalen);
-    int (*navigation_waypoint_read)(ambit_object_t *object, ambit_pack_poi_t *pois_data, uint16_t *poi_count);
-    int (*navigation_waypoint_write)(ambit_object_t *object, ambit_pack_poi_t *poidatam, uint16_t poi_count);
+    int (*navigation_read)(ambit_object_t *object, ambit_pack_waypoint_t **waypoint_data, uint16_t *waypoint_count);
+    int (*navigation_write)(ambit_object_t *object, ambit_pack_waypoint_t *waypoint_data, uint16_t waypoint_count);
 } ambit_device_driver_t;
 
 extern ambit_device_driver_t ambit_device_driver_ambit;  // Ambit & Ambit2

@@ -278,10 +278,6 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
-            //*data = (u_int8_t*)malloc(_data.length());
-
-            //memcpy(*data, _data.data(), _data.length());
-            printf("%s\n", _data.data());
             jsonParser.parsePersonalSettings(_data, settings);
             ret = _data.length();
         }
@@ -290,6 +286,66 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
     delete reply;
 
     return ret;
+}
+
+int MovesCount::applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings) {
+
+    //TODO: resolve name conflict, rename device waypoint?
+    bool device_waypoint_has_changes = false;
+    int  device_waypoint_num_changes = 0; //this value is only a control value for allocating memory if device_waypoint_has_changes
+    int  device_waypoint_count = devicePersonalSettings->waypoints.count;
+    int  moves_waypoint_count = movesPersonalSettings->waypoints.count;
+
+    for(int x=0; x<device_waypoint_count; x++) {
+        if(devicePersonalSettings->waypoints.data[x].status == 2) { //Waypoint marked for removal
+            for(int y=0; y<moves_waypoint_count; y++) {
+                if(strncmp(devicePersonalSettings->waypoints.data[x].name, movesPersonalSettings->waypoints.data[y].name,49) == 0 && strncmp(devicePersonalSettings->waypoints.data[x].route_name, movesPersonalSettings->waypoints.data[y].route_name,49) == 0) {
+                    devicePersonalSettings->waypoints.data[x].status = 0;
+                    movesPersonalSettings->waypoints.data[x].status = 2; //Mark for actual removal
+                    device_waypoint_has_changes = true;
+                    device_waypoint_num_changes--;
+                }
+            }
+        } else if(devicePersonalSettings->waypoints.data[x].status == 1) { //Waypoint marked for addition;
+            for(int y=0; y<moves_waypoint_count; y++) {
+                if(strncmp(devicePersonalSettings->waypoints.data[x].name, movesPersonalSettings->waypoints.data[y].name,49) == 0 && strncmp(devicePersonalSettings->waypoints.data[x].route_name, movesPersonalSettings->waypoints.data[y].route_name,49) == 0) {
+                    movesPersonalSettings->waypoints.data[x].status = 2; //Marked for removal due to name conflict (device win)
+                }
+
+            }
+            device_waypoint_has_changes = true;
+            device_waypoint_num_changes++;
+        }
+    }
+
+    if(device_waypoint_has_changes) {
+        int new_waypoint_count = moves_waypoint_count+device_waypoint_num_changes;
+        int new_added = 0;
+        ambit_waypoint_t *new_waypoints = (ambit_waypoint_t *)malloc(sizeof(ambit_waypoint_t)*new_waypoint_count);
+
+        for(int x=0; x<moves_waypoint_count && new_added<new_waypoint_count; x++) {
+            if(movesPersonalSettings->waypoints.data[x].status == 0) {
+                new_waypoints[new_added] = movesPersonalSettings->waypoints.data[x];
+                ++new_added;
+            }
+        }
+
+        for(int x=0; x<device_waypoint_count && new_added<new_waypoint_count; x++) {
+            if(devicePersonalSettings->waypoints.data[x].status == 1) {
+                new_waypoints[new_added] = devicePersonalSettings->waypoints.data[x];
+                ++new_added;
+            }
+        }
+
+        if(movesPersonalSettings->waypoints.data != NULL) {
+            free(movesPersonalSettings->waypoints.data);
+        }
+
+        movesPersonalSettings->waypoints.data = new_waypoints;
+        movesPersonalSettings->waypoints.count = new_waypoint_count;
+    }
+
+    return 0;
 }
 
 void MovesCount::getDeviceSettingsInThread()
@@ -344,7 +400,21 @@ void MovesCount::checkLatestFirmwareVersionInThread()
 
 void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settings)
 {
-    Q_UNUSED(settings);
+    QByteArray json_settings;
+    QNetworkReply *reply;
+
+    jsonParser.generateNewPersonalSettings(settings, device_info, json_settings);
+    reply = syncPUT("/userdevices/" + QString("%1").arg(device_info.serial), "resetchangedsettings=true", json_settings, true);
+
+    if(reply->error() == QNetworkReply::NoError) {
+        QByteArray _data = reply->readAll();
+
+        if (_data.length() > 0) {
+            printf("writePersonalSettingsInThread OK: %s\n", _data.data());
+        }
+    } else {
+        qDebug() << QString("writePersonalSettingsInThread error: ") << reply->error();
+    }
 }
 
 void MovesCount::writeLogInThread(LogEntry *logEntry)
@@ -458,6 +528,15 @@ QNetworkReply *MovesCount::asyncPOST(QString path, QString additionalHeaders, QB
         url += "&" + additionalHeaders;
     }
 
+    QByteArray ba = url.toLatin1();
+    const char *c_str2 = ba.data();
+    printf("asyncPOST: %s\n", c_str2);
+
+    #ifdef QT_DEBUG
+    QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
+    ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    QSslConfiguration::setDefaultConfiguration(ssl_config);
+    #endif
     req.setRawHeader("User-Agent", "ArREST v1.0");
     req.setRawHeader("Content-Type", "application/json");
     req.setUrl(QUrl(url));
@@ -470,6 +549,46 @@ QNetworkReply *MovesCount::syncPOST(QString path, QString additionalHeaders, QBy
     QNetworkReply *reply;
 
     reply = asyncPOST(path, additionalHeaders, postData, auth);
+    QEventLoop loop;
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+
+    return reply;
+}
+
+QNetworkReply *MovesCount::asyncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
+{
+    QNetworkRequest req;
+    QString url = this->baseAddress + path + "?appkey=" + this->appkey;
+
+    if (auth) {
+        url += "&userkey=" + this->userkey + "&email=" + this->username;
+    }
+    if (additionalHeaders.length() > 0) {
+        url += "&" + additionalHeaders;
+    }
+
+    QByteArray ba = url.toLatin1();
+    const char *c_str2 = ba.data();
+    printf("asyncPUT: %s\n", c_str2);
+
+    #ifdef QT_DEBUG
+    QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
+    ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    QSslConfiguration::setDefaultConfiguration(ssl_config);
+    #endif
+    req.setRawHeader("User-Agent", "ArREST v1.0");
+    req.setRawHeader("Content-Type", "application/json");
+    req.setUrl(QUrl(url));
+
+    return this->manager->put(req, postData);
+}
+
+QNetworkReply *MovesCount::syncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
+{
+    QNetworkReply *reply;
+
+    reply = asyncPUT(path, additionalHeaders, postData, auth);
     QEventLoop loop;
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();

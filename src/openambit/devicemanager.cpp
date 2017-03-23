@@ -22,12 +22,14 @@
 #include "devicemanager.h"
 
 #include <QTimer>
+#include <stdio.h>
 #include <libambit.h>
 
 DeviceManager::DeviceManager(QObject *parent) :
     QObject(parent), deviceObject(NULL), udevListener(NULL)
 {
     movesCount = MovesCount::instance();
+    currentPersonalSettings = libambit_personal_settings_alloc();
 }
 
 DeviceManager::~DeviceManager()
@@ -35,6 +37,11 @@ DeviceManager::~DeviceManager()
     mutex.lock();
     delete udevListener;
     chargeTimer.stop();
+
+    if(currentPersonalSettings != NULL) {
+        libambit_personal_settings_free(currentPersonalSettings);
+    }
+
     mutex.unlock();
 }
 
@@ -86,7 +93,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     struct tm *local_time;
     uint8_t *orbitData;
     int orbitDataLen;
-    ambit_personal_settings_t personalSettings;
+    ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
     mutex.lock();
     this->syncMovescount = syncMovescount;
@@ -98,15 +105,10 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
 
     if (this->deviceObject != NULL) {
         emit this->syncProgressInform(QString(tr("Reading personal settings")), false, true, 0);
-        res = libambit_personal_settings_get(this->deviceObject, &currentPersonalSettings);
 
-        ambit_waypoint_t *waypoint_data_array = NULL;
-        uint16_t waypoint_count;
-        waypoint_sync_res = libambit_navigation_waypoint_read(this->deviceObject, waypoint_data_array, &waypoint_count);
-
-        if(waypoint_data_array != NULL) {
-             free(waypoint_data_array);
-        }
+        // Reading personal settings + waypoints
+        res = libambit_personal_settings_get(this->deviceObject, currentPersonalSettings);
+        waypoint_sync_res = libambit_navigation_read(this->deviceObject, currentPersonalSettings);
 
         currentSyncPart++;
 
@@ -128,9 +130,15 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
 
         if (waypoint_sync_res != -1 && syncMovescount) {
 
-            if((movesCount->getPersonalSettings(&personalSettings, true)) != -1) {
-                
+            if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
+                 movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
+                 movesCount->writePersonalSettings(movecountPersonalSettings);
+
+                 if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
+                     libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
+                 }
             }
+
 
             emit this->syncProgressInform(QString(tr("Synchronizing settings")), false, true, 100*currentSyncPart/syncParts);
             currentSyncPart++;
@@ -160,6 +168,9 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         libambit_sync_display_clear(this->deviceObject);
     }
     mutex.unlock();
+
+    libambit_personal_settings_free(movecountPersonalSettings);
+    movecountPersonalSettings = NULL;
 
     emit syncFinished(res >= 0);
 
@@ -209,7 +220,7 @@ int DeviceManager::log_skip_cb(void *ref, ambit_log_header_t *log_header)
 void DeviceManager::log_push_cb(void *ref, ambit_log_entry_t *log_entry)
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
-    LogEntry *entry = manager->logStore.store(manager->currentDeviceInfo, &manager->currentPersonalSettings, log_entry);
+    LogEntry *entry = manager->logStore.store(manager->currentDeviceInfo, manager->currentPersonalSettings, log_entry);
     if (entry != NULL) {
         //! TODO: make this optional, only used for debugging
         manager->movesCountXML.writeLog(entry);

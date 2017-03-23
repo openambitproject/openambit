@@ -55,6 +55,7 @@ public:
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
     int getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings);
+    int applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings);
     void getDeviceSettings();
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
@@ -95,6 +96,9 @@ private:
 
     QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
     QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+
+    QNetworkReply *asyncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *syncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
 
 #ifdef QT_DEBUG
     void writeJsonToStorage(QString filename, QByteArray &data);

@@ -41,6 +41,7 @@ public:
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
     int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps);
 
+    int generateNewPersonalSettings(ambit_personal_settings_t *settings, DeviceInfo &device_info, QByteArray &output);
     int generateLogData(LogEntry *logEntry, QByteArray &output);
     
 signals:

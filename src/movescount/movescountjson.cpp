@@ -24,6 +24,7 @@
 #include <QRegExp>
 #include <QVariantMap>
 #include <QVariantList>
+#include <QDebug>
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 # include <qjson/parser.h>
 # include <qjson/serializer.h>
@@ -97,18 +98,29 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     if(result["Waypoints"].type() == QVariant::List) {
         ps->waypoints.count = (uint16_t)result["Waypoints"].toList().count();
 
+        if(ps->waypoints.data != NULL) {
+            free(ps->waypoints.data);
+            ps->waypoints.data = NULL;
+        }
+
         ps->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ps->waypoints.count);
 
         for(int x=0; x<ps->waypoints.count; x++) {
+            QDateTime dt;
             QVariantMap jsonWp = result["Waypoints"].toList().at(x).toMap();
             ps->waypoints.data[x].altitude = (uint16_t)jsonWp["Altitude"].toInt();
             ps->waypoints.data[x].longitude = (uint32_t)(jsonWp["Longitude"].toFloat()*10000000);
             ps->waypoints.data[x].latitude = (uint32_t)(jsonWp["Latitude"].toFloat()*10000000);
-            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt()*10000000);
-            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt()*10000000);
+            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt());
             this->copyDataString(jsonWp["Name"],ps->waypoints.data[x].name, 49);
             strncpy(ps->waypoints.data[x].route_name, "", 49);
-            //TODO: Copy time to struct
+            dt = dt.fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
+            ps->waypoints.data[x].ctime_second = (uint8_t)dt.toString("s").toInt();
+            ps->waypoints.data[x].ctime_minute = (uint8_t)dt.toString("m").toInt();
+            ps->waypoints.data[x].ctime_hour = (uint8_t)dt.toString("h").toInt();
+            ps->waypoints.data[x].ctime_day = (uint8_t)dt.toString("d").toInt();
+            ps->waypoints.data[x].ctime_month = (uint8_t)dt.toString("M").toInt();
+            ps->waypoints.data[x].ctime_year = (uint16_t)dt.toString("yyyy").toInt();
         }
     }
 
@@ -141,6 +153,57 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     }
 
     return -1;
+}
+
+int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *settings, DeviceInfo &device_info, QByteArray &output)
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    QJson::Serializer serializer;
+    serializer.setDoublePrecision(16);
+    serializer.setIndentMode(QJson::IndentCompact);
+#endif
+    bool ok;
+    QVariantMap content;
+
+    content.insert("DeviceName", device_info.model);
+    content.insert("FirmwareVersion", QString("%1.%2.%3").arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]));
+    content.insert("HardwareVersion", QString("%1.%2.%3").arg(device_info.hw_version[0]).arg(device_info.hw_version[1]).arg(device_info.hw_version[2]));
+    content.insert("SerialNumber", device_info.serial);
+
+    QVariantList waypoints;
+
+    if(settings->waypoints.count>0) {
+
+        QVariantMap c_waypoint;
+
+        for(int x=0; x < settings->waypoints.count; x++) {
+            c_waypoint.clear();
+            c_waypoint.insert("Altitude", settings->waypoints.data[x].altitude);
+            c_waypoint.insert("CreationLocalTime", QString("%1-%2-%3T%4:%5:%6.0").arg(settings->waypoints.data[x].ctime_year, 4, 10, QLatin1Char('0'))
+                                                                               .arg(settings->waypoints.data[x].ctime_month, 2, 10, QLatin1Char('0'))
+                                                                               .arg(settings->waypoints.data[x].ctime_day, 2, 10, QLatin1Char('0'))
+                                                                               .arg(settings->waypoints.data[x].ctime_hour, 2, 10, QLatin1Char('0'))
+                                                                               .arg(settings->waypoints.data[x].ctime_minute, 2, 10, QLatin1Char('0'))
+                                                                               .arg(settings->waypoints.data[x].ctime_second, 2, 10, QLatin1Char('0'))
+                                                                               );
+            c_waypoint.insert("Latitude",  (double)settings->waypoints.data[x].latitude/10000000);
+            c_waypoint.insert("Longitude",  (double)settings->waypoints.data[x].longitude/10000000);
+            c_waypoint.insert("Name", QString(settings->waypoints.data[x].name));
+            c_waypoint.insert("Type", settings->waypoints.data[x].type);
+            waypoints.append(c_waypoint);
+        }
+    }
+
+    content.insert("Waypoints", waypoints);
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    output = serializer.serialize(content, &ok);
+#else
+    output = QJsonDocument(QJsonObject::fromVariantMap(content)).toJson(QJsonDocument::Compact);
+    ok = !output.isEmpty();
+#endif
+
+    return (ok ? 0 : -1);
 }
 
 /**
@@ -817,7 +880,7 @@ QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevD
 QVariantMap MovesCountJSON::parseJson(const QByteArray& input, bool& ok) const
 {
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-	 QJson::Parser parser;
+    QJson::Parser parser;
     return parser.parse(input, &ok).toMap();
 #else
     QJsonParseError err;

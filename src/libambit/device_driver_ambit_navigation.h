@@ -35,8 +35,8 @@ extern "C" {
 
 // Altitude is not stored inside Ambit2 S
 
-typedef struct __attribute__((__packed__)) ambit_pack_poi_s {
-    uint16_t      poi_index;
+typedef struct __attribute__((__packed__)) ambit_pack_waypoint_s {
+    uint16_t      index;
     uint16_t      unknown;
     char          name[16];
     char          route_name[16];
@@ -48,14 +48,21 @@ typedef struct __attribute__((__packed__)) ambit_pack_poi_s {
     uint16_t      ctime_year;
     int32_t       latitude;
     int32_t       longitude;
-    uint16_t      poitype;
-    uint8_t       poi_name_count;
+    uint16_t      type;
+    uint8_t       name_count;
     uint8_t       status; //0 - synced, 1 - (added in watch), 2 - (removed in watch)
-} ambit_pack_poi_t;
+} ambit_pack_waypoint_t;
 
-int ambit_navigation_poi_read(ambit_object_t *object, ambit_pack_poi_t *pois_data, uint16_t *poi_count);
-int ambit_navigation_poi_write(ambit_object_t *object,ambit_pack_poi_t *poidata, uint16_t poi_count);
-void ambit_navigation_print_struct(ambit_pack_poi_t *str);
+// Cross reference table for converting to and from movescount waypoint type id
+#define NUM_WAYPOINTS_MOVESCOUNT 32
+#define NUM_WAYPOINTS_AMBIT 18
+
+extern const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT];
+extern const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT];
+
+int ambit_navigation_read(ambit_object_t *object, ambit_pack_waypoint_t **waypoint_data, uint16_t *waypoint_count);
+int ambit_navigation_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoint_data, uint16_t waypoint_count);
+void ambit_navigation_print_struct(ambit_pack_waypoint_t *str);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }

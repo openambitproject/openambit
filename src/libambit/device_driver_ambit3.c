@@ -388,7 +388,7 @@ static int get_memory_maps(ambit_object_t *object)
     memory_map_entry_t *mm_entry;
     const uint8_t *ptr;
 
-    if (libambit_protocol_command(object, ambit_command_poi_count, NULL, 0, &reply_data, &replylen, 2) != 0 || replylen < 4) {
+    if (libambit_protocol_command(object, ambit_command_waypoint_count, NULL, 0, &reply_data, &replylen, 2) != 0 || replylen < 4) {
         libambit_protocol_free(reply_data);
         LOG_WARNING("Failed to read memory map key");
         return -1;
