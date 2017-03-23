@@ -52,6 +52,23 @@ typedef struct ambit_device_status_s {
     uint8_t  charge;
 } ambit_device_status_t;
 
+typedef struct ambit_waypoint_s {
+    uint16_t      index;
+    char          name[50];
+    char          route_name[50];
+    uint8_t       ctime_second;
+    uint8_t       ctime_minute;
+    uint8_t       ctime_hour;
+    uint8_t       ctime_day;
+    uint8_t       ctime_month;
+    uint16_t      ctime_year;
+    int32_t       latitude;
+    int32_t       longitude;
+    uint16_t      altitude;
+    uint8_t       type;
+    uint8_t       status;
+} ambit_waypoint_t;
+
 typedef struct ambit_personal_settings_s {
     uint8_t  sportmode_button_lock;
     uint8_t  timemode_button_lock;
@@ -106,6 +123,14 @@ typedef struct ambit_personal_settings_s {
     uint8_t  automatic_bikepower_calib;
     uint8_t  automatic_footpod_calib;
     uint8_t  training_program;
+    struct {
+        uint8_t  **uris;
+        uint8_t  count;
+    } routes;
+    struct {
+        ambit_waypoint_t *data;
+        uint16_t count;
+    } waypoints;
 } ambit_personal_settings_t;
 
 typedef struct ambit_log_date_time_s {
@@ -502,6 +527,19 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
  * \param log_entry Log entry to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
+/**
+ * Free log entry allocated by libambit_log_read
+ * \param log_entry Log entry to free
+ */
+void libambit_log_entry_free(ambit_log_entry_t *log_entry);
+
+/**
+ * Read POI entries 
+ */
+int libambit_navigation_waypoint_read(ambit_object_t *object, ambit_waypoint_t *waypoint_data, uint16_t *waypoint_count);
+
+
+void libambit_test(ambit_object_t *object);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }

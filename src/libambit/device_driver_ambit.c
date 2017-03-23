@@ -21,12 +21,14 @@
  */
 #include "device_driver.h"
 #include "device_driver_common.h"
+#include "device_driver_ambit_navigation.h"
 #include "libambit_int.h"
 #include "protocol.h"
 #include "pmem20.h"
 #include "personal.h"
 #include "debug.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -62,7 +64,9 @@ ambit_device_driver_t ambit_device_driver_ambit = {
     personal_settings_get,
     log_read,
     gps_orbit_header_read,
-    gps_orbit_write
+    gps_orbit_write,
+    ambit_navigation_poi_read,
+    ambit_navigation_poi_write
 };
 
 /*
@@ -135,6 +139,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
         LOG_WARNING("Failed to read number of log entries");
         return -1;
     }
+
     log_entries_total = le16toh(*(uint16_t*)(reply_data + 2));
     libambit_protocol_free(reply_data);
 

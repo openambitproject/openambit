@@ -24,6 +24,7 @@ add_library (
   crc16.c
   debug.c
   device_driver_ambit.c
+  device_driver_ambit_navigation.c
   device_driver_ambit3.c
   device_driver_common.c
   device_support.c

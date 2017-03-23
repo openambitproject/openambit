@@ -34,6 +34,7 @@
 #endif
 #include <zlib.h>
 #include <math.h>
+#include <stdio.h>
 
 MovesCountJSON::MovesCountJSON(QObject *parent) :
     QObject(parent)
@@ -79,6 +80,47 @@ int MovesCountJSON::parseLogReply(QByteArray &input, QString &moveId)
 
     return -1;
 }
+
+int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps) {
+
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    bool ok = false;
+    QVariantMap result = parseJson(input, ok);
+
+	 if(!ok) {
+        return -1;
+    }
+
+    if(result["Waypoints"].type() == QVariant::List) {
+        ps->waypoints.count = (uint16_t)result["Waypoints"].toList().count();
+
+        ps->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ps->waypoints.count);
+
+        for(int x=0; x<ps->waypoints.count; x++) {
+            QVariantMap jsonWp = result["Waypoints"].toList().at(x).toMap();
+            ps->waypoints.data[x].altitude = (uint16_t)jsonWp["Altitude"].toInt();
+            ps->waypoints.data[x].longitude = (uint32_t)(jsonWp["Longitude"].toFloat()*10000000);
+            ps->waypoints.data[x].latitude = (uint32_t)(jsonWp["Latitude"].toFloat()*10000000);
+            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt()*10000000);
+            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt()*10000000);
+            this->copyDataString(jsonWp["Name"],ps->waypoints.data[x].name, 49);
+            strncpy(ps->waypoints.data[x].route_name, "", 49);
+            //TODO: Copy time to struct
+        }
+    }
+
+	 return 0;
+}
+
+bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength) {
+    QByteArray ba=entry.toString().toLatin1();
+    strncpy(data, ba.data(), maxlength);
+    return true;
+}
+
 
 int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries)
 {
@@ -775,7 +817,7 @@ QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevD
 QVariantMap MovesCountJSON::parseJson(const QByteArray& input, bool& ok) const
 {
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QJson::Parser parser;
+	 QJson::Parser parser;
     return parser.parse(input, &ok).toMap();
 #else
     QJsonParseError err;

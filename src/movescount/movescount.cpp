@@ -21,6 +21,9 @@
  */
 #include "movescount.h"
 #include <QtNetwork/QNetworkRequest>
+#ifdef QT_DEBUG
+#include <QtNetwork/QSslConfiguration>
+#endif
 #include <QEventLoop>
 #include <QMutex>
 #include <QDebug>
@@ -128,17 +131,17 @@ int MovesCount::getOrbitalData(u_int8_t **data)
     return ret;
 }
 
-int MovesCount::getPersonalSettings(ambit_personal_settings_t *settings)
+int MovesCount::getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings)
 {
     int ret = -1;
 
     if (&workerThread == QThread::currentThread()) {
-        ret = getPersonalSettingsInThread(settings);
+        ret = getPersonalSettingsInThread(settings, onlychangedsettings);
     }
     else {
         QMetaObject::invokeMethod(this, "getPersonalSettingsInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
-                                  Q_ARG(ambit_personal_settings_t *, settings));
+                                  Q_ARG(ambit_personal_settings_t *, settings), Q_ARG(bool, onlychangedsettings));
     }
 
     return ret;
@@ -264,10 +267,29 @@ int MovesCount::getOrbitalDataInThread(u_int8_t **data)
     return ret;
 }
 
-int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings)
+int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings, bool onlychangedsettings)
 {
-    Q_UNUSED(settings);
-    return 0;
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallcustommodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
+
+    if(reply->error() == QNetworkReply::NoError) {
+        QByteArray _data = reply->readAll();
+
+        if (_data.length() > 0) {
+            //*data = (u_int8_t*)malloc(_data.length());
+
+            //memcpy(*data, _data.data(), _data.length());
+            printf("%s\n", _data.data());
+            jsonParser.parsePersonalSettings(_data, settings);
+            ret = _data.length();
+        }
+    }
+
+    delete reply;
+
+    return ret;
 }
 
 void MovesCount::getDeviceSettingsInThread()
@@ -397,6 +419,15 @@ QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, boo
         url += "&" + additionalHeaders;
     }
 
+    QByteArray ba = url.toLatin1();
+    const char *c_str2 = ba.data();
+    printf("asyncGET: %s\n", c_str2);
+    
+    #ifdef QT_DEBUG
+    QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
+    ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    QSslConfiguration::setDefaultConfiguration(ssl_config);
+    #endif
     req.setRawHeader("User-Agent", "ArREST v1.0");
     req.setUrl(QUrl(url));
 

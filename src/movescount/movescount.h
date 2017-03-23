@@ -54,7 +54,7 @@ public:
 
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
-    int getPersonalSettings(ambit_personal_settings_t *settings);
+    int getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings);
     void getDeviceSettings();
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
@@ -75,7 +75,7 @@ private slots:
     void handleAuthorizationSignal(bool authorized);
 
     int getOrbitalDataInThread(u_int8_t **data);
-    int getPersonalSettingsInThread(ambit_personal_settings_t *settings);
+    int getPersonalSettingsInThread(ambit_personal_settings_t *settings, bool onlychangedsettings);
     void getDeviceSettingsInThread();
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 

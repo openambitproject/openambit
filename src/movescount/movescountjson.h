@@ -39,6 +39,7 @@ public:
     int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3]);
     int parseLogReply(QByteArray &input, QString &moveId);
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
+    int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps);
 
     int generateLogData(LogEntry *logEntry, QByteArray &output);
     
@@ -48,6 +49,7 @@ public slots:
 
 private:
     bool writePeriodicSample(ambit_log_sample_t *sample, QVariantMap &output);
+    bool copyDataString(QVariant entry, char *data, size_t maxlength);
 
     int compressData(QByteArray &content, QByteArray &output);
     QList<int> rearrangeSamples(LogEntry *logEntry);

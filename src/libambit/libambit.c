@@ -509,3 +509,32 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 
     return device;
 }
+
+int libambit_navigation_waypoint_read(ambit_object_t *object, ambit_waypoint_t *waypoint_data, uint16_t *waypoint_count) {
+
+    int ret = -1;
+
+    printf("libambit_navigation_poi_read\n");
+
+    if (object->driver != NULL && object->driver->navigation_waypoint_read != NULL) {
+        ambit_pack_poi_t *pack_data = NULL;
+        uint16_t ambit_pack_count;
+        ret = object->driver->navigation_waypoint_read(object, pack_data, &ambit_pack_count);
+        printf("libambit.c ambit_pack_count %u\n", ambit_pack_count);
+
+        if(pack_data != NULL) {
+            free(pack_data);
+        }
+    }
+    else {
+        LOG_WARNING("Driver does not support navigation_poi_read");
+    }
+
+    return ret;
+}
+
+void libambit_test(ambit_object_t *object) {
+    size_t replylen;
+    uint8_t *reply_data = NULL;
+    libambit_protocol_command(object, 0x0b04, 0, 0, &reply_data, &replylen, 0);
+}
