@@ -537,6 +537,11 @@ int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *
         uint16_t ambit_pack_count = 0;
         ret = object->driver->navigation_read(object, &pack_data, &ambit_pack_count);
 
+        if(personal_settings->waypoints.data != NULL) {
+            free(personal_settings->waypoints.data);
+            personal_settings->waypoints.data = NULL;
+        }
+
         personal_settings->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ambit_pack_count);
         personal_settings->waypoints.count = ambit_pack_count;
 
@@ -595,6 +600,8 @@ int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t 
             }
 
             ret = object->driver->navigation_write(object, pack_data, personal_settings->waypoints.count);
+
+            free(pack_data);
         }
     }
     return ret;

@@ -557,8 +557,8 @@ typedef void (*ambit_log_progress_cb)(void *userref, uint16_t log_count, uint16_
  */
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
 /**
- * Free struct allocated by libambit_alloc_personal_settings
- * \param personal_settings Struct to free
+ * Free log entry allocated by libambit_log_read
+ * \param log_entry Log entry to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
 

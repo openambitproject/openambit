@@ -121,6 +121,8 @@ int ambit_navigation_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoin
         libambit_protocol_command(object, ambit_command_waypoint_write, send_data, sizeof(ambit_pack_waypoint_t), NULL, NULL, 0);
     }
 
+    free(send_data);
+
     return 0;
 }
 
