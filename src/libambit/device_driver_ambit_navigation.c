@@ -102,26 +102,27 @@ int ambit_navigation_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoin
         return -1;
     }
 
-
     //Remove all device navigation elements before write
     if( libambit_protocol_command(object, ambit_command_nav_memory_delete, NULL, 0, NULL, NULL, 0) != 0) {
         LOG_WARNING("Failed to remove navigation points from memory");
         return -1;
     }
 
-    uint8_t *send_data = NULL;
-    ambit_pack_waypoint_t send_pack;
-    send_data = malloc(sizeof(ambit_pack_waypoint_t));
+    if(waypoint_count>0 && waypoint_data != NULL) {
+        uint8_t *send_data = NULL;
+        ambit_pack_waypoint_t send_pack;
+        send_data = malloc(sizeof(ambit_pack_waypoint_t));
 
-    for(int x=0; x < waypoint_count; x++) {
-        send_pack = waypoint_data[x];
-        send_pack.type = ambit_waypoint_types_from_movescount[send_pack.type];
-        send_pack.status = 0;
-        memcpy(send_data, &send_pack, sizeof(ambit_pack_waypoint_t));
-        libambit_protocol_command(object, ambit_command_waypoint_write, send_data, sizeof(ambit_pack_waypoint_t), NULL, NULL, 0);
+        for(int x=0; x < waypoint_count; x++) {
+            send_pack = waypoint_data[x];
+            send_pack.type = ambit_waypoint_types_from_movescount[send_pack.type];
+            send_pack.status = 0;
+            memcpy(send_data, &send_pack, sizeof(ambit_pack_waypoint_t));
+            libambit_protocol_command(object, ambit_command_waypoint_write, send_data, sizeof(ambit_pack_waypoint_t), NULL, NULL, 0);
+        }
+
+        free(send_data);
     }
-
-    free(send_data);
 
     return 0;
 }

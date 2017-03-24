@@ -602,6 +602,8 @@ int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t 
             ret = object->driver->navigation_write(object, pack_data, personal_settings->waypoints.count);
 
             free(pack_data);
+        } else {
+            ret = object->driver->navigation_write(object, NULL, 0);
         }
     }
     return ret;
