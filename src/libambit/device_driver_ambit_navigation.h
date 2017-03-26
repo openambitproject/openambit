@@ -57,11 +57,13 @@ typedef struct __attribute__((__packed__)) ambit_pack_waypoint_s {
 #define NUM_WAYPOINTS_MOVESCOUNT 32
 #define NUM_WAYPOINTS_AMBIT 18
 
-extern const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT];
-extern const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT];
+const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT];
+const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT];
 
-int ambit_navigation_read(ambit_object_t *object, ambit_pack_waypoint_t **waypoint_data, uint16_t *waypoint_count);
-int ambit_navigation_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoint_data, uint16_t waypoint_count);
+int ambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *settings);
+int ambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *settings);
+int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t **waypoint_data, uint16_t *waypoint_count);
+int ambit_navigation_waypoint_write(ambit_object_t *object,ambit_pack_waypoint_t *waypoint_data, uint16_t waypoint_count);
 void ambit_navigation_print_struct(ambit_pack_waypoint_t *str);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
