@@ -55,6 +55,8 @@ public:
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
     int getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings);
+    int getRoute(ambit_route_t *routes, QString url);
+    int getRoutePoints(ambit_route_t *routes, QString url);
     int applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings);
     void getDeviceSettings();
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
@@ -77,6 +79,8 @@ private slots:
 
     int getOrbitalDataInThread(u_int8_t **data);
     int getPersonalSettingsInThread(ambit_personal_settings_t *settings, bool onlychangedsettings);
+    int getRouteInThread(ambit_route_t *routes, QString url);
+    int getRoutePointsInThread(ambit_route_t *routes, QString url);
     void getDeviceSettingsInThread();
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 

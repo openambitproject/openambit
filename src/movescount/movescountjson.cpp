@@ -19,11 +19,13 @@
  * Contributors:
  *
  */
+#include "movescount.h"
 #include "movescountjson.h"
 
 #include <QRegExp>
 #include <QVariantMap>
 #include <QVariantList>
+#include <QStringList>
 #include <QDebug>
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 # include <qjson/parser.h>
@@ -82,7 +84,8 @@ int MovesCountJSON::parseLogReply(QByteArray &input, QString &moveId)
     return -1;
 }
 
-int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps) {
+int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount)
+{
 
     if (input.length() <= 0) {
         return -1;
@@ -93,6 +96,18 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
 
 	 if(!ok) {
         return -1;
+    }
+
+    if(ps->routes.count == 0 && result["RouteURIs"].type() == QVariant::String) {
+        qDebug() << "RouteURIs: " << result["RouteURIs"].toString();
+        QStringList routes = result["RouteURIs"].toString().split(',');
+        ps->routes.count = routes.size();
+        ps->routes.data  = libambit_route_alloc(ps->routes.count);
+        for(int x=0; x<routes.size(); x++) {
+            qDebug() << "URL: " << routes.at(x);
+            movescount->getRoute(&(ps->routes.data[x]), routes.value(x));
+        }
+
     }
 
     if(result["Waypoints"].type() == QVariant::List) {
@@ -124,15 +139,141 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         }
     }
 
-	 return 0;
+    return 0;
 }
 
-bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength) {
+bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength)
+{
     QByteArray ba=entry.toString().toLatin1();
     strncpy(data, ba.data(), maxlength);
     return true;
 }
 
+int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, MovesCount *movescount)
+{
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    bool ok = false;
+    QVariantMap result = parseJson(input, ok);
+    QString name = "";
+
+	 if(!ok) {
+        return -1;
+    }
+
+    if(result["RoutePointsCount"].type() == QVariant::ULongLong) {
+        route->points_count = (uint16_t)result["RoutePointsCount"].toInt();
+    }
+
+    if(result["RoutePointsURI"].type() == QVariant::String) {
+        if(movescount->getRoutePoints(route, result["RoutePointsURI"].toString()) != route->points_count) {
+            if(route->points != NULL) {
+                free(route->points);
+                route->points = NULL;
+            }
+            route->points_count = 0;
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+
+    route->id = result["RouteID"].toUInt();
+    strncpy(route->name, result["Name"].toString().toLatin1().data(),49);
+    route->waypoint_count = result["WaypointCount"].toUInt();
+    route->activity_id = result["ActivityID"].toUInt();
+    route->altitude_dec = result["DescentAltitude"].toUInt();
+    route->altitude_asc= result["AscentAltitude"].toUInt();
+    route->distance = result["Distance"].toUInt();
+
+    libambit_debug_route_print(route);
+
+    return (int)route->points_count;
+}
+
+int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route)
+{
+    //Todo: Implement compressed and json routepoints. It looks like yo have to tell the uiservices-api to use
+    //      the other format specific, so no hurry to implement.
+    int ret = -1;
+
+    if (input.length() <= 0) {
+        return -1;
+    }
+
+    bool ok = false;
+    QVariantMap result = parseJson(input, ok);
+    QString jsonRoutePoints = "";
+
+    if(result["CompressedRoutePoints"].type() == QVariant::String && result["CompressedRoutePoints"].toString() != "") {
+        qDebug() << "Is Compressed data";
+        //gunzip data
+        return -2; //Should not be possible
+    }
+
+    if(result["RoutePoints"].type() == QVariant::String && result["RoutePoints"].toString() != "") {
+        qDebug() << "Is Json Routepoints";
+        jsonRoutePoints = result["RoutePoints"].toString();
+        return -2; //Should not be possible
+    }
+
+    if(jsonRoutePoints != "") {
+
+        if(!ok) {
+            return -1;
+        }
+
+    } else if (result["Points"].type() == QVariant::String && result["Points"].toString() != "") {
+        QStringList strPointsList = result["Points"].toString().split(';');
+        route->points = (ambit_routepoint_t*)malloc(strPointsList.size()*sizeof(ambit_routepoint_t));
+        int32_t clat = 0, clon=0;
+        for(int x = 0; x<strPointsList.size();++x) {
+            QStringList strPointArray = strPointsList.at(x).split(',');
+            clat = (int32_t)(strPointArray.at(0).toDouble()*10000000);
+            clon = (int32_t)(strPointArray.at(1).toDouble()*10000000);
+            appendRoutePoint(route, x, clat, clon, strPointArray.at(2).toInt(), (uint32_t)strPointArray.at(3).toDouble()*100000);
+        }
+        ret = strPointsList.size();
+    } else {
+        return -1;
+    }
+
+    route->end_lat = route->points[(ret-1)].lat;
+    route->end_lon = route->points[(ret-1)].lon;
+
+    route->mid_lat = route->max_lat - (route->max_lat - route->min_lat)/2;
+    route->mid_lon = route->max_lon - (route->max_lon - route->min_lon)/2;
+
+    return ret;
+}
+
+bool MovesCountJSON::appendRoutePoint(ambit_route_t *route, int point_number, int32_t lat, int32_t lon, int32_t altitude, uint32_t distance)
+{
+
+    if(point_number == 0) {
+        route->start_lat = lat;
+        route->start_lon = lon;
+        route->max_lat = route->start_lat;
+        route->min_lat = route->start_lat;
+        route->max_lon = route->start_lon;
+        route->min_lon = route->start_lon;
+    }
+
+    //This is needed to calculate route->mid_lat and route->mid_lon
+    if(lat > route->max_lat) route->max_lat = lat;
+    if(lat < route->min_lat) route->min_lat = lat;
+    if(lon > route->max_lon) route->max_lon = lon;
+    if(lon < route->min_lon) route->min_lon = lon;
+
+    route->points[point_number].lat = lat;
+    route->points[point_number].lon = lon;
+    route->points[point_number].altitude = altitude;
+    route->points[point_number].distance = distance;
+
+    return true;
+}
 
 int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries)
 {

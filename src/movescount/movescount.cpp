@@ -147,6 +147,38 @@ int MovesCount::getPersonalSettings(ambit_personal_settings_t *settings, bool on
     return ret;
 }
 
+int MovesCount::getRoute(ambit_route_t *route, QString url)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getRouteInThread(route, url);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getRouteInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_route_t *, route), Q_ARG(QString, url));
+    }
+
+    return ret;
+}
+
+int MovesCount::getRoutePoints(ambit_route_t *route, QString url)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getRoutePointsInThread(route, url);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getRoutePointsInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_route_t *, route), Q_ARG(QString, url));
+    }
+
+    return ret;
+}
+
 void MovesCount::getDeviceSettings()
 {
     QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
@@ -278,7 +310,7 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
-            jsonParser.parsePersonalSettings(_data, settings);
+            jsonParser.parsePersonalSettings(_data, settings, this);
             ret = _data.length();
         }
     }
@@ -288,7 +320,51 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
     return ret;
 }
 
-int MovesCount::applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings) {
+int MovesCount::getRouteInThread(ambit_route_t *route, QString url)
+{
+
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/" + url, "", true);
+
+    if(reply->error() == QNetworkReply::NoError) {
+        QByteArray _data = reply->readAll();
+
+        if (_data.length() > 0) {
+            jsonParser.parseRoute(_data, route, this);
+            ret = _data.length();
+        }
+    }
+
+    delete reply;
+
+    return ret;
+}
+
+int MovesCount::getRoutePointsInThread(ambit_route_t *route, QString url)
+{
+
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/" + url, "", true);
+
+    if(reply->error() == QNetworkReply::NoError) {
+        QByteArray _data = reply->readAll();
+
+        if (_data.length() > 0) {
+            ret = jsonParser.parseRoutePoints(_data, route);
+        }
+    }
+
+    delete reply;
+
+    return ret;
+}
+
+int MovesCount::applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings)
+{
 
     //TODO: resolve name conflict, rename device waypoint?
     bool device_waypoint_has_changes = false;
@@ -437,7 +513,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         }
-    } 
+    }
     else {
         qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << reply->readAll() << "\"";
     }
@@ -489,11 +565,8 @@ QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, boo
         url += "&" + additionalHeaders;
     }
 
-    QByteArray ba = url.toLatin1();
-    const char *c_str2 = ba.data();
-    printf("asyncGET: %s\n", c_str2);
-    
     #ifdef QT_DEBUG
+    qDebug() << "asyncGet: " << url;
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
     ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(ssl_config);
@@ -528,11 +601,8 @@ QNetworkReply *MovesCount::asyncPOST(QString path, QString additionalHeaders, QB
         url += "&" + additionalHeaders;
     }
 
-    QByteArray ba = url.toLatin1();
-    const char *c_str2 = ba.data();
-    printf("asyncPOST: %s\n", c_str2);
-
     #ifdef QT_DEBUG
+    qDebug() << "asyncGet: " << url;
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
     ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(ssl_config);
@@ -568,11 +638,8 @@ QNetworkReply *MovesCount::asyncPUT(QString path, QString additionalHeaders, QBy
         url += "&" + additionalHeaders;
     }
 
-    QByteArray ba = url.toLatin1();
-    const char *c_str2 = ba.data();
-    printf("asyncPUT: %s\n", c_str2);
-
     #ifdef QT_DEBUG
+    qDebug() << "asyncGet: " << url;
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
     ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(ssl_config);

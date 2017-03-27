@@ -69,6 +69,35 @@ typedef struct ambit_waypoint_s {
     uint8_t       status;
 } ambit_waypoint_t;
 
+typedef struct ambit_routepoint_s {
+    int32_t      lat;      //devide value by 10000000
+    int32_t      lon;      //devide value by 10000000
+    int32_t      altitude; //meters
+    uint32_t     distance; //relative distance from 0 - 1.000.000
+} ambit_routepoint_t;
+
+typedef struct ambit_route_s {
+    uint32_t      id;
+    char          name[50];
+    uint16_t      waypoint_count;
+    uint16_t      activity_id;
+    uint16_t      altitude_asc; //meters
+    uint16_t      altitude_dec; //meters
+    uint16_t      points_count;
+    uint32_t      distance;
+    int32_t       start_lat;  //devide value by 10000000
+    int32_t       start_lon;  //devide value by 10000000
+    int32_t       end_lat;  //devide value by 10000000
+    int32_t       end_lon;  //devide value by 10000000
+    int32_t       max_lat;  //devide value by 10000000
+    int32_t       min_lat;  //devide value by 10000000
+    int32_t       max_lon;  //devide value by 10000000
+    int32_t       min_lon;  //devide value by 10000000
+    int32_t       mid_lat;  //devide value by 10000000
+    int32_t       mid_lon;  //devide value by 10000000
+    ambit_routepoint_t *points;
+} ambit_route_t;
+
 typedef struct ambit_personal_settings_s {
     uint8_t  sportmode_button_lock;
     uint8_t  timemode_button_lock;
@@ -124,7 +153,7 @@ typedef struct ambit_personal_settings_s {
     uint8_t  automatic_footpod_calib;
     uint8_t  training_program;
     struct {
-        uint8_t  **uris;
+        ambit_route_t *data;
         uint8_t  count;
     } routes;
     struct {
@@ -561,7 +590,16 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
  * \param log_entry Log entry to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
-
+/**
+ * Init ambit_route_t struct
+ */
+ambit_route_t* libambit_route_alloc(uint16_t route_count);
+/**
+ * Free struct allocated by libambit_route_alloc
+ * \param personal_settings Struct to free
+ */
+void libambit_route_free(ambit_route_t *routes, uint16_t route_count);
+void libambit_debug_route_print(ambit_route_t *r);
 /**
  * Init personal_settings struct
  */
@@ -570,7 +608,6 @@ ambit_personal_settings_t* libambit_personal_settings_alloc();
  * Free struct allocated by libambit_personal_settings_alloc
  * \param personal_settings Struct to free
  */
-
 void libambit_personal_settings_free(ambit_personal_settings_t *personal_settings);
 
 /**

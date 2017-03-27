@@ -513,7 +513,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 ambit_personal_settings_t* libambit_personal_settings_alloc() {
     ambit_personal_settings_t *ps;
     ps = (ambit_personal_settings_t*)calloc(1, sizeof(ambit_personal_settings_t));
-    ps->routes.uris = NULL;
+    ps->routes.data = NULL;
     ps->waypoints.data = NULL;
     return ps;
 }
@@ -523,13 +523,50 @@ void libambit_personal_settings_free(ambit_personal_settings_t *personal_setting
         free(personal_settings->waypoints.data);
     }
 
+    if(personal_settings->routes.data != NULL) {
+        libambit_route_free(personal_settings->routes.data, personal_settings->routes.count);
+    }
+
     free(personal_settings);
 }
 
+void libambit_debug_route_print(ambit_route_t *r) {
+    printf("id: %u\n", r->id);
+    printf("name: %s\n", r->name);
+    printf("waypoint_count: %u\n", r->waypoint_count);
+    printf("activity_id: %u\n", r->activity_id);
+    printf("points_count: %u\n", r->points_count);
+    printf("distance: %u\n", r->distance);
+    printf("mid_lat: %u\n", r->mid_lat);
+    printf("mid_lon: %u\n", r->mid_lon);
+    printf("\n");
+}
+
+ambit_route_t* libambit_route_alloc(uint16_t route_count) {
+    ambit_route_t *routes;
+    routes = (ambit_route_t*)calloc(route_count, sizeof(ambit_route_t));
+    for(int x=0; x<route_count; ++x) {
+        routes[x].points = NULL;
+    }
+    return routes;
+}
+
+void libambit_route_free(ambit_route_t *routes, uint16_t route_count) {
+
+    if(route_count!=0) {
+        for(int x; x<route_count; ++x) {
+            if(routes[x].points != NULL) {
+                free(routes[x].points);
+            }
+        }
+    } else if(routes->points != NULL) {
+        free(routes->points);
+    }
+
+    free(routes);
+}
+
 int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
-
-    //Todo: To make it driver independent, ambit_pack_waypoint data fill must happen inside the driver
-
     int ret = -1;
 
     if (object->driver != NULL && object->driver->navigation_read != NULL) {
