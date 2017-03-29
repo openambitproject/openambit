@@ -566,6 +566,28 @@ void libambit_route_free(ambit_route_t *routes, uint16_t route_count) {
     free(routes);
 }
 
+void libambit_waypoint_append(ambit_personal_settings_t *ps, ambit_waypoint_t *waypoints, uint8_t num_to_append) {
+
+    if(num_to_append == 0) {
+        //Do nothing
+        return;
+    }
+
+    ambit_waypoint_t *old_array = ps->waypoints.data;
+    uint8_t old_count = ps->waypoints.count;
+
+    ps->waypoints.count += num_to_append;
+    ps->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ps->waypoints.count);
+
+    if(old_count>0) {
+        memcpy(ps->waypoints.data, old_array, sizeof(ambit_waypoint_t)*old_count);
+        if(old_array != NULL) {
+            free(old_array);
+        }
+    }
+    memcpy(&(ps->waypoints.data[old_count]), waypoints, sizeof(ambit_waypoint_t)*num_to_append);
+}
+
 int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
     int ret = -1;
 

@@ -599,6 +599,10 @@ ambit_route_t* libambit_route_alloc(uint16_t route_count);
  * \param personal_settings Struct to free
  */
 void libambit_route_free(ambit_route_t *routes, uint16_t route_count);
+/**
+ * Append to a ambit_personal_settings_t.waypoints
+ */
+void libambit_waypoint_append(ambit_personal_settings_t *ps, ambit_waypoint_t *waypoints, uint8_t num_to_append);
 void libambit_debug_route_print(ambit_route_t *r);
 /**
  * Init personal_settings struct
