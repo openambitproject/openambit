@@ -109,7 +109,6 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         // Reading personal settings + waypoints
         res = libambit_personal_settings_get(this->deviceObject, currentPersonalSettings);
         waypoint_sync_res = libambit_navigation_read(this->deviceObject, currentPersonalSettings);
-
         currentSyncPart++;
 
         libambit_sync_display_show(this->deviceObject);
@@ -133,10 +132,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
                  movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
                  movesCount->writePersonalSettings(movecountPersonalSettings);
-
-                 if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
-                     libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
-                 }
+                 libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
             }
 
 

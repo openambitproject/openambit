@@ -261,7 +261,9 @@ typedef enum movescount_waypoint_type_e {
     movescount_waypoint_type_trail = 28,
     movescount_waypoint_type_rock = 29,
     movescount_waypoint_type_meadow = 30,
-    movescount_waypoint_type_cave = 31
+    movescount_waypoint_type_cave = 31,
+    movescount_waypoint_type_internal_wp_start = 32,
+    movescount_waypoint_type_internal_wp_end = 33
 } movescount_waypoint_type_t;
 
 typedef struct ambit_log_sample_periodic_value_s {

@@ -98,45 +98,47 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         return -1;
     }
 
+    //Empty waypoints
+    ps->waypoints.count = 0;
+    if(ps->waypoints.data != NULL) free(ps->waypoints.data);
+
     if(ps->routes.count == 0 && result["RouteURIs"].type() == QVariant::String) {
-        qDebug() << "RouteURIs: " << result["RouteURIs"].toString();
         QStringList routes = result["RouteURIs"].toString().split(',');
         ps->routes.count = routes.size();
         ps->routes.data  = libambit_route_alloc(ps->routes.count);
         for(int x=0; x<routes.size(); x++) {
-            qDebug() << "URL: " << routes.at(x);
-            movescount->getRoute(&(ps->routes.data[x]), routes.value(x));
+            movescount->getRoute(&(ps->routes.data[x]), ps, routes.value(x));
         }
 
     }
 
-    if(result["Waypoints"].type() == QVariant::List) {
-        ps->waypoints.count = (uint16_t)result["Waypoints"].toList().count();
+    if(result["Waypoints"].type() == QVariant::List && result["Waypoints"].toList().count()>0) {
+        ambit_waypoint_t *waypoints_to_append = NULL;
+        uint8_t num_to_append = (uint8_t)result["Waypoints"].toList().count();
 
-        if(ps->waypoints.data != NULL) {
-            free(ps->waypoints.data);
-            ps->waypoints.data = NULL;
-        }
 
-        ps->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ps->waypoints.count);
+        waypoints_to_append = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*num_to_append);
 
-        for(int x=0; x<ps->waypoints.count; x++) {
+        for(int x=0; x<num_to_append; x++) {
             QDateTime dt;
             QVariantMap jsonWp = result["Waypoints"].toList().at(x).toMap();
-            ps->waypoints.data[x].altitude = (uint16_t)jsonWp["Altitude"].toInt();
-            ps->waypoints.data[x].longitude = (uint32_t)(jsonWp["Longitude"].toFloat()*10000000);
-            ps->waypoints.data[x].latitude = (uint32_t)(jsonWp["Latitude"].toFloat()*10000000);
-            ps->waypoints.data[x].type = (uint8_t)(jsonWp["Type"].toInt());
-            this->copyDataString(jsonWp["Name"],ps->waypoints.data[x].name, 49);
-            strncpy(ps->waypoints.data[x].route_name, "", 49);
+            waypoints_to_append[x].altitude = (uint16_t)jsonWp["Altitude"].toInt();
+            waypoints_to_append[x].longitude = (uint32_t)(jsonWp["Longitude"].toFloat()*10000000);
+            waypoints_to_append[x].latitude = (uint32_t)(jsonWp["Latitude"].toFloat()*10000000);
+            waypoints_to_append[x].type = (uint8_t)(jsonWp["Type"].toInt());
+            this->copyDataString(jsonWp["Name"],waypoints_to_append[x].name, 49);
+            strncpy(waypoints_to_append[x].route_name, "", 49);
             dt = dt.fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
-            ps->waypoints.data[x].ctime_second = (uint8_t)dt.toString("s").toInt();
-            ps->waypoints.data[x].ctime_minute = (uint8_t)dt.toString("m").toInt();
-            ps->waypoints.data[x].ctime_hour = (uint8_t)dt.toString("h").toInt();
-            ps->waypoints.data[x].ctime_day = (uint8_t)dt.toString("d").toInt();
-            ps->waypoints.data[x].ctime_month = (uint8_t)dt.toString("M").toInt();
-            ps->waypoints.data[x].ctime_year = (uint16_t)dt.toString("yyyy").toInt();
+            waypoints_to_append[x].ctime_second = (uint8_t)dt.toString("s").toInt();
+            waypoints_to_append[x].ctime_minute = (uint8_t)dt.toString("m").toInt();
+            waypoints_to_append[x].ctime_hour = (uint8_t)dt.toString("h").toInt();
+            waypoints_to_append[x].ctime_day = (uint8_t)dt.toString("d").toInt();
+            waypoints_to_append[x].ctime_month = (uint8_t)dt.toString("M").toInt();
+            waypoints_to_append[x].ctime_year = (uint16_t)dt.toString("yyyy").toInt();
         }
+
+        libambit_waypoint_append(ps, waypoints_to_append, num_to_append);
+        free(waypoints_to_append);
     }
 
     return 0;
@@ -149,7 +151,7 @@ bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength
     return true;
 }
 
-int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, MovesCount *movescount)
+int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_personal_settings_t *ps, MovesCount *movescount)
 {
     if (input.length() <= 0) {
         return -1;
@@ -167,8 +169,12 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, MovesCou
         route->points_count = (uint16_t)result["RoutePointsCount"].toInt();
     }
 
+    route->id = result["RouteID"].toUInt();
+    strncpy(route->name, result["Name"].toString().toLatin1().data(),49);
+    route->waypoint_count = result["WaypointCount"].toUInt();
+
     if(result["RoutePointsURI"].type() == QVariant::String) {
-        if(movescount->getRoutePoints(route, result["RoutePointsURI"].toString()) != route->points_count) {
+        if(movescount->getRoutePoints(route, ps, result["RoutePointsURI"].toString()) != route->points_count) {
             if(route->points != NULL) {
                 free(route->points);
                 route->points = NULL;
@@ -180,9 +186,6 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, MovesCou
         return -1;
     }
 
-    route->id = result["RouteID"].toUInt();
-    strncpy(route->name, result["Name"].toString().toLatin1().data(),49);
-    route->waypoint_count = result["WaypointCount"].toUInt();
     route->activity_id = result["ActivityID"].toUInt();
     route->altitude_dec = result["DescentAltitude"].toUInt();
     route->altitude_asc= result["AscentAltitude"].toUInt();
@@ -193,7 +196,7 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, MovesCou
     return (int)route->points_count;
 }
 
-int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route)
+int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, ambit_personal_settings_t *ps)
 {
     //Todo: Implement compressed and json routepoints. It looks like yo have to tell the uiservices-api to use
     //      the other format specific, so no hurry to implement.
@@ -205,7 +208,13 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route)
 
     bool ok = false;
     QVariantMap result = parseJson(input, ok);
-    QString jsonRoutePoints = "";
+    QVariantList jsonRoutePoints;
+    int32_t clat = 0, clon=0;
+    uint16_t cur_waypoint_count = 0;
+
+    if(!ok) {
+        return -1;
+    }
 
     if(result["CompressedRoutePoints"].type() == QVariant::String && result["CompressedRoutePoints"].toString() != "") {
         qDebug() << "Is Compressed data";
@@ -213,22 +222,35 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route)
         return -2; //Should not be possible
     }
 
-    if(result["RoutePoints"].type() == QVariant::String && result["RoutePoints"].toString() != "") {
-        qDebug() << "Is Json Routepoints";
-        jsonRoutePoints = result["RoutePoints"].toString();
-        return -2; //Should not be possible
+    if(result["RoutePoints"].type() == QVariant::List && result["RoutePoints"].toList().size() > 1) {
+        jsonRoutePoints = result["RoutePoints"].toList();
     }
 
-    if(jsonRoutePoints != "") {
+    if(jsonRoutePoints.size()>1) {
 
-        if(!ok) {
-            return -1;
+        route->points = (ambit_routepoint_t*)malloc(jsonRoutePoints.size()*sizeof(ambit_routepoint_t));
+        for(int x=0; x<jsonRoutePoints.size(); ++x) {
+            QVariantMap jCurrent = jsonRoutePoints.at(x).toMap();
+            clat = (int32_t)(jCurrent["Latitude"].toDouble()*10000000);
+            clon = (int32_t)(jCurrent["Longitude"].toDouble()*10000000);
+            appendRoutePoint(route, x, clat, clon, jCurrent["Altitude"].toInt(), (uint32_t)(jCurrent["RelativeDistance"].toDouble()*100000));
+
+            if(x == 0) {
+                appendWaypoint(cur_waypoint_count, ps, QString(route->name), "A", clat, clon, jCurrent["Altitude"].toInt(), movescount_waypoint_type_internal_wp_start);
+                ++cur_waypoint_count;
+            }
+
+            if(jCurrent["Name"].toString() != "") {
+                appendWaypoint(cur_waypoint_count, ps, QString(route->name), jCurrent["Name"].toString(), clat, clon, jCurrent["Altitude"].toInt(), jCurrent["Type"].toInt());
+                ++cur_waypoint_count;
+            }
         }
 
+
     } else if (result["Points"].type() == QVariant::String && result["Points"].toString() != "") {
+        /* This format does not support waypoints */
         QStringList strPointsList = result["Points"].toString().split(';');
         route->points = (ambit_routepoint_t*)malloc(strPointsList.size()*sizeof(ambit_routepoint_t));
-        int32_t clat = 0, clon=0;
         for(int x = 0; x<strPointsList.size();++x) {
             QStringList strPointArray = strPointsList.at(x).split(',');
             clat = (int32_t)(strPointArray.at(0).toDouble()*10000000);
@@ -246,12 +268,13 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route)
     route->mid_lat = route->max_lat - (route->max_lat - route->min_lat)/2;
     route->mid_lon = route->max_lon - (route->max_lon - route->min_lon)/2;
 
+    appendWaypoint(cur_waypoint_count, ps, QString(route->name), "B", route->end_lat, route->end_lon, route->points[(ret-1)].altitude, movescount_waypoint_type_internal_wp_end);
+
     return ret;
 }
 
 bool MovesCountJSON::appendRoutePoint(ambit_route_t *route, int point_number, int32_t lat, int32_t lon, int32_t altitude, uint32_t distance)
 {
-
     if(point_number == 0) {
         route->start_lat = lat;
         route->start_lon = lon;
@@ -271,6 +294,26 @@ bool MovesCountJSON::appendRoutePoint(ambit_route_t *route, int point_number, in
     route->points[point_number].lon = lon;
     route->points[point_number].altitude = altitude;
     route->points[point_number].distance = distance;
+
+    return true;
+}
+
+bool MovesCountJSON::appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, QString route_name, QString waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type) {
+
+    ambit_waypoint_t wp;
+    wp.index = 0;
+    strncpy(wp.name, waypoint_name.toLatin1().data(), 49);
+    strncpy(wp.route_name, route_name.toLatin1().data(), 49);
+    wp.ctime_second = count;
+    wp.ctime_minute = wp.ctime_hour = 0;
+    wp.ctime_day = wp.ctime_month = 1;
+    wp.ctime_year = 1980;
+    wp.latitude = lat;
+    wp.longitude = lon;
+    wp.altitude = altitude;
+    wp.type = type;
+    wp.status = 1;
+    libambit_waypoint_append(ps, &wp, 1);
 
     return true;
 }
@@ -307,8 +350,12 @@ int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *setti
     QVariantMap content;
 
     content.insert("DeviceName", device_info.model);
-    content.insert("FirmwareVersion", QString("%1.%2.%3").arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]));
-    content.insert("HardwareVersion", QString("%1.%2.%3").arg(device_info.hw_version[0]).arg(device_info.hw_version[1]).arg(device_info.hw_version[2]));
+    content.insert("FirmwareVersion", QString("%1.%2.%3")
+            .arg(device_info.fw_version[0]).arg(device_info.fw_version[1])
+            .arg(device_info.fw_version[2]));
+    content.insert("HardwareVersion", QString("%1.%2.%3")
+            .arg(device_info.hw_version[0]).arg(device_info.hw_version[1])
+            .arg(device_info.hw_version[2]));
     content.insert("SerialNumber", device_info.serial);
 
     QVariantList waypoints;
@@ -318,20 +365,24 @@ int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *setti
         QVariantMap c_waypoint;
 
         for(int x=0; x < settings->waypoints.count; x++) {
-            c_waypoint.clear();
-            c_waypoint.insert("Altitude", settings->waypoints.data[x].altitude);
-            c_waypoint.insert("CreationLocalTime", QString("%1-%2-%3T%4:%5:%6.0").arg(settings->waypoints.data[x].ctime_year, 4, 10, QLatin1Char('0'))
-                                                                               .arg(settings->waypoints.data[x].ctime_month, 2, 10, QLatin1Char('0'))
-                                                                               .arg(settings->waypoints.data[x].ctime_day, 2, 10, QLatin1Char('0'))
-                                                                               .arg(settings->waypoints.data[x].ctime_hour, 2, 10, QLatin1Char('0'))
-                                                                               .arg(settings->waypoints.data[x].ctime_minute, 2, 10, QLatin1Char('0'))
-                                                                               .arg(settings->waypoints.data[x].ctime_second, 2, 10, QLatin1Char('0'))
-                                                                               );
-            c_waypoint.insert("Latitude",  (double)settings->waypoints.data[x].latitude/10000000);
-            c_waypoint.insert("Longitude",  (double)settings->waypoints.data[x].longitude/10000000);
-            c_waypoint.insert("Name", QString(settings->waypoints.data[x].name));
-            c_waypoint.insert("Type", settings->waypoints.data[x].type);
-            waypoints.append(c_waypoint);
+            if(settings->waypoints.data[x].route_name[0] == '\0') {
+                c_waypoint.clear();
+                c_waypoint.insert("Altitude", settings->waypoints.data[x].altitude);
+                c_waypoint.insert("CreationLocalTime", QString("%1-%2-%3T%4:%5:%6.0")
+                        .arg(settings->waypoints.data[x].ctime_year, 4, 10, QLatin1Char('0'))
+                        .arg(settings->waypoints.data[x].ctime_month, 2, 10, QLatin1Char('0'))
+                        .arg(settings->waypoints.data[x].ctime_day, 2, 10, QLatin1Char('0'))
+                        .arg(settings->waypoints.data[x].ctime_hour, 2, 10, QLatin1Char('0'))
+                        .arg(settings->waypoints.data[x].ctime_minute, 2, 10, QLatin1Char('0'))
+                        .arg(settings->waypoints.data[x].ctime_second, 2, 10, QLatin1Char('0'))
+                        );
+                c_waypoint.insert("Latitude",  (double)settings->waypoints.data[x].latitude/10000000);
+                c_waypoint.insert("Longitude",  (double)settings->waypoints.data[x].longitude/10000000);
+                c_waypoint.insert("Name", QString(settings->waypoints.data[x].name));
+                c_waypoint.insert("Type", settings->waypoints.data[x].type);
+                waypoints.append(c_waypoint);
+
+            }
         }
     }
 

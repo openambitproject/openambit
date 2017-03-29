@@ -147,33 +147,33 @@ int MovesCount::getPersonalSettings(ambit_personal_settings_t *settings, bool on
     return ret;
 }
 
-int MovesCount::getRoute(ambit_route_t *route, QString url)
+int MovesCount::getRoute(ambit_route_t *route, ambit_personal_settings_t *ps, QString url)
 {
     int ret = -1;
 
     if (&workerThread == QThread::currentThread()) {
-        ret = getRouteInThread(route, url);
+        ret = getRouteInThread(route, ps, url);
     }
     else {
         QMetaObject::invokeMethod(this, "getRouteInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
-                                  Q_ARG(ambit_route_t *, route), Q_ARG(QString, url));
+                                  Q_ARG(ambit_route_t *, route),Q_ARG(ambit_personal_settings_t *, ps) , Q_ARG(QString, url));
     }
 
     return ret;
 }
 
-int MovesCount::getRoutePoints(ambit_route_t *route, QString url)
+int MovesCount::getRoutePoints(ambit_route_t *route, ambit_personal_settings_t *ps, QString url)
 {
     int ret = -1;
 
     if (&workerThread == QThread::currentThread()) {
-        ret = getRoutePointsInThread(route, url);
+        ret = getRoutePointsInThread(route, ps, url);
     }
     else {
         QMetaObject::invokeMethod(this, "getRoutePointsInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
-                                  Q_ARG(ambit_route_t *, route), Q_ARG(QString, url));
+                                  Q_ARG(ambit_route_t *, route),Q_ARG(ambit_personal_settings_t *, ps), Q_ARG(QString, url));
     }
 
     return ret;
@@ -320,7 +320,7 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
     return ret;
 }
 
-int MovesCount::getRouteInThread(ambit_route_t *route, QString url)
+int MovesCount::getRouteInThread(ambit_route_t *route, ambit_personal_settings_t *ps, QString url)
 {
 
     int ret = -1;
@@ -332,7 +332,7 @@ int MovesCount::getRouteInThread(ambit_route_t *route, QString url)
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
-            jsonParser.parseRoute(_data, route, this);
+            jsonParser.parseRoute(_data, route, ps, this);
             ret = _data.length();
         }
     }
@@ -342,19 +342,19 @@ int MovesCount::getRouteInThread(ambit_route_t *route, QString url)
     return ret;
 }
 
-int MovesCount::getRoutePointsInThread(ambit_route_t *route, QString url)
+int MovesCount::getRoutePointsInThread(ambit_route_t *route, ambit_personal_settings_t *ps, QString url)
 {
 
     int ret = -1;
     QNetworkReply *reply;
 
-    reply = syncGET("/" + url, "", true);
+    reply = syncGET("/" + url, "type=routepoints&maxpoints=1000", true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
-            ret = jsonParser.parseRoutePoints(_data, route);
+            ret = jsonParser.parseRoutePoints(_data, route, ps);
         }
     }
 
