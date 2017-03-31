@@ -38,6 +38,7 @@
 #include <zlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <algorithm>
 
 MovesCountJSON::MovesCountJSON(QObject *parent) :
     QObject(parent)
@@ -98,7 +99,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         return -1;
     }
 
-    //Empty waypoints
+    //Empty waypoints in personal_settings (ps)
     ps->waypoints.count = 0;
     if(ps->waypoints.data != NULL) free(ps->waypoints.data);
 
@@ -141,6 +142,32 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         free(waypoints_to_append);
     }
 
+    //Sort waypoints on route_name
+    QStringList qslist_route_name;
+    QString last = "";
+    uint16_t sort_pos = 0;
+    ambit_waypoint_t *wp_sorted = (ambit_waypoint_t*)calloc(ps->waypoints.count,sizeof(ambit_waypoint_t));
+
+    for(int x=0; x < ps->waypoints.count;++x) {
+        if(x == 0 || last.compare(QString(ps->waypoints.data[x].route_name)) !=0 ) {
+            last = QString(ps->waypoints.data[x].route_name);
+            qslist_route_name.append(last);
+        }
+    }
+
+    qslist_route_name.sort();
+
+    for(int x=0; x < qslist_route_name.size(); ++x) {
+        for(int y = 0; y < ps->waypoints.count;++y) {
+            if(qslist_route_name.at(x).compare(QString(ps->waypoints.data[y].route_name)) == 0) {
+                wp_sorted[sort_pos++] = ps->waypoints.data[y];
+            }
+        }
+    }
+
+    free(ps->waypoints.data);
+    ps->waypoints.data = wp_sorted;
+
     return 0;
 }
 
@@ -173,8 +200,10 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
     strncpy(route->name, result["Name"].toString().toLatin1().data(),49);
     route->waypoint_count = result["WaypointCount"].toUInt();
 
+    int ret;
+
     if(result["RoutePointsURI"].type() == QVariant::String) {
-        if(movescount->getRoutePoints(route, ps, result["RoutePointsURI"].toString()) != route->points_count) {
+        if((ret = movescount->getRoutePoints(route, ps, result["RoutePointsURI"].toString())) < 2) {
             if(route->points != NULL) {
                 free(route->points);
                 route->points = NULL;
@@ -182,6 +211,8 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
             route->points_count = 0;
             return -1;
         }
+
+        route->points_count = ret;
     } else {
         return -1;
     }
@@ -191,7 +222,8 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
     route->altitude_asc= result["AscentAltitude"].toUInt();
     route->distance = result["Distance"].toUInt();
 
-    libambit_debug_route_print(route);
+    //TODO: Remove
+    //libambit_debug_route_print(route);
 
     return (int)route->points_count;
 }
@@ -246,6 +278,7 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
             }
         }
 
+        ret = jsonRoutePoints.size();
 
     } else if (result["Points"].type() == QVariant::String && result["Points"].toString() != "") {
         /* This format does not support waypoints */
@@ -312,7 +345,7 @@ bool MovesCountJSON::appendWaypoint(uint16_t count, ambit_personal_settings_t *p
     wp.longitude = lon;
     wp.altitude = altitude;
     wp.type = type;
-    wp.status = 1;
+    wp.status = 0;
     libambit_waypoint_append(ps, &wp, 1);
 
     return true;
