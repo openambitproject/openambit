@@ -111,6 +111,30 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
             movescount->getRoute(&(ps->routes.data[x]), ps, routes.value(x));
         }
 
+        //Sort routes on name
+        QStringList qslist_route_name;
+        uint16_t sort_pos = 0;
+        ambit_route_t *routes_sorted = (ambit_route_t*)calloc(ps->routes.count,sizeof(ambit_route_t));
+
+        for(int x=0; x < ps->routes.count;++x) {
+            qslist_route_name.append(QString(ps->routes.data[x].name));
+        }
+
+        qslist_route_name.sort();
+        for(int k=0, s=qslist_route_name.size(), max=(s/2); k<max; k++) qslist_route_name.swap(k,s-(1+k));
+
+        for(int x=0; x < qslist_route_name.size(); ++x) {
+            for(int y = 0; y < ps->routes.count;++y) {
+                if(qslist_route_name.at(x).compare(QString(ps->routes.data[y].name)) == 0) {
+                    routes_sorted[sort_pos++] = ps->routes.data[y];
+                    break;
+                }
+            }
+        }
+
+        free(ps->routes.data);
+        ps->routes.data = routes_sorted;
+
     }
 
     if(result["Waypoints"].type() == QVariant::List && result["Waypoints"].toList().count()>0) {
@@ -267,11 +291,6 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
             clon = (int32_t)(jCurrent["Longitude"].toDouble()*10000000);
             appendRoutePoint(route, x, clat, clon, jCurrent["Altitude"].toInt(), (uint32_t)(jCurrent["RelativeDistance"].toDouble()*100000));
 
-            if(x == 0) {
-                appendWaypoint(cur_waypoint_count, ps, QString(route->name), "A", clat, clon, jCurrent["Altitude"].toInt(), movescount_waypoint_type_internal_wp_start);
-                ++cur_waypoint_count;
-            }
-
             if(jCurrent["Name"].toString() != "") {
                 appendWaypoint(cur_waypoint_count, ps, QString(route->name), jCurrent["Name"].toString(), clat, clon, jCurrent["Altitude"].toInt(), jCurrent["Type"].toInt());
                 ++cur_waypoint_count;
@@ -301,7 +320,10 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
     route->mid_lat = route->max_lat - (route->max_lat - route->min_lat)/2;
     route->mid_lon = route->max_lon - (route->max_lon - route->min_lon)/2;
 
-    appendWaypoint(cur_waypoint_count, ps, QString(route->name), "B", route->end_lat, route->end_lon, route->points[(ret-1)].altitude, movescount_waypoint_type_internal_wp_end);
+    if(cur_waypoint_count == 0) {
+        appendWaypoint(cur_waypoint_count++, ps, QString(route->name), "A", route->start_lat, route->start_lon, route->points[0].altitude, movescount_waypoint_type_internal_wp_start);
+        appendWaypoint(cur_waypoint_count, ps, QString(route->name), "B", route->end_lat, route->end_lon, route->points[(ret-1)].altitude, movescount_waypoint_type_internal_wp_end);
+    }
 
     return ret;
 }

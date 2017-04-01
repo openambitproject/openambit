@@ -126,6 +126,7 @@ int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t
     if( libambit_protocol_command(object, ambit_command_waypoint_count, NULL, 0, &reply_data, &replylen, 0) != 0) {
         LOG_WARNING("Failed to read number of waypoints entries");
         libambit_protocol_free(reply_data);
+        reply_data = NULL;
         return -1;
     }
 
@@ -133,6 +134,7 @@ int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t
     waypoint_return_list = malloc(sizeof(ambit_pack_waypoint_t)*(*way_point_count));
 
     libambit_protocol_free(reply_data);
+    reply_data = NULL;
 
     sendlen = sizeof(ambit_pack_waypoint_t);
 
@@ -161,9 +163,12 @@ int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t
             LOG_WARNING("ambit_command_waypoint_read failed: %u\n", x);
         }
 
-        free(send_data);
-        send_data = NULL;
+        if(send_data != NULL) {
+            free(send_data);
+            send_data = NULL;
+        }
         libambit_protocol_free(reply_data);
+        reply_data = NULL;
 
     }
 
@@ -276,7 +281,7 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
     for(int x=0; x<ps->routes.count;++x) {
         routepoints_count_tot += ps->routes.data[x].points_count;
     }
-
+    
     ambit_pack_routes_t routes = ambit_navigation_route_init(ps->routes.count, routepoints_count_tot);
 
     for(int x=0;x<ps->routes.count;++x) {
