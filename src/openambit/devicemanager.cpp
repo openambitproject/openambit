@@ -91,7 +91,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     int waypoint_sync_res = -1;
     time_t current_time;
     struct tm *local_time;
-    uint8_t *orbitData;
+    uint8_t *orbitData = NULL;
     int orbitDataLen;
     ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 

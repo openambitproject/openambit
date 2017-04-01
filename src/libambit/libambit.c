@@ -554,7 +554,7 @@ ambit_route_t* libambit_route_alloc(uint16_t route_count) {
 void libambit_route_free(ambit_route_t *routes, uint16_t route_count) {
 
     if(route_count!=0) {
-        for(int x; x<route_count; ++x) {
+        for(int x=0; x<route_count; ++x) {
             if(routes[x].points != NULL) {
                 free(routes[x].points);
             }
