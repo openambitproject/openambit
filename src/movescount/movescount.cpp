@@ -602,7 +602,7 @@ QNetworkReply *MovesCount::asyncPOST(QString path, QString additionalHeaders, QB
     }
 
     #ifdef QT_DEBUG
-    qDebug() << "asyncGet: " << url;
+    qDebug() << "asyncPost: " << url;
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
     ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(ssl_config);
@@ -639,7 +639,7 @@ QNetworkReply *MovesCount::asyncPUT(QString path, QString additionalHeaders, QBy
     }
 
     #ifdef QT_DEBUG
-    qDebug() << "asyncGet: " << url;
+    qDebug() << "asyncPut: " << url;
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
     ssl_config.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(ssl_config);

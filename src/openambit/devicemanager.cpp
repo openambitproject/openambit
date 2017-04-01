@@ -77,7 +77,7 @@ void DeviceManager::detect()
         this->deviceObject = libambit_new(devinfo);
     }
     libambit_free_enumeration(devinfo);
-    
+
     mutex.unlock();
 
     if (res == 0) {
@@ -128,6 +128,8 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         }
 
         if (waypoint_sync_res != -1 && syncMovescount) {
+            emit this->syncProgressInform(QString(tr("Synchronizing settings")), false, true, 100*currentSyncPart/syncParts);
+            currentSyncPart++;
 
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
                  movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
@@ -135,9 +137,6 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
                  libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
             }
 
-
-            emit this->syncProgressInform(QString(tr("Synchronizing settings")), false, true, 100*currentSyncPart/syncParts);
-            currentSyncPart++;
         } else if(syncMovescount) {
 
             emit this->syncProgressInform(QString(tr("Synchronizing failed")), true, false, 100*currentSyncPart/syncParts);
