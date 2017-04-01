@@ -71,35 +71,6 @@ set(FILES_TO_TRANSLATE ${openambit_SRCS} ${openambit_UIS} ${openambit_MOCS})
 
 set(APP_ICON ${PROJECT_SOURCE_DIR}/icons/icon_disconnected.png)
 
-if(USE_QT5)
-  QT5_WRAP_UI(UIS ${openambit_UIS})
-  QT5_ADD_RESOURCES(RSCS ${openambit_RSCS})
-else(USE_QT5)
-  QT4_WRAP_UI(UIS ${openambit_UIS})
-  QT4_ADD_RESOURCES(RSCS ${openambit_RSCS})
-endif(USE_QT5)
-
-set(CMAKE_AUTOMOC ON)
-
-add_definitions(-DAPP_VERSION="${OPENAMBIT_VERSION}")
-
-add_executable(openambit ${openambit_HDRS} ${openambit_SRCS} ${UIS} ${RSCS})
-
-if(USE_QT5)
-  QT5_USE_MODULES(openambit Core Widgets Network)
-else(USE_QT5)
-  QT4_USE_MODULES(openambit Core Gui Network)
-endif(USE_QT5)
-
-target_link_libraries(openambit ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} )
-
-install(TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
-install(FILES ${APP_ICON}
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
-        RENAME openambit.png)
-
 ######### Translations
 file(GLOB TRANSLATIONS_FILES translations/*.ts)
 
@@ -130,3 +101,33 @@ list(APPEND openambit_RSCS ${TRANSLATIONS_QRC})
 
 # prevent the generated files from being deleted during make clean
 set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM true)
+######### Translations
+
+if(USE_QT5)
+  QT5_WRAP_UI(UIS ${openambit_UIS})
+  QT5_ADD_RESOURCES(RSCS ${openambit_RSCS})
+else(USE_QT5)
+  QT4_WRAP_UI(UIS ${openambit_UIS})
+  QT4_ADD_RESOURCES(RSCS ${openambit_RSCS})
+endif(USE_QT5)
+
+set(CMAKE_AUTOMOC ON)
+
+add_definitions(-DAPP_VERSION="${OPENAMBIT_VERSION}")
+
+add_executable(openambit ${openambit_HDRS} ${openambit_SRCS} ${UIS} ${RSCS})
+
+if(USE_QT5)
+  QT5_USE_MODULES(openambit Core Widgets Network)
+else(USE_QT5)
+  QT4_USE_MODULES(openambit Core Gui Network)
+endif(USE_QT5)
+
+target_link_libraries(openambit ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} )
+
+install(TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+install(FILES ${APP_ICON}
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
+        RENAME openambit.png)
