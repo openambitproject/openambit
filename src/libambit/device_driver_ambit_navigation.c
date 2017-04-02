@@ -243,9 +243,9 @@ ambit_pack_routes_t ambit_navigation_route_init(uint16_t route_count, uint32_t r
     routes.data_route_info = (ambit_pack_route_info_t*)calloc(route_count, sizeof(ambit_pack_route_info_t));
     routes.data_routepoints = (ambit_pack_routepoints_t*)calloc(routepoints_count, sizeof(ambit_pack_routepoints_t));
     routes.route_info_length = sizeof(ambit_pack_route_info_head_t)+sizeof(ambit_pack_route_info_t)*route_count;
-    routes.route_info_pos = 0;
+    routes.route_info_offset = 0;
     routes.routepoints_length = sizeof(ambit_pack_routepoints_t)*routepoints_count;
-    routes.routepoints_pos = 0;
+    routes.routepoints_offset = 0;
     return routes;
 }
 void ambit_navigation_route_free(ambit_pack_routes_t routes) {
@@ -274,7 +274,7 @@ void debug_print_hex(uint8_t *data, size_t datalen) {
 int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings_t *ps) {
     //TODO: Split function in smaller functions
 
-    uint32_t routepoints_count_tot = 0, routepoint_start_index_pos=0, current_point_pos = 0;
+    uint32_t routepoints_count_tot = 0, routepoint_start_index_offset=0, current_point_offset = 0;
 
 
     //calculate total number of routepoints
@@ -290,7 +290,7 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
 
         strncpy(cur->name, cur_ps->name, 15);
 
-        cur->routepoint_start_index = htole32(routepoints_count_tot-cur_ps->points_count-routepoint_start_index_pos);
+        cur->routepoint_start_index = htole32(routepoints_count_tot-cur_ps->points_count-routepoint_start_index_offset);
         cur->routepoint_count = htole16(cur_ps->points_count);
         cur->distance = htole32(cur_ps->distance);
         cur->latitude = htole32(cur_ps->mid_lat);
@@ -301,10 +301,10 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
         cur->unknown2 = 0xffff; //probably needs fix
         cur->unknown3 = 0;
 
-        routepoint_start_index_pos += cur->routepoint_count;
+        routepoint_start_index_offset += cur->routepoint_count;
 
         //pack routepoints
-        current_point_pos = cur->routepoint_start_index;
+        current_point_offset = cur->routepoint_start_index;
 
 
         for(int y=0;y<cur_ps->points_count;++y) {
@@ -330,9 +330,9 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
             //printf("x_axis_rel: %imeters (%i)\n", rel_x, cur_ps->points[y].lon);
             //printf("y_axis_rel: %imeters (%i)\n", rel_y, cur_ps->points[y].lat);
 
-            routes.data_routepoints[current_point_pos].x_axis_rel = htole32(rel_x);
-            routes.data_routepoints[current_point_pos].y_axis_rel = htole32(rel_y);
-            ++current_point_pos;
+            routes.data_routepoints[current_point_offset].x_axis_rel = htole32(rel_x);
+            routes.data_routepoints[current_point_offset].y_axis_rel = htole32(rel_y);
+            ++current_point_offset;
         }
     }
 
@@ -373,7 +373,7 @@ int ambit_navigation_route_write_to_packs(ambit_object_t *object, ambit_pack_rou
     //Write to device;
     //debug_print_hex(data, pack_len);
     ret = libambit_protocol_command(object, ambit_command_data_write, data, pack_len, NULL, NULL, 0);
-    routes->route_info_pos += writelen;
+    routes->route_info_offset += writelen;
 
     free(data);
 
@@ -381,10 +381,10 @@ int ambit_navigation_route_write_to_packs(ambit_object_t *object, ambit_pack_rou
         return ret;
     }
 
-    while(routes->route_info_pos < routes->route_info_length) {
+    while(routes->route_info_offset < routes->route_info_length) {
         device_memory_addr += max_pack_len;
         ++pack_sequence;
-        writelen = fmin(max_pack_len, routes->route_info_length-routes->route_info_pos);
+        writelen = fmin(max_pack_len, routes->route_info_length-routes->route_info_offset);
         pack_len = sizeof(ambit_pack_write_head_t)+writelen;
         write_head.memory_addr_start = htole32(device_memory_addr);
         write_head.pack_len = htole16(writelen);
@@ -395,14 +395,14 @@ int ambit_navigation_route_write_to_packs(ambit_object_t *object, ambit_pack_rou
 
         memcpy(data, &write_head, sizeof(ambit_pack_write_head_t));
         memcpy(data+sizeof(ambit_pack_write_head_t),
-            (uint8_t*)(routes->data_route_info) + (routes->route_info_pos - sizeof(ambit_pack_route_info_head_t)),
+            (uint8_t*)(routes->data_route_info) + (routes->route_info_offset - sizeof(ambit_pack_route_info_head_t)),
             writelen);
 
 
         //Write to device
         //debug_print_hex(data, pack_len);
         ret = libambit_protocol_command(object, ambit_command_data_write, data, pack_len, NULL, NULL, 0);
-        routes->route_info_pos += writelen;
+        routes->route_info_offset += writelen;
         free(data);
 
         if(ret == -1) {
@@ -413,22 +413,22 @@ int ambit_navigation_route_write_to_packs(ambit_object_t *object, ambit_pack_rou
     //Write route points
     device_memory_addr = 0x042830;
 
-    while(routes->routepoints_pos < routes->routepoints_length) {
-        writelen = fmin(max_pack_len, routes->routepoints_length-routes->routepoints_pos);
+    while(routes->routepoints_offset < routes->routepoints_length) {
+        writelen = fmin(max_pack_len, routes->routepoints_length-routes->routepoints_offset);
         write_head.memory_addr_start = htole32(device_memory_addr);
         write_head.pack_len = htole16(writelen);
         data = (uint8_t*)malloc(sizeof(ambit_pack_write_head_t)+writelen);
 
         memcpy(data, &write_head, sizeof(ambit_pack_write_head_t));
         memcpy(data+sizeof(ambit_pack_write_head_t),
-                (uint8_t*)(routes->data_routepoints) + routes->routepoints_pos,
+                (uint8_t*)(routes->data_routepoints) + routes->routepoints_offset,
                 writelen);
         pack_len = sizeof(ambit_pack_write_head_t)+writelen;
  
         //Write to device
         //debug_print_hex(data, pack_len);
         ret = libambit_protocol_command(object, ambit_command_data_write, data, pack_len, NULL, NULL, 0);
-        routes->routepoints_pos += writelen;
+        routes->routepoints_offset += writelen;
         free(data);
         device_memory_addr += max_pack_len;
     }

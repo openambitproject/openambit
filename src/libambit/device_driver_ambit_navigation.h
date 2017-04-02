@@ -106,9 +106,9 @@ typedef struct ambit_pack_routes_s {
     ambit_pack_routepoints_t        *data_routepoints;
 
     size_t route_info_length; //bytes
-    size_t route_info_pos; //bytes
+    size_t route_info_offset; //bytes
     size_t routepoints_length; //bytes
-    size_t routepoints_pos; //bytes
+    size_t routepoints_offset; //bytes
 } ambit_pack_routes_t;
 
 // Cross reference table for converting to and from movescount waypoint type id

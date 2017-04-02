@@ -113,7 +113,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
 
         //Sort routes on name
         QStringList qslist_route_name;
-        uint16_t sort_pos = 0;
+        uint16_t sort_offset = 0;
         ambit_route_t *routes_sorted = (ambit_route_t*)calloc(ps->routes.count,sizeof(ambit_route_t));
 
         for(int x=0; x < ps->routes.count;++x) {
@@ -126,7 +126,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         for(int x=0; x < qslist_route_name.size(); ++x) {
             for(int y = 0; y < ps->routes.count;++y) {
                 if(qslist_route_name.at(x).compare(QString(ps->routes.data[y].name)) == 0) {
-                    routes_sorted[sort_pos++] = ps->routes.data[y];
+                    routes_sorted[sort_offset++] = ps->routes.data[y];
                     break;
                 }
             }
@@ -169,7 +169,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     //Sort waypoints on route_name
     QStringList qslist_route_name;
     QString last = "";
-    uint16_t sort_pos = 0;
+    uint16_t sort_offset = 0;
     ambit_waypoint_t *wp_sorted = (ambit_waypoint_t*)calloc(ps->waypoints.count,sizeof(ambit_waypoint_t));
 
     for(int x=0; x < ps->waypoints.count;++x) {
@@ -184,7 +184,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     for(int x=0; x < qslist_route_name.size(); ++x) {
         for(int y = 0; y < ps->waypoints.count;++y) {
             if(qslist_route_name.at(x).compare(QString(ps->waypoints.data[y].route_name)) == 0) {
-                wp_sorted[sort_pos++] = ps->waypoints.data[y];
+                wp_sorted[sort_offset++] = ps->waypoints.data[y];
             }
         }
     }
