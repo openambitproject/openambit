@@ -23,6 +23,8 @@
 
 #include "distance.h"
 
+#define EARTH_RADIUS 6367
+
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
@@ -46,7 +48,7 @@ double distance_calc(double lat_a, double long_a, double lat_b, double long_b)
     double tmp = pow(sin(lat_dist/2),2) +
         cos(lat_a) * cos(lat_b) * pow(sin(long_dist/2),2);
     tmp = 2 * atan2(sqrt(tmp), sqrt(1-tmp));
-    tmp = (6371 * tmp); //6371 is radius of earth
+    tmp = (EARTH_RADIUS * tmp);
     return tmp;
 }
 
