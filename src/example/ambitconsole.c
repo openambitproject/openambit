@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libambit.h>
+#include <libambit-structs.h>
 
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);

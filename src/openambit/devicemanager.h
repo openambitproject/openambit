@@ -35,6 +35,7 @@
 #include <movescount/movescountxml.h>
 #include "udevlistener.h"
 #include <libambit.h>
+#include <libambit-structs.h>
 
 #include <libudev.h>
 

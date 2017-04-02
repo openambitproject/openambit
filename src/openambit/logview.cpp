@@ -1,4 +1,5 @@
 #include "logview.h"
+#include <libambit-structs.h>
 
 LogView::LogView(QWidget *parent):
     QTextBrowser(parent)

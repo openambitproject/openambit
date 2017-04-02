@@ -20,6 +20,7 @@
  *
  */
 #include "deviceinfo.h"
+#include <libambit-structs.h>
 
 DeviceInfo&
 DeviceInfo::operator=(const ambit_device_info_t& devinfo)

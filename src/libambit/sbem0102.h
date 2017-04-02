@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "libambit.h"
+#include "debug.h"
+#include "utils.h"
 
 typedef struct libambit_sbem0102_s {
     uint16_t chunk_size;
@@ -156,15 +158,36 @@ static inline const uint8_t *libambit_sbem0102_data_ptr(libambit_sbem0102_data_t
  */
 static inline int libambit_sbem0102_data_next(libambit_sbem0102_data_t *object)
 {
+    size_t read_offset;
+    uint8_t log_end[] = { 0, 0, 0, 0, 0x7a, 0x44 };
+    uint8_t *data;
+
     // Initial state
     if (object->read_ptr == NULL) {
         object->read_ptr = object->data;
         return 0;
     }
     // Loop state
-    if (object->data + object->size > object->read_ptr + 2 + libambit_sbem0102_data_len(object)) {
-        object->read_ptr += 2 + libambit_sbem0102_data_len(object);
-        return 0;
+    switch (object->read_ptr[0]) {
+      case 0x7a:
+      case 0x8a:
+        read_offset = (size_t) (object->read_ptr - object->data);
+        data = find_sequence(object->read_ptr, object->size - read_offset,
+                             log_end, ARRAY_LENGTH(log_end));
+        if (data) {
+            object->read_ptr = data + 4;
+            return 0;
+        }
+        else {
+            return -1;
+        }
+        break;
+      default:
+        if (object->data + object->size > object->read_ptr + 2 + libambit_sbem0102_data_len(object)) {
+            object->read_ptr += 2 + libambit_sbem0102_data_len(object);
+            return 0;
+        }
+        break;
     }
     // Exit state
     return -1;
