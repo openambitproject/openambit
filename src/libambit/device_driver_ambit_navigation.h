@@ -88,8 +88,8 @@ typedef struct __attribute__((__packed__)) ambit_pack_route_info_s {
     uint32_t      distance; //length of route from first to last point in meters
     int32_t       latitude;
     int32_t       longitude;
-    int32_t       first_x_axis_rel_eastern_point; //why??
-    int32_t       first_y_axis_rel_nothern_point; //Why??
+    int32_t       max_x_axis_rel_eastern_point; //why??
+    int32_t       max_y_axis_rel_nothern_point; //Why??
     uint16_t      unknown1; //Mostly 0xffff
     uint16_t      unknown2; //Mostly 0xffff
     uint16_t      unknown3; //Always 0??

@@ -295,8 +295,8 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
         cur->distance = htole32(cur_ps->distance);
         cur->latitude = htole32(cur_ps->mid_lat);
         cur->longitude = htole32(cur_ps->mid_lon);
-        cur->first_x_axis_rel_eastern_point = 0; //Will be set later
-        cur->first_y_axis_rel_nothern_point = 0; //Will be set later
+        cur->max_x_axis_rel_eastern_point = 0; //Will be set later
+        cur->max_y_axis_rel_nothern_point = 0; //Will be set later
         cur->unknown1 = 0xffff; //probably needs fix
         cur->unknown2 = 0xffff; //probably needs fix
         cur->unknown3 = 0;
@@ -320,11 +320,11 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
                 rel_y *= -1;
             }
 
-            if(rel_x > cur->first_x_axis_rel_eastern_point) {
-                cur->first_x_axis_rel_eastern_point = htole32(rel_x);
+            if(rel_x > cur->max_x_axis_rel_eastern_point) {
+                cur->max_x_axis_rel_eastern_point = htole32(rel_x);
             }
-            if(rel_y > cur->first_y_axis_rel_nothern_point) {
-                cur->first_y_axis_rel_nothern_point = htole32(rel_y);
+            if(rel_y > cur->max_y_axis_rel_nothern_point) {
+                cur->max_y_axis_rel_nothern_point = htole32(rel_y);
             }
 
             //printf("x_axis_rel: %imeters (%i)\n", rel_x, cur_ps->points[y].lon);
