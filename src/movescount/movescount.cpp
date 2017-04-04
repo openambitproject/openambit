@@ -512,6 +512,8 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
         QByteArray data = reply->readAll();
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
+        } else {
+            qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
         }
     } 
     else {
