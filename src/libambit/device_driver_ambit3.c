@@ -93,6 +93,8 @@ ambit_device_driver_t ambit_device_driver_ambit3 = {
     gps_orbit_header_read,
     gps_orbit_write,
     NULL,
+    NULL,
+    NULL,
     NULL
 };
 

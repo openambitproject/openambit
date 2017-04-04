@@ -85,7 +85,7 @@ void DeviceManager::detect()
     }
 }
 
-void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncMovescount = false)
+void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncSportMode = false, bool syncMovescount = false)
 {
     int res = -1;
     int waypoint_sync_res = -1;
@@ -101,6 +101,7 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     syncParts = 2;
     if (syncTime) syncParts++;
     if (syncOrbit) syncParts+=2;
+    if (syncSportMode) syncParts++;
     if (syncMovescount) syncParts++;
 
     if (this->deviceObject != NULL) {
@@ -156,6 +157,26 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
                 emit this->syncProgressInform(QString(tr("Failed to get orbital data")), true, false, 100*currentSyncPart/syncParts);
                 res = -1;
             }
+
+            currentSyncPart++;
+        }
+
+        if (syncSportMode && res != -1) {
+            emit this->syncProgressInform(QString(tr("Fetching sport modes")), false, true, 100*currentSyncPart/syncParts);
+
+            ambit_app_rules_t* ambitApps = ambit_malloc_app_rules();
+            movesCount->getAppsData(ambitApps);
+
+            ambit_device_settings_t *ambitDeviceSettings = ambit_malloc_device_settings();
+            if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
+                emit this->syncProgressInform(QString(tr("Write sport modes")), false, false, 100*currentSyncPart/syncParts);
+                res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
+
+                emit this->syncProgressInform(QString(tr("Write apps")), false, true, 100*currentSyncPart/syncParts);
+                res = libambit_app_data_write(this->deviceObject, ambitDeviceSettings, ambitApps);
+            }
+            libambit_device_settings_free(ambitDeviceSettings);
+            libambit_app_rules_free(ambitApps);
 
             currentSyncPart++;
         }
