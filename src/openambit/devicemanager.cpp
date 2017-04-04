@@ -22,12 +22,14 @@
 #include "devicemanager.h"
 
 #include <QTimer>
+#include <stdio.h>
 #include <libambit.h>
 
 DeviceManager::DeviceManager(QObject *parent) :
     QObject(parent), deviceObject(NULL), udevListener(NULL)
 {
     movesCount = MovesCount::instance();
+    currentPersonalSettings = libambit_personal_settings_alloc();
 }
 
 DeviceManager::~DeviceManager()
@@ -35,6 +37,11 @@ DeviceManager::~DeviceManager()
     mutex.lock();
     delete udevListener;
     chargeTimer.stop();
+
+    if(currentPersonalSettings != NULL) {
+        libambit_personal_settings_free(currentPersonalSettings);
+    }
+
     mutex.unlock();
 }
 
@@ -70,6 +77,7 @@ void DeviceManager::detect()
         this->deviceObject = libambit_new(devinfo);
     }
     libambit_free_enumeration(devinfo);
+
     mutex.unlock();
 
     if (res == 0) {
@@ -80,10 +88,12 @@ void DeviceManager::detect()
 void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncMovescount = false)
 {
     int res = -1;
+    int waypoint_sync_res = -1;
     time_t current_time;
     struct tm *local_time;
-    uint8_t *orbitData;
+    uint8_t *orbitData = NULL;
     int orbitDataLen;
+    ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
     mutex.lock();
     this->syncMovescount = syncMovescount;
@@ -91,10 +101,14 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     syncParts = 2;
     if (syncTime) syncParts++;
     if (syncOrbit) syncParts+=2;
+    if (syncMovescount) syncParts++;
 
     if (this->deviceObject != NULL) {
         emit this->syncProgressInform(QString(tr("Reading personal settings")), false, true, 0);
-        res = libambit_personal_settings_get(this->deviceObject, &currentPersonalSettings);
+
+        // Reading personal settings + waypoints
+        res = libambit_personal_settings_get(this->deviceObject, currentPersonalSettings);
+        waypoint_sync_res = libambit_navigation_read(this->deviceObject, currentPersonalSettings);
         currentSyncPart++;
 
         libambit_sync_display_show(this->deviceObject);
@@ -110,6 +124,22 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         if (res != -1) {
             emit this->syncProgressInform(QString(tr("Reading log files")), false, true, 100*currentSyncPart/syncParts);
             res = libambit_log_read(this->deviceObject, readAllLogs ? NULL : &log_skip_cb, &log_push_cb, &log_progress_cb, this);
+            currentSyncPart++;
+        }
+
+        if (waypoint_sync_res != -1 && syncMovescount) {
+            emit this->syncProgressInform(QString(tr("Synchronizing settings")), false, true, 100*currentSyncPart/syncParts);
+            currentSyncPart++;
+
+            if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
+                 movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
+                 movesCount->writePersonalSettings(movecountPersonalSettings);
+                 libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
+            }
+
+        } else if(syncMovescount) {
+
+            emit this->syncProgressInform(QString(tr("Synchronizing failed")), true, false, 100*currentSyncPart/syncParts);
             currentSyncPart++;
         }
 
@@ -133,6 +163,9 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
         libambit_sync_display_clear(this->deviceObject);
     }
     mutex.unlock();
+
+    libambit_personal_settings_free(movecountPersonalSettings);
+    movecountPersonalSettings = NULL;
 
     emit syncFinished(res >= 0);
 
@@ -182,7 +215,7 @@ int DeviceManager::log_skip_cb(void *ref, ambit_log_header_t *log_header)
 void DeviceManager::log_push_cb(void *ref, ambit_log_entry_t *log_entry)
 {
     DeviceManager *manager = static_cast<DeviceManager*> (ref);
-    LogEntry *entry = manager->logStore.store(manager->currentDeviceInfo, &manager->currentPersonalSettings, log_entry);
+    LogEntry *entry = manager->logStore.store(manager->currentDeviceInfo, manager->currentPersonalSettings, log_entry);
     if (entry != NULL) {
         //! TODO: make this optional, only used for debugging
         manager->movesCountXML.writeLog(entry);

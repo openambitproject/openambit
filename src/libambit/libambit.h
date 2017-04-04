@@ -52,6 +52,52 @@ typedef struct ambit_device_status_s {
     uint8_t  charge;
 } ambit_device_status_t;
 
+typedef struct ambit_waypoint_s {
+    uint16_t      index;
+    char          name[50];
+    char          route_name[50];
+    uint8_t       ctime_second;
+    uint8_t       ctime_minute;
+    uint8_t       ctime_hour;
+    uint8_t       ctime_day;
+    uint8_t       ctime_month;
+    uint16_t      ctime_year;
+    int32_t       latitude;
+    int32_t       longitude;
+    uint16_t      altitude;
+    uint8_t       type;
+    uint8_t       status;
+} ambit_waypoint_t;
+
+typedef struct ambit_routepoint_s {
+    int32_t      lat;      //devide value by 10000000
+    int32_t      lon;      //devide value by 10000000
+    int32_t      altitude; //meters
+    uint32_t     distance; //relative distance from 0 - 1.000.000
+} ambit_routepoint_t;
+
+typedef struct ambit_route_s {
+    uint32_t      id;
+    char          name[50];
+    uint16_t      waypoint_count;
+    uint16_t      activity_id;
+    uint16_t      altitude_asc; //meters
+    uint16_t      altitude_dec; //meters
+    uint16_t      points_count;
+    uint32_t      distance;
+    int32_t       start_lat;  //devide value by 10000000
+    int32_t       start_lon;  //devide value by 10000000
+    int32_t       end_lat;  //devide value by 10000000
+    int32_t       end_lon;  //devide value by 10000000
+    int32_t       max_lat;  //devide value by 10000000
+    int32_t       min_lat;  //devide value by 10000000
+    int32_t       max_lon;  //devide value by 10000000
+    int32_t       min_lon;  //devide value by 10000000
+    int32_t       mid_lat;  //devide value by 10000000
+    int32_t       mid_lon;  //devide value by 10000000
+    ambit_routepoint_t *points;
+} ambit_route_t;
+
 typedef struct ambit_personal_settings_s {
     uint8_t  sportmode_button_lock;
     uint8_t  timemode_button_lock;
@@ -106,6 +152,14 @@ typedef struct ambit_personal_settings_s {
     uint8_t  automatic_bikepower_calib;
     uint8_t  automatic_footpod_calib;
     uint8_t  training_program;
+    struct {
+        ambit_route_t *data;
+        uint8_t  count;
+    } routes;
+    struct {
+        ambit_waypoint_t *data;
+        uint16_t count;
+    } waypoints;
 } ambit_personal_settings_t;
 
 typedef struct ambit_log_date_time_s {
@@ -174,6 +228,43 @@ typedef enum ambit_log_sample_periodic_type_e {
     ambit_log_sample_periodic_type_ruleoutput4 = 0x67,
     ambit_log_sample_periodic_type_ruleoutput5 = 0x68
 } ambit_log_sample_periodic_type_t;
+
+typedef enum movescount_waypoint_type_e {
+    movescount_waypoint_type_building = 0,
+    movescount_waypoint_type_home = 1,
+    movescount_waypoint_type_car = 2,
+    movescount_waypoint_type_parking = 3,
+    movescount_waypoint_type_camp = 4,
+    movescount_waypoint_type_camping = 5,
+    movescount_waypoint_type_food = 6,
+    movescount_waypoint_type_restaurant = 7,
+    movescount_waypoint_type_cafe = 8,
+    movescount_waypoint_type_lodging = 9,
+    movescount_waypoint_type_hostel = 10,
+    movescount_waypoint_type_hotel = 11,
+    movescount_waypoint_type_water = 12,
+    movescount_waypoint_type_river = 13,
+    movescount_waypoint_type_lake = 14,
+    movescount_waypoint_type_coast = 15,
+    movescount_waypoint_type_mouantain = 16,
+    movescount_waypoint_type_hill = 17,
+    movescount_waypoint_type_valley = 18,
+    movescount_waypoint_type_cliff = 19,
+    movescount_waypoint_type_forest = 20,
+    movescount_waypoint_type_crossroad = 21,
+    movescount_waypoint_type_sight = 22,
+    movescount_waypoint_type_beginning = 23,
+    movescount_waypoint_type_end = 24,
+    movescount_waypoint_type_geocache = 25,
+    movescount_waypoint_type_poi = 26,
+    movescount_waypoint_type_road = 27,
+    movescount_waypoint_type_trail = 28,
+    movescount_waypoint_type_rock = 29,
+    movescount_waypoint_type_meadow = 30,
+    movescount_waypoint_type_cave = 31,
+    movescount_waypoint_type_internal_wp_start = 32,
+    movescount_waypoint_type_internal_wp_end = 33
+} movescount_waypoint_type_t;
 
 typedef struct ambit_log_sample_periodic_value_s {
     ambit_log_sample_periodic_type_t type;
@@ -496,12 +587,46 @@ typedef void (*ambit_log_progress_cb)(void *userref, uint16_t log_count, uint16_
  * libambit_log_entry_free()
  */
 int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
-
 /**
  * Free log entry allocated by libambit_log_read
  * \param log_entry Log entry to free
  */
 void libambit_log_entry_free(ambit_log_entry_t *log_entry);
+/**
+ * Init ambit_route_t struct
+ */
+ambit_route_t* libambit_route_alloc(uint16_t route_count);
+/**
+ * Free struct allocated by libambit_route_alloc
+ * \param personal_settings Struct to free
+ */
+void libambit_route_free(ambit_route_t *routes, uint16_t route_count);
+/**
+ * Append to a ambit_personal_settings_t.waypoints
+ */
+void libambit_waypoint_append(ambit_personal_settings_t *ps, ambit_waypoint_t *waypoints, uint8_t num_to_append);
+void libambit_debug_route_print(ambit_route_t *r);
+/**
+ * Init personal_settings struct
+ */
+ambit_personal_settings_t* libambit_personal_settings_alloc();
+/**
+ * Free struct allocated by libambit_personal_settings_alloc
+ * \param personal_settings Struct to free
+ */
+void libambit_personal_settings_free(ambit_personal_settings_t *personal_settings);
+
+/**
+ * Read Waypoint entries
+ */
+int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
+
+/**
+ * Write Waypoint entries
+ */
+int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
+
+void libambit_test(ambit_object_t *object);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }

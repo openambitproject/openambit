@@ -28,7 +28,10 @@
 #include <libambit.h>
 
 #include "logentry.h"
+#include "movescount.h"
 #include "movescountlogdirentry.h"
+
+class MovesCount;
 
 class MovesCountJSON : public QObject
 {
@@ -39,15 +42,22 @@ public:
     int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3]);
     int parseLogReply(QByteArray &input, QString &moveId);
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
+    int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount);
+    int parseRoute(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps, MovesCount *movescount);
+    int parseRoutePoints(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps);
+    bool appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, QString route_name, QString waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type);
 
+    int generateNewPersonalSettings(ambit_personal_settings_t *settings, DeviceInfo &device_info, QByteArray &output);
     int generateLogData(LogEntry *logEntry, QByteArray &output);
-    
+
 signals:
-    
+
 public slots:
 
 private:
     bool writePeriodicSample(ambit_log_sample_t *sample, QVariantMap &output);
+    bool copyDataString(QVariant entry, char *data, size_t maxlength);
+    bool appendRoutePoint(ambit_route_t *route, int point_number, int32_t lat, int32_t lon, int32_t altitude, uint32_t distance);
 
     int compressData(QByteArray &content, QByteArray &output);
     QList<int> rearrangeSamples(LogEntry *logEntry);

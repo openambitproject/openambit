@@ -91,7 +91,9 @@ ambit_device_driver_t ambit_device_driver_ambit3 = {
     personal_settings_get,
     log_read,
     gps_orbit_header_read,
-    gps_orbit_write
+    gps_orbit_write,
+    NULL,
+    NULL
 };
 
 /*
@@ -386,7 +388,7 @@ static int get_memory_maps(ambit_object_t *object)
     memory_map_entry_t *mm_entry;
     const uint8_t *ptr;
 
-    if (libambit_protocol_command(object, ambit_command_unknown2, NULL, 0, &reply_data, &replylen, 2) != 0 || replylen < 4) {
+    if (libambit_protocol_command(object, ambit_command_waypoint_count, NULL, 0, &reply_data, &replylen, 2) != 0 || replylen < 4) {
         libambit_protocol_free(reply_data);
         LOG_WARNING("Failed to read memory map key");
         return -1;

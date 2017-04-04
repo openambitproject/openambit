@@ -54,7 +54,10 @@ public:
 
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
-    int getPersonalSettings(ambit_personal_settings_t *settings);
+    int getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings);
+    int getRoute(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
+    int getRoutePoints(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
+    int applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings);
     void getDeviceSettings();
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
@@ -75,7 +78,9 @@ private slots:
     void handleAuthorizationSignal(bool authorized);
 
     int getOrbitalDataInThread(u_int8_t **data);
-    int getPersonalSettingsInThread(ambit_personal_settings_t *settings);
+    int getPersonalSettingsInThread(ambit_personal_settings_t *settings, bool onlychangedsettings);
+    int getRouteInThread(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
+    int getRoutePointsInThread(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
     void getDeviceSettingsInThread();
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 
@@ -95,6 +100,9 @@ private:
 
     QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
     QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+
+    QNetworkReply *asyncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *syncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
 
 #ifdef QT_DEBUG
     void writeJsonToStorage(QString filename, QByteArray &data);

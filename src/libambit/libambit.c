@@ -509,3 +509,110 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
 
     return device;
 }
+
+ambit_personal_settings_t* libambit_personal_settings_alloc() {
+    ambit_personal_settings_t *ps;
+    ps = (ambit_personal_settings_t*)calloc(1, sizeof(ambit_personal_settings_t));
+    ps->routes.data = NULL;
+    ps->waypoints.data = NULL;
+    return ps;
+}
+
+void libambit_personal_settings_free(ambit_personal_settings_t *personal_settings) {
+    if(personal_settings->waypoints.data != NULL) {
+        free(personal_settings->waypoints.data);
+    }
+
+    if(personal_settings->routes.data != NULL) {
+        libambit_route_free(personal_settings->routes.data, personal_settings->routes.count);
+    }
+
+    free(personal_settings);
+}
+
+void libambit_debug_route_print(ambit_route_t *r) {
+    printf("id: %u\n", r->id);
+    printf("name: %s\n", r->name);
+    printf("waypoint_count: %u\n", r->waypoint_count);
+    printf("activity_id: %u\n", r->activity_id);
+    printf("points_count: %u\n", r->points_count);
+    printf("distance: %u\n", r->distance);
+    printf("mid_lat: %u\n", r->mid_lat);
+    printf("mid_lon: %u\n", r->mid_lon);
+    printf("\n");
+}
+
+ambit_route_t* libambit_route_alloc(uint16_t route_count) {
+    ambit_route_t *routes;
+    routes = (ambit_route_t*)calloc(route_count, sizeof(ambit_route_t));
+    for(int x=0; x<route_count; ++x) {
+        routes[x].points = NULL;
+    }
+    return routes;
+}
+
+void libambit_route_free(ambit_route_t *routes, uint16_t route_count) {
+
+    if(route_count!=0) {
+        for(int x=0; x<route_count; ++x) {
+            if(routes[x].points != NULL) {
+                free(routes[x].points);
+            }
+        }
+    } else if(routes->points != NULL) {
+        free(routes->points);
+    }
+
+    free(routes);
+}
+
+void libambit_waypoint_append(ambit_personal_settings_t *ps, ambit_waypoint_t *waypoints, uint8_t num_to_append) {
+
+    if(num_to_append == 0) {
+        //Do nothing
+        return;
+    }
+
+    ambit_waypoint_t *old_array = ps->waypoints.data;
+    uint8_t old_count = ps->waypoints.count;
+
+    ps->waypoints.count += num_to_append;
+    ps->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ps->waypoints.count);
+
+    if(old_count>0) {
+        memcpy(ps->waypoints.data, old_array, sizeof(ambit_waypoint_t)*old_count);
+        if(old_array != NULL) {
+            free(old_array);
+        }
+    }
+    memcpy(&(ps->waypoints.data[old_count]), waypoints, sizeof(ambit_waypoint_t)*num_to_append);
+}
+
+int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->navigation_read != NULL) {
+        ret = object->driver->navigation_read(object, personal_settings);
+    }
+    else {
+        LOG_WARNING("Driver does not support navigation_waypoint_read");
+    }
+
+    return ret;
+}
+
+int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings) {
+
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->navigation_write != NULL) {
+        ret = object->driver->navigation_write(object, personal_settings);
+    }
+    return ret;
+}
+
+void libambit_test(ambit_object_t *object) {
+    size_t replylen;
+    uint8_t *reply_data = NULL;
+    libambit_protocol_command(object, 0x0b04, 0, 0, &reply_data, &replylen, 0);
+}

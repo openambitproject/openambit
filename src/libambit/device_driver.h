@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include "libambit.h"
+#include "device_driver_ambit_navigation.h"
 
 typedef struct ambit_device_driver_s {
     void (*init)(ambit_object_t *object, uint32_t driver_param);
@@ -37,6 +38,8 @@ typedef struct ambit_device_driver_s {
     int (*log_read)(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref);
     int (*gps_orbit_header_read)(ambit_object_t *object, uint8_t data[8]);
     int (*gps_orbit_write)(ambit_object_t *object, uint8_t *data, size_t datalen);
+    int (*navigation_read)(ambit_object_t *object, ambit_personal_settings_t *settings);
+    int (*navigation_write)(ambit_object_t *object, ambit_personal_settings_t *settings);
 } ambit_device_driver_t;
 
 extern ambit_device_driver_t ambit_device_driver_ambit;  // Ambit & Ambit2
