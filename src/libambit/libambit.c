@@ -752,18 +752,6 @@ void libambit_personal_settings_free(ambit_personal_settings_t *personal_setting
     free(personal_settings);
 }
 
-void libambit_debug_route_print(ambit_route_t *r) {
-    printf("id: %u\n", r->id);
-    printf("name: %s\n", r->name);
-    printf("waypoint_count: %u\n", r->waypoint_count);
-    printf("activity_id: %u\n", r->activity_id);
-    printf("points_count: %u\n", r->points_count);
-    printf("distance: %u\n", r->distance);
-    printf("mid_lat: %u\n", r->mid_lat);
-    printf("mid_lon: %u\n", r->mid_lon);
-    printf("\n");
-}
-
 ambit_route_t* libambit_route_alloc(uint16_t route_count) {
     ambit_route_t *routes;
     routes = (ambit_route_t*)calloc(route_count, sizeof(ambit_route_t));

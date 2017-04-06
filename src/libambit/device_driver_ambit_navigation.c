@@ -150,8 +150,11 @@ int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t
 
         if( libambit_protocol_command(object, ambit_command_waypoint_read, send_data, sendlen, &reply_data ,&replylen , 0) == 0 ) {
             memcpy(&waypoint_return_list[x], reply_data, sizeof(ambit_pack_waypoint_t));
-            //ambit_navigation_print_struct(&waypoint_return_list[x]);
-            //printf("\n");
+
+#ifdef DEBUG_PRINT_INFO
+            ambit_navigation_print_struct(&waypoint_return_list[x]);
+            printf("\n");
+#endif
 
             if(waypoint_return_list[x].type < NUM_WAYPOINTS_AMBIT) {
                 waypoint_return_list[x].type = ambit_waypoint_types_to_movescount[waypoint_return_list[x].type];
@@ -212,6 +215,7 @@ int ambit_navigation_waypoint_write(ambit_object_t *object,ambit_pack_waypoint_t
     return 0;
 }
 
+#ifdef DEBUG_PRINT_INFO
 void ambit_navigation_print_struct(ambit_pack_waypoint_t *str) {
 
 	printf("index: %u\n", le16toh(str->index));
@@ -232,6 +236,7 @@ void ambit_navigation_print_struct(ambit_pack_waypoint_t *str) {
 	printf("status: %u\n", str->status);
 
 }
+#endif
 
 ambit_pack_routes_t ambit_navigation_route_init(uint16_t route_count, uint32_t routepoints_count) {
     ambit_pack_routes_t routes;

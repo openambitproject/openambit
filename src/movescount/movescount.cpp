@@ -554,10 +554,6 @@ void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settin
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
-
-        if (_data.length() > 0) {
-            printf("writePersonalSettingsInThread OK: %s\n", _data.data());
-        }
     } else {
         qDebug() << QString("writePersonalSettingsInThread error: ") << reply->error();
     }
