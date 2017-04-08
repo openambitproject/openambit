@@ -18,7 +18,7 @@ public:
 
     MovescountSettings& operator=(MovescountSettings &rhs);
 
-    void toAmbitData(ambit_device_settings_t *ambitSettings);
+    void toAmbitData(ambit_custom_mode_device_settings_t *ambitSettings);
 signals:
 
 public slots:

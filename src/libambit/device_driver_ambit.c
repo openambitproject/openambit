@@ -54,8 +54,8 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
 static int gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
-static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes);
-static int app_data_write(ambit_object_t *object, ambit_device_settings_t *ambit_device_settings, ambit_app_rules_t* ambit_apps);
+static int custom_mode_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_custom_modes);
+static int app_data_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_device_settings, ambit_app_rules_t* ambit_apps);
 
 /*
  * Global variables
@@ -309,7 +309,7 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
-static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_device_settings)
+static int custom_mode_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_device_settings)
 {
     int ret = -1;
 
@@ -317,7 +317,7 @@ static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *am
 
 //    libambit_protocol_command(object, ambit_command_write_start, NULL, 0, NULL, NULL, 0);
 
-    int dataBufferSize = calculate_size_for_serialize_device_settings(ambit_device_settings);
+    int dataBufferSize = calculate_size_for_serialize_custom_mode_device_settings(ambit_device_settings);
     if (dataBufferSize==0) {
         return 0;
     }
@@ -325,14 +325,14 @@ static int custom_mode_write(ambit_object_t *object, ambit_device_settings_t *am
     uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
     if (data != NULL) {
-        int dataLen = serialize_device_settings(ambit_device_settings, data);
+        int dataLen = serialize_custom_mode_device_settings(ambit_device_settings, data);
         ret = libambit_pmem20_custom_mode_write(&object->driver_data->pmem20, data, dataLen, false);
     }
 
     return ret;
 }
 
-static int app_data_write(ambit_object_t *object, ambit_device_settings_t *ambit_device_settings, ambit_app_rules_t* ambit_apps)
+static int app_data_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_device_settings, ambit_app_rules_t* ambit_apps)
 {
     int ret = -1;
 

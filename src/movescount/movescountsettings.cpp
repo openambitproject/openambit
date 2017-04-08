@@ -44,10 +44,10 @@ MovescountSettings& MovescountSettings::operator=(MovescountSettings &rhs)
     return *this;
 }
 
-void MovescountSettings::toAmbitData(ambit_device_settings_t *ambitSettings)
+void MovescountSettings::toAmbitData(ambit_custom_mode_device_settings_t *ambitSettings)
 {
     // Copy Custom modes
-    if (ambit_malloc_custom_modes(customModes.count(), ambitSettings)) {
+    if (libambit_malloc_custom_modes(customModes.count(), ambitSettings)) {
         ambit_custom_mode_t *ambitCustomModes = ambitSettings->custom_modes;
 
         foreach(CustomMode customMode, customModes)
@@ -58,7 +58,7 @@ void MovescountSettings::toAmbitData(ambit_device_settings_t *ambitSettings)
     }
 
     // Copy Custom mode Groups
-    if (ambit_malloc_custom_mode_groups(customModeGroups.count(), ambitSettings)) {
+    if (libambit_malloc_custom_mode_groups(customModeGroups.count(), ambitSettings)) {
         ambit_custom_mode_group_t *ambitCustomModeGroups = ambitSettings->custom_mode_groups;
 
         foreach(CustomModeGroup customModeGroup, customModeGroups)

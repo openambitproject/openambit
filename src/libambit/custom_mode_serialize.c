@@ -14,9 +14,9 @@ const u_int8_t UNKNOWN_DISPLAYES[] =
 
 
 static void serialize_header(u_int16_t header_nbr, u_int16_t length, u_int8_t *dataWrite);
-static int serialize_custom_modes(ambit_device_settings_t *ambit_settings, u_int8_t *data);
+static int serialize_custom_modes(ambit_custom_mode_device_settings_t *ambit_settings, u_int8_t *data);
 static int serialize_custom_mode(ambit_custom_mode_t *ambit_custom_mode, u_int8_t *data);
-static u_int8_t serialize_settings(ambit_custom_mode_settings_t *settings, u_int8_t *data);
+static u_int8_t serialize_custom_mode_settings(ambit_custom_mode_settings_t *settings, u_int8_t *data);
 static int serialize_displays(ambit_custom_mode_t *ambit_custom_mode, u_int8_t *data);
 static int serialize_display(ambit_custom_mode_display_t *display, u_int8_t *data);
 static int serialize_display_layout(uint16_t displayType, u_int8_t *data);
@@ -27,7 +27,7 @@ static int serialize_view_entry(uint16_t view, u_int8_t *data);
 
 static int serialize_apps_index(ambit_custom_mode_t *ambit_custom_mode, u_int8_t *data);
 
-static int serialize_custom_mode_groups(ambit_device_settings_t *ambit_settings, u_int8_t *data);
+static int serialize_custom_mode_groups(ambit_custom_mode_device_settings_t *ambit_settings, u_int8_t *data);
 static int serialize_custom_mode_group(ambit_custom_mode_group_t *custom_mode_group, u_int8_t *data);
 static int serialize_name(char *activity_name, u_int8_t *data);
 static int serialize_activity_id(uint16_t activity_id, u_int8_t *data);
@@ -65,7 +65,7 @@ u_int8_t calculate_app_rule_checksum(u_int8_t *data, u_int32_t data_length)
     return checksum;
 }
 
-int calculate_size_for_serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_t* ambit_apps)
+int calculate_size_for_serialize_app_data(ambit_custom_mode_device_settings_t *ambit_settings, ambit_app_rules_t* ambit_apps)
 {
     u_int16_t nbr_of_apps = ambit_settings->app_ids_count;
 
@@ -87,7 +87,7 @@ int calculate_size_for_serialize_app_data(ambit_device_settings_t *ambit_setting
     return serialize_buffer_size;
 }
 
-int serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_t* ambit_apps, uint8_t *data)
+int serialize_app_data(ambit_custom_mode_device_settings_t *ambit_settings, ambit_app_rules_t* ambit_apps, uint8_t *data)
 {
     u_int16_t nbr_of_apps = ambit_settings->app_ids_count;
     if (nbr_of_apps==0) {
@@ -130,7 +130,7 @@ int serialize_app_data(ambit_device_settings_t *ambit_settings, ambit_app_rules_
     return writeAppPosition - data;
 }
 
-int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_device_settings)
+int calculate_size_for_serialize_custom_mode_device_settings(ambit_custom_mode_device_settings_t *ambit_device_settings)
 {
     int serialize_buffer_size = 0;
     int i, j;
@@ -167,7 +167,7 @@ int calculate_size_for_serialize_device_settings(ambit_device_settings_t *ambit_
     return serialize_buffer_size;
 }
 
-int serialize_device_settings(ambit_device_settings_t *ambit_settings, uint8_t *data)
+int serialize_custom_mode_device_settings(ambit_custom_mode_device_settings_t *ambit_settings, uint8_t *data)
 {
     u_int8_t *writePosition;
     writePosition = data + HEADER_SIZE; //Save space for header.
@@ -197,7 +197,7 @@ static int serialize_unknown_data_field(u_int8_t *data)
     return 4 + 2;
 }
 
-static int serialize_custom_modes(ambit_device_settings_t *ambit_settings, u_int8_t *data)
+static int serialize_custom_modes(ambit_custom_mode_device_settings_t *ambit_settings, u_int8_t *data)
 {
     u_int8_t *writePosition = data + HEADER_SIZE; //Save space for header.
 
@@ -219,7 +219,7 @@ static int serialize_custom_mode(ambit_custom_mode_t *ambit_custom_mode, u_int8_
 {
     u_int8_t *dataWrite = data + HEADER_SIZE;
 
-    dataWrite += serialize_settings(&(ambit_custom_mode->settings), dataWrite);
+    dataWrite += serialize_custom_mode_settings(&(ambit_custom_mode->settings), dataWrite);
     dataWrite += serialize_displays(ambit_custom_mode, dataWrite);
     if(ambit_custom_mode->apps_list_count) {
         dataWrite += serialize_apps_index(ambit_custom_mode, dataWrite);
@@ -230,7 +230,7 @@ static int serialize_custom_mode(ambit_custom_mode_t *ambit_custom_mode, u_int8_
     return dataWrite - data;
 }
 
-static u_int8_t serialize_settings(ambit_custom_mode_settings_t *settings, u_int8_t *data)
+static u_int8_t serialize_custom_mode_settings(ambit_custom_mode_settings_t *settings, u_int8_t *data)
 {
     serialize_header(SETTINGS_HEADER, SETTINGS_SIZE, data);
 
@@ -389,7 +389,7 @@ static int serialize_view_entry(uint16_t view, u_int8_t *data)
     return sizeof(ambit_custom_mode_view_t);
 }
 
-static int serialize_custom_mode_groups(ambit_device_settings_t *ambit_settings, u_int8_t *data)
+static int serialize_custom_mode_groups(ambit_custom_mode_device_settings_t *ambit_settings, u_int8_t *data)
 {
     u_int8_t *writePosition = data + HEADER_SIZE; //Save space for header.
 

@@ -501,7 +501,7 @@ int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* amb
             appRulesData.append(binary);
         }
 
-        if (ambit_malloc_app_rule(appRulesId.count(), ambitApps)) {
+        if (libambit_malloc_app_rule(appRulesId.count(), ambitApps)) {
             int i = 0;
             for (i=0; i<appRulesId.count(); i++) {
                 ambitApps->app_rules[i].app_id = appRulesId.at(i);

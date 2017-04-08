@@ -57,7 +57,7 @@ void CustomModeGroup::toAmbitData(ambit_custom_mode_group_t *ambitCustomModeGrou
     ambitCustomModeGroups->is_visible = isVisible;
     toAmbitName(ambitCustomModeGroups->activity_name);
 
-    if (ambit_malloc_custom_mode_index(customModeIndex.count(), ambitCustomModeGroups)) {
+    if (libambit_malloc_custom_mode_index(customModeIndex.count(), ambitCustomModeGroups)) {
         uint16_t *ambitCustomModeIndex = ambitCustomModeGroups->custom_mode_index;
 
         foreach (u_int16_t index, customModeIndex) {

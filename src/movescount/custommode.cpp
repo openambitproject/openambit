@@ -172,14 +172,14 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     return *this;
 }
 
-void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_device_settings_t *ambitSettings)
+void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_custom_mode_device_settings_t *ambitSettings)
 {
     // Copy settings
     ambit_custom_mode_settings_t *ambitCustomModeSettings = &(ambitCustomMode->settings);
     toAmbitSettings(ambitCustomModeSettings);
 
     // Copy displays
-    if (ambit_malloc_custom_mode_displays(displays.count(), ambitCustomMode)) {
+    if (libambit_malloc_custom_mode_displays(displays.count(), ambitCustomMode)) {
         ambit_custom_mode_display_t *ambitDisplays = ambitCustomMode->display;
 
         foreach (CustomModeDisplay display, displays) {
@@ -188,7 +188,7 @@ void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, amb
         }
     }
 
-    if (ambit_malloc_custom_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
+    if (libambit_malloc_custom_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
         for(int i = 0; i < appRuleIds.count(); i++) {
             ambitCustomMode->apps_list[i].index = ambitSettings->app_ids_count;
             ambitCustomMode->apps_list[i].logging = (loggedAppRuleIds.at(i) != 0);
@@ -328,7 +328,7 @@ void CustomModeDisplay::toAmbitBarographDisplay(ambit_custom_mode_display_t *amb
     ambitDisplay->row2 = 0x0e;
     ambitDisplay->row3 = 0x00;
 
-    ambit_malloc_custom_mode_view(3, ambitDisplay);
+    libambit_malloc_custom_mode_view(3, ambitDisplay);
     ambitDisplay->view[0] = 0x0d;   // Temperature
     ambitDisplay->view[1] = 0x01;   // Day time
     ambitDisplay->view[2] = 0x12;   // Ref hight
@@ -358,7 +358,7 @@ void CustomModeDisplay::toAmbitTextDisplay(ambit_custom_mode_display_t *ambitDis
     ambitDisplay->row2 = movescount2ambitConverter.value(row2);
     ambitDisplay->row3 = 0;
 
-    if (ambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
+    if (libambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
         uint16_t *ambitViews = ambitDisplay->view;
 
         foreach (int view, views) {

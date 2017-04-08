@@ -64,7 +64,7 @@ public:
 
     uint getCustomModeId() const;
 
-    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_device_settings_t *ambitSettings);
+    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_custom_mode_device_settings_t *ambitSettings);
     void toAmbitSettings(ambit_custom_mode_settings_t *settings);
     void toAmbitName(char ambitName[]);
 

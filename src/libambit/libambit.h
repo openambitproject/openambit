@@ -553,14 +553,14 @@ typedef struct ambit_custom_mode_s {
     ambit_apps_list_t *apps_list;
 } ambit_custom_mode_t;
 
-typedef struct ambit_device_settings_s {
+typedef struct ambit_custom_mode_device_settings_s {
     uint32_t custom_modes_count;
     ambit_custom_mode_t *custom_modes;
     uint32_t custom_mode_groups_count;
     ambit_custom_mode_group_t *custom_mode_groups;
     uint32_t app_ids_count;
     uint32_t app_ids[40];
-} ambit_device_settings_t;
+} ambit_custom_mode_device_settings_t;
 
 typedef struct ambit_app_rule_s {
     uint32_t app_rule_data_length;
@@ -665,10 +665,10 @@ int libambit_gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datal
  * \param ambit_custom_modes settings object to be written
  * \return 0 on success, else -1
  */
-int libambit_custom_mode_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes);
+int libambit_custom_mode_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_custom_modes);
 
 
-int libambit_app_data_write(ambit_object_t *object, ambit_device_settings_t *ambit_custom_modes, ambit_app_rules_t* ambit_apps);
+int libambit_app_data_write(ambit_object_t *object, ambit_custom_mode_device_settings_t *ambit_custom_modes, ambit_app_rules_t* ambit_apps);
 
 /**
  * Callback function for checking if a specific log entry should be read out or
@@ -725,7 +725,6 @@ void libambit_route_free(ambit_route_t *routes, uint16_t route_count);
  * Append to a ambit_personal_settings_t.waypoints
  */
 void libambit_waypoint_append(ambit_personal_settings_t *ps, ambit_waypoint_t *waypoints, uint8_t num_to_append);
-void libambit_debug_route_print(ambit_route_t *r);
 /**
  * Init personal_settings struct
  */
@@ -746,15 +745,13 @@ int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *
  */
 int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
 
-void libambit_test(ambit_object_t *object);
-
 /**
  * Allocates memmory for device settings structure and
  * initiate pointer in the structure to NULL and custom_modes_count and custom_mode_groups_count to 0.
- * \note Caller is responsible of freeing the struct with libambit_device_settings_free()
+ * \note Caller is responsible of freeing the struct with libambit_custom_mode_device_settings_free()
  * \return pointer to allocated data struct.
  */
-ambit_device_settings_t *ambit_malloc_device_settings(void);
+ambit_custom_mode_device_settings_t *libambit_malloc_custom_mode_device_settings(void);
 
 /**
  * Allocates memmory for a number of custom mode structures and
@@ -764,7 +761,7 @@ ambit_device_settings_t *ambit_malloc_device_settings(void);
  * The ambit_settings will be updated to point at the allocated data and the custom modes count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_modes(uint16_t count, ambit_device_settings_t *ambit_settings);
+bool libambit_malloc_custom_modes(uint16_t count, ambit_custom_mode_device_settings_t *ambit_settings);
 
 /**
  * Allocates memmory for a number of custom mode group structures and
@@ -774,7 +771,7 @@ bool ambit_malloc_custom_modes(uint16_t count, ambit_device_settings_t *ambit_se
  * The ambit_settings will be updated to point at the allocated data and the custom mode groups count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_mode_groups(uint16_t count, ambit_device_settings_t *ambit_settings);
+bool libambit_malloc_custom_mode_groups(uint16_t count, ambit_custom_mode_device_settings_t *ambit_settings);
 
 /**
  * Allocates memmory for a number of display structures and
@@ -784,7 +781,7 @@ bool ambit_malloc_custom_mode_groups(uint16_t count, ambit_device_settings_t *am
  * The ambit_custom_mode will be updated to point at the allocated data and the display count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_mode_displays(uint16_t count, ambit_custom_mode_t *ambit_custom_mode);
+bool libambit_malloc_custom_mode_displays(uint16_t count, ambit_custom_mode_t *ambit_custom_mode);
 
 /**
  * Allocates memmory for a number of views.
@@ -793,7 +790,7 @@ bool ambit_malloc_custom_mode_displays(uint16_t count, ambit_custom_mode_t *ambi
  * The ambit_displays will be updated to point at the allocated data and the views count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_mode_view(uint16_t count, ambit_custom_mode_display_t *ambit_displays);
+bool libambit_malloc_custom_mode_view(uint16_t count, ambit_custom_mode_display_t *ambit_displays);
 
 /**
  * Allocates memmory for a number of app ids.
@@ -802,7 +799,7 @@ bool ambit_malloc_custom_mode_view(uint16_t count, ambit_custom_mode_display_t *
  * The ambit_custom_mode will be updated to point at the allocated data and the app_ids_count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_mode_app_ids(uint16_t count, ambit_custom_mode_t *ambit_custom_mode);
+bool libambit_malloc_custom_mode_app_ids(uint16_t count, ambit_custom_mode_t *ambit_custom_mode);
 
 /**
  * Allocates memmory for a number of custom mode index.
@@ -811,18 +808,18 @@ bool ambit_malloc_custom_mode_app_ids(uint16_t count, ambit_custom_mode_t *ambit
  * The ambit_custom_mode_group will be updated to point at the allocated data and the custom mode index count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_custom_mode_index(uint16_t count, ambit_custom_mode_group_t *ambit_custom_mode_group);
+bool libambit_malloc_custom_mode_index(uint16_t count, ambit_custom_mode_group_t *ambit_custom_mode_group);
 
 /**
  * Free device setting and under laying data structures,
  * allocated by ambit_maloc_*
  * \param settings Device settings to free
  */
-void libambit_device_settings_free(ambit_device_settings_t *settings);
+void libambit_custom_mode_device_settings_free(ambit_custom_mode_device_settings_t *settings);
 
 /**
  * Free structures for app rules and under laying data,
- * allocated by ambit_malloc_app_rules and ambit_malloc_app_rule
+ * allocated by liblibambit_malloc_app_rules and libambit_malloc_app_rule
  * \param app_rules structure to be freed
  */
 void libambit_app_rules_free(ambit_app_rules_t *app_rules);
@@ -833,7 +830,7 @@ void libambit_app_rules_free(ambit_app_rules_t *app_rules);
  * \note Caller is responsible of freeing the struct with libambit_app_rules_free()
  * \return pointer to allocated data struct.
  */
-ambit_app_rules_t *ambit_malloc_app_rules(void);
+ambit_app_rules_t *liblibambit_malloc_app_rules(void);
 
 /**
  * Allocates memmory for a number of app rules.
@@ -842,7 +839,7 @@ ambit_app_rules_t *ambit_malloc_app_rules(void);
  * The app_rule pointer in ambit_app_rules will be updated to point to the allocated data and the app_rules_count will be set to count.
  * \return true if allocation was succesfull.
  */
-bool ambit_malloc_app_rule(uint16_t count, ambit_app_rules_t *ambit_app_rules);
+bool libambit_malloc_app_rule(uint16_t count, ambit_app_rules_t *ambit_app_rules);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }
