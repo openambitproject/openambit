@@ -17,7 +17,7 @@ public:
 
     void setCustomModeIndex(const QList<u_int16_t> &customModesList);
 
-    void toAmbitData(ambit_custom_mode_group_t *ambitCustomModeGroups);
+    void toAmbitData(ambit_sport_mode_group_t *ambitCustomModeGroups);
 
 signals:
 
@@ -35,8 +35,8 @@ private:
     QList<uint> customModeIndex;
 
     static const QString ACTIVITY_ID;
-    static const QString CUSTOM_MODE_GROUPS_ID;
-    static const QString CUSTOM_MODE_IDS;
+    static const QString SPORT_MODE_GROUPS_ID;
+    static const QString SPORT_MODE_IDS;
     static const QString IS_VISIBLE;
     static const QString ACTIVITY_NAME;
 

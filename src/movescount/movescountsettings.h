@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QList>
 
-#include "custommode.h"
-#include "custommodegroup.h"
+#include "sportmode.h"
+#include "sportmodegroup.h"
 
 class MovescountSettings : public QObject
 {
@@ -18,7 +18,7 @@ public:
 
     MovescountSettings& operator=(MovescountSettings &rhs);
 
-    void toAmbitData(ambit_custom_mode_device_settings_t *ambitSettings);
+    void toAmbitData(ambit_sport_mode_device_settings_t *ambitSettings);
 signals:
 
 public slots:

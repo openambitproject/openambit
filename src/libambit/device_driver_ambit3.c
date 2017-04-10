@@ -51,7 +51,7 @@ struct ambit_device_driver_data_s {
         memory_map_entry_t routes;
         memory_map_entry_t rules;
         memory_map_entry_t gps;
-        memory_map_entry_t custom_modes;
+        memory_map_entry_t sport_modes;
         memory_map_entry_t training_program;
         memory_map_entry_t excercise_log;
         memory_map_entry_t event_log;
@@ -420,7 +420,7 @@ static int get_memory_maps(ambit_object_t *object)
                 mm_entry = &object->driver_data->memory_maps.gps;
             }
             else if (strcmp((char*)ptr, "CustomModes") == 0) {
-                mm_entry = &object->driver_data->memory_maps.custom_modes;
+                mm_entry = &object->driver_data->memory_maps.sport_modes;
             }
             else if (strcmp((char*)ptr, "TrainingProgram") == 0) {
                 mm_entry = &object->driver_data->memory_maps.training_program;

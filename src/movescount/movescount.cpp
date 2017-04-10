@@ -184,7 +184,7 @@ void MovesCount::getDeviceSettings()
     QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
 }
 
-int MovesCount::getCustomModeData(ambit_custom_mode_device_settings_t* ambitCustomModes)
+int MovesCount::getCustomModeData(ambit_sport_mode_device_settings_t* ambitCustomModes)
 {
     int ret = -1;
 
@@ -194,7 +194,7 @@ int MovesCount::getCustomModeData(ambit_custom_mode_device_settings_t* ambitCust
     else {
         QMetaObject::invokeMethod(this, "getCustomModeDataInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
-                                  Q_ARG(ambit_custom_mode_device_settings_t*, ambitCustomModes));
+                                  Q_ARG(ambit_sport_mode_device_settings_t*, ambitCustomModes));
     }
 
     return ret;
@@ -336,7 +336,7 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
     int ret = -1;
     QNetworkReply *reply;
 
-    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallcustommodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
+    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallsportmodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -467,7 +467,7 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
-int MovesCount::getCustomModeDataInThread(ambit_custom_mode_device_settings_t *ambitSettings)
+int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
     QNetworkReply *reply;

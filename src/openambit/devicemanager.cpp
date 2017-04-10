@@ -150,15 +150,15 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
             ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
             movesCount->getAppsData(ambitApps);
 
-            ambit_custom_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_custom_mode_device_settings();
+            ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
             if (movesCount->getCustomModeData(ambitDeviceSettings) != -1) {
                 emit this->syncProgressInform(QString(tr("Write sport modes")), false, false, 100*currentSyncPart/syncParts);
-                res = libambit_custom_mode_write(this->deviceObject, ambitDeviceSettings);
+                res = libambit_sport_mode_write(this->deviceObject, ambitDeviceSettings);
 
                 emit this->syncProgressInform(QString(tr("Write apps")), false, true, 100*currentSyncPart/syncParts);
                 res = libambit_app_data_write(this->deviceObject, ambitDeviceSettings, ambitApps);
             }
-            libambit_custom_mode_device_settings_free(ambitDeviceSettings);
+            libambit_sport_mode_device_settings_free(ambitDeviceSettings);
             libambit_app_rules_free(ambitApps);
 
             currentSyncPart++;

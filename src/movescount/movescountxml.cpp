@@ -572,7 +572,7 @@ bool MovesCountXML::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<
         xml.writeTextElement("Time", QString::number((double)sample->time/1000.0, 'g', 16));
         xml.writeStartElement("Events");
         xml.writeStartElement("Activity");
-        xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.custommode));
+        xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.sportmode));
         xml.writeStartElement("Type");
         typename_lookup_entry_t *name_lookup;
         for (name_lookup = &sampleActivityNames[0]; name_lookup->XMLName != ""; name_lookup++) {

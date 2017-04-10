@@ -20,13 +20,13 @@ public:
 
     CustomModeDisplay& operator=(const CustomModeDisplay &rhs);
 
-    void toAmbitCustomModeData(ambit_custom_mode_display_t *ambitDisplay);
+    void toAmbitCustomModeData(ambit_sport_mode_display_t *ambitDisplay);
 
 private:
     u_int16_t ambitDisplayType();
-    void toAmbitBarographDisplay(ambit_custom_mode_display_t *ambitDisplay);
-    void toAmbitLinegraphDisplay(ambit_custom_mode_display_t *ambitDisplay);
-    void toAmbitTextDisplay(ambit_custom_mode_display_t *ambitDisplay);
+    void toAmbitBarographDisplay(ambit_sport_mode_display_t *ambitDisplay);
+    void toAmbitLinegraphDisplay(ambit_sport_mode_display_t *ambitDisplay);
+    void toAmbitTextDisplay(ambit_sport_mode_display_t *ambitDisplay);
 
     bool requiresHRBelt;
     int row1;
@@ -64,8 +64,8 @@ public:
 
     uint getCustomModeId() const;
 
-    void toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_custom_mode_device_settings_t *ambitSettings);
-    void toAmbitSettings(ambit_custom_mode_settings_t *settings);
+    void toAmbitCustomModeData(ambit_sport_mode_t *ambitCustomMode, ambit_sport_mode_device_settings_t *ambitSettings);
+    void toAmbitSettings(ambit_sport_mode_settings_t *settings);
     void toAmbitName(char ambitName[]);
 
 signals:
@@ -100,7 +100,7 @@ private:
     bool useHrBelt;
     bool useHrLimits;
     bool useIntervals;
-    uint custommodeId;
+    uint sportmodeId;
     uint autoScrolingSpeed;
     float autoPauseSpeed;
     uint backlightMode;
@@ -133,7 +133,7 @@ public:
     static const QString USE_HR_BELT;
     static const QString USE_HR_LIMITS;
     static const QString USE_INTERVALS;
-    static const QString CUSTOM_MODE_ID;
+    static const QString SPORT_MODE_ID;
     static const QString AUTO_SCROLING_SPEED;
     static const QString AUTO_PAUSE_SPEED;
     static const QString BACKLIGHT_MODE;

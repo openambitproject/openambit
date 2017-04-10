@@ -1,4 +1,4 @@
-#include "custommode.h"
+#include "sportmode.h"
 #include "libambit.h"
 
 const QString CustomMode::ACTIVITY_ID = "ActivityID";
@@ -23,7 +23,7 @@ const QString CustomMode::USE_POWER_POD = "UsePowerPOD";
 const QString CustomMode::USE_HR_BELT = "UseHRBelt";
 const QString CustomMode::USE_HR_LIMITS = "UseHRLimits";
 const QString CustomMode::USE_INTERVALS = "UseIntervals";
-const QString CustomMode::CUSTOM_MODE_ID = "CustomModeID";
+const QString CustomMode::SPORT_MODE_ID = "CustomModeID";
 const QString CustomMode::AUTO_SCROLING_SPEED = "AutoScrolling";
 const QString CustomMode::AUTO_PAUSE_SPEED = "AutoPauseSpeed";
 const QString CustomMode::BACKLIGHT_MODE = "BacklightMode";
@@ -59,7 +59,7 @@ CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
     useHrBelt = customModeMap[USE_HR_BELT].toBool();
     useHrLimits = customModeMap[USE_HR_LIMITS].toBool();
     useIntervals = customModeMap[USE_INTERVALS].toBool();
-    custommodeId = customModeMap[CUSTOM_MODE_ID].toUInt();
+    sportmodeId = customModeMap[SPORT_MODE_ID].toUInt();
     if (customModeMap[AUTO_SCROLING_SPEED].toString() == QString::null) {
         autoScrolingSpeed = 0;
     }
@@ -123,7 +123,7 @@ CustomMode::CustomMode(const CustomMode &other) :
     useHrBelt(other.useHrBelt),
     useHrLimits(other.useHrLimits),
     useIntervals(other.useIntervals),
-    custommodeId(other.custommodeId),
+    sportmodeId(other.sportmodeId),
     autoScrolingSpeed(other.autoScrolingSpeed),
     autoPauseSpeed(other.autoPauseSpeed),
     backlightMode(other.backlightMode),
@@ -159,7 +159,7 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     useHrBelt = rhs.useHrBelt;
     useHrLimits = rhs.useHrLimits;
     useIntervals = rhs.useIntervals;
-    custommodeId = rhs.custommodeId;
+    sportmodeId = rhs.sportmodeId;
     autoScrolingSpeed = rhs.autoScrolingSpeed;
     autoPauseSpeed = rhs.autoPauseSpeed;
     backlightMode = rhs.backlightMode;
@@ -172,15 +172,15 @@ CustomMode &CustomMode::operator=(const CustomMode &rhs)
     return *this;
 }
 
-void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, ambit_custom_mode_device_settings_t *ambitSettings)
+void CustomMode::toAmbitCustomModeData(ambit_sport_mode_t *ambitCustomMode, ambit_sport_mode_device_settings_t *ambitSettings)
 {
     // Copy settings
-    ambit_custom_mode_settings_t *ambitCustomModeSettings = &(ambitCustomMode->settings);
+    ambit_sport_mode_settings_t *ambitCustomModeSettings = &(ambitCustomMode->settings);
     toAmbitSettings(ambitCustomModeSettings);
 
     // Copy displays
-    if (libambit_malloc_custom_mode_displays(displays.count(), ambitCustomMode)) {
-        ambit_custom_mode_display_t *ambitDisplays = ambitCustomMode->display;
+    if (libambit_malloc_sport_mode_displays(displays.count(), ambitCustomMode)) {
+        ambit_sport_mode_display_t *ambitDisplays = ambitCustomMode->display;
 
         foreach (CustomModeDisplay display, displays) {
             display.toAmbitCustomModeData(ambitDisplays);
@@ -188,7 +188,7 @@ void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, amb
         }
     }
 
-    if (libambit_malloc_custom_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
+    if (libambit_malloc_sport_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
         for(int i = 0; i < appRuleIds.count(); i++) {
             ambitCustomMode->apps_list[i].index = ambitSettings->app_ids_count;
             ambitCustomMode->apps_list[i].logging = (loggedAppRuleIds.at(i) != 0);
@@ -199,11 +199,11 @@ void CustomMode::toAmbitCustomModeData(ambit_custom_mode_t *ambitCustomMode, amb
     }
 }
 
-void CustomMode::toAmbitSettings(ambit_custom_mode_settings_t *settings)
+void CustomMode::toAmbitSettings(ambit_sport_mode_settings_t *settings)
 {
     toAmbitName(settings->activity_name);
     settings->activity_id = (uint16_t)activityId;
-    settings->custom_mode_id = (uint16_t)custommodeId;
+    settings->sport_mode_id = (uint16_t)sportmodeId;
     memset(settings->unknown1, 0, sizeof(settings->unknown1));
     settings->hrbelt_and_pods = hrbeltAndPods();
     settings->alti_baro_mode = altiBaroMode;
@@ -255,7 +255,7 @@ u_int16_t CustomMode::hrbeltAndPods()
 
 uint CustomMode::getCustomModeId() const
 {
-    return custommodeId;
+    return sportmodeId;
 }
 
 const QString CustomModeDisplay::REQUIRES_HR_BELT = "RequiresHRBelt";
@@ -306,7 +306,7 @@ CustomModeDisplay &CustomModeDisplay::operator=(const CustomModeDisplay &rhs)
     return *this;
 }
 
-void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambitDisplay)
+void CustomModeDisplay::toAmbitCustomModeData(ambit_sport_mode_display_t *ambitDisplay)
 {
     ambitDisplay->type = ambitDisplayType();
     ambitDisplay->requiresHRBelt = requiresHRBelt;
@@ -322,19 +322,19 @@ void CustomModeDisplay::toAmbitCustomModeData(ambit_custom_mode_display_t *ambit
     }
 }
 
-void CustomModeDisplay::toAmbitBarographDisplay(ambit_custom_mode_display_t *ambitDisplay)
+void CustomModeDisplay::toAmbitBarographDisplay(ambit_sport_mode_display_t *ambitDisplay)
 {
     ambitDisplay->row1 = 0x07;  // pressure
     ambitDisplay->row2 = 0x0e;
     ambitDisplay->row3 = 0x00;
 
-    libambit_malloc_custom_mode_view(3, ambitDisplay);
+    libambit_malloc_sport_mode_view(3, ambitDisplay);
     ambitDisplay->view[0] = 0x0d;   // Temperature
     ambitDisplay->view[1] = 0x01;   // Day time
     ambitDisplay->view[2] = 0x12;   // Ref hight
 }
 
-void CustomModeDisplay::toAmbitLinegraphDisplay(ambit_custom_mode_display_t *ambitDisplay)
+void CustomModeDisplay::toAmbitLinegraphDisplay(ambit_sport_mode_display_t *ambitDisplay)
 {
     ambitDisplay->row1 = movescount2ambitConverter.value(row1);
     switch (row1) {
@@ -352,13 +352,13 @@ void CustomModeDisplay::toAmbitLinegraphDisplay(ambit_custom_mode_display_t *amb
     ambitDisplay->row3 = 0x05; // Chrono
 }
 
-void CustomModeDisplay::toAmbitTextDisplay(ambit_custom_mode_display_t *ambitDisplay)
+void CustomModeDisplay::toAmbitTextDisplay(ambit_sport_mode_display_t *ambitDisplay)
 {
     ambitDisplay->row1 = movescount2ambitConverter.value(row1);
     ambitDisplay->row2 = movescount2ambitConverter.value(row2);
     ambitDisplay->row3 = 0;
 
-    if (libambit_malloc_custom_mode_view(views.count(), ambitDisplay)) {
+    if (libambit_malloc_sport_mode_view(views.count(), ambitDisplay)) {
         uint16_t *ambitViews = ambitDisplay->view;
 
         foreach (int view, views) {

@@ -36,7 +36,7 @@ add_library (
   sbem0102.c
   sha256.c
   utils.c
-  custom_mode_serialize.c
+  sport_mode_serialize.c
   ${HIDAPI_SOURCE_FILES}
 )
 

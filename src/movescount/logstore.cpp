@@ -1077,7 +1077,7 @@ void LogStore::XMLReader::readLogSamples()
                             logEntry->logEntry->samples[sampleCount].u.activity.activitytype = xml.readElementText().toUInt();
                         }
                         else if (xml.name() == "CustomModeId") {
-                            logEntry->logEntry->samples[sampleCount].u.activity.custommode = xml.readElementText().toUInt();
+                            logEntry->logEntry->samples[sampleCount].u.activity.sportmode = xml.readElementText().toUInt();
                         }
                         else {
                             /* Should not get here! */
@@ -1728,7 +1728,7 @@ bool LogStore::XMLWriter::writeLogSample(ambit_log_sample_t *sample)
     case ambit_log_sample_type_activity:
     {
         xml.writeTextElement("ActivityType", QString("%1").arg(sample->u.activity.activitytype));
-        xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.custommode));
+        xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.sportmode));
         break;
     }
     case ambit_log_sample_type_cadence_source:
