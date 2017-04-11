@@ -59,6 +59,8 @@ public:
     int getRoutePoints(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
     int applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings);
     void getDeviceSettings();
+    int getCustomModeData(ambit_sport_mode_device_settings_t *ambitCustomModes);
+    int getAppsData(ambit_app_rules_t *ambitApps);
     QList<MovesCountLogDirEntry> getMovescountEntries(QDate startTime, QDate endTime);
 
     void checkAuthorization();
@@ -82,6 +84,8 @@ private slots:
     int getRouteInThread(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
     int getRoutePointsInThread(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
     void getDeviceSettingsInThread();
+    int getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings);
+    int getAppsDataInThread(ambit_app_rules_t *ambitApps);
     QList<MovesCountLogDirEntry> getMovescountEntriesInThread(QDate startTime, QDate endTime);
 
     void checkAuthorizationInThread();

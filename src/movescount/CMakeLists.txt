@@ -54,6 +54,9 @@ add_library(
   movescount
   SHARED
   deviceinfo.cpp
+  sportmode.cpp
+  sportmodegroup.cpp
+  movescountsettings.cpp
   logentry.cpp
   logstore.cpp
   movescount.cpp

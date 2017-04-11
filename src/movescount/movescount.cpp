@@ -184,6 +184,38 @@ void MovesCount::getDeviceSettings()
     QMetaObject::invokeMethod(this, "getDeviceSettingsInThread", Qt::AutoConnection);
 }
 
+int MovesCount::getCustomModeData(ambit_sport_mode_device_settings_t* ambitCustomModes)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getCustomModeDataInThread(ambitCustomModes);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getCustomModeDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_sport_mode_device_settings_t*, ambitCustomModes));
+    }
+
+    return ret;
+}
+
+int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getAppsDataInThread(ambitApps);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getAppsDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_app_rules_t*, ambitApps));
+    }
+
+    return ret;
+}
+
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntries(QDate startTime, QDate endTime)
 {
     QList<MovesCountLogDirEntry> retList;
@@ -304,7 +336,7 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
     int ret = -1;
     QNetworkReply *reply;
 
-    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallcustommodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
+    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallsportmodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -435,6 +467,44 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
+int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+        MovescountSettings settings = MovescountSettings();
+
+        if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
+            settings.toAmbitData(ambitSettings);
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
+int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/rules/private", "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate startTime, QDate endTime)
 {
     QNetworkReply *reply;
@@ -484,10 +554,6 @@ void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settin
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
-
-        if (_data.length() > 0) {
-            printf("writePersonalSettingsInThread OK: %s\n", _data.data());
-        }
     } else {
         qDebug() << QString("writePersonalSettingsInThread error: ") << reply->error();
     }
