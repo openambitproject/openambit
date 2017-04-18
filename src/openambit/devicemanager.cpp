@@ -22,6 +22,7 @@
 #include "devicemanager.h"
 
 #include <QTimer>
+#include <QDebug>
 #include <stdio.h>
 #include <libambit.h>
 
@@ -85,8 +86,9 @@ void DeviceManager::detect()
     }
 }
 
-void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bool syncOrbit = true, bool syncSportMode = false, bool syncMovescount = false)
+void DeviceManager::startSync(bool readAllLogs = false)
 {
+    Settings settings;
     int res = -1;
     int waypoint_sync_res = -1;
     time_t current_time;
@@ -94,6 +96,12 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
     uint8_t *orbitData = NULL;
     int orbitDataLen;
     ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
+
+    bool syncTime = settings.value("syncSettings/syncTime", true).toBool();
+    bool syncOrbit = settings.value("syncSettings/syncOrbit", true).toBool();
+    bool syncSportMode = settings.value("syncSettings/syncSportMode", false).toBool();
+    bool syncNavigation = settings.value("syncSettings/syncNavigation", false).toBool();
+    bool syncMovescount = settings.value("movescountSettings/movescountEnable", false).toBool();
 
     mutex.lock();
     this->syncMovescount = syncMovescount;
@@ -128,20 +136,17 @@ void DeviceManager::startSync(bool readAllLogs = false, bool syncTime = true, bo
             currentSyncPart++;
         }
 
-        if (waypoint_sync_res != -1 && syncMovescount) {
-            emit this->syncProgressInform(QString(tr("Synchronizing settings")), false, true, 100*currentSyncPart/syncParts);
+        if (waypoint_sync_res != -1 && syncNavigation) {
+            emit this->syncProgressInform(QString(tr("Synchronizing navigation")), false, true, 100*currentSyncPart/syncParts);
             currentSyncPart++;
 
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
                  movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
                  movesCount->writePersonalSettings(movecountPersonalSettings);
+                 emit this->syncProgressInform(QString(tr("Write navigation")), false, false, 100*currentSyncPart/syncParts);
                  libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
+                 emit this->syncProgressInform(QString(tr("Synchronized navigation")), false, false, 100*currentSyncPart/syncParts);
             }
-
-        } else if(syncMovescount) {
-
-            emit this->syncProgressInform(QString(tr("Synchronizing failed")), true, false, 100*currentSyncPart/syncParts);
-            currentSyncPart++;
         }
 
         if (syncSportMode && res != -1) {
