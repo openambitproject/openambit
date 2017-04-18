@@ -533,16 +533,34 @@ void MainWindow::LogMessageRow::setMessage(QString message)
 void MainWindow::LogMessageRow::setStatus(Status status)
 {
     QIcon icon;
+    QString str_icon = "";
 
     if (status == StatusRunning) {
-        icon = QIcon::fromTheme("task-ongoing");
+        if(QIcon::hasThemeIcon("test-ongoing")) {
+            icon = QIcon::fromTheme("task-ongoing");
+        } else {
+            str_icon = QChar(0x1a,0x23);
+        }
     }
     else if (status == StatusSuccess) {
-        icon = QIcon::fromTheme("task-complete");
+        if(QIcon::hasThemeIcon("task-complete")) {
+            icon = QIcon::fromTheme("task-complete");
+        } else {
+            str_icon = QChar(0x13,0x27);
+        }
     }
     else if (status == StatusFailed) {
-        icon = QIcon::fromTheme("task-reject");
+        if(QIcon::hasThemeIcon("task-reject")) {
+            icon = QIcon::fromTheme("task-reject");
+        } else {
+            str_icon = QChar(0x17,0x27);
+        }
     }
-    iconLabel->setPixmap(icon.pixmap(8,8));
+
+    if(str_icon != "") {
+        iconLabel->setText(str_icon);
+    } else {
+        iconLabel->setPixmap(icon.pixmap(8,8));
+    }
 }
 
