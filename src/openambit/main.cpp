@@ -32,6 +32,17 @@ static void initTranslations(void);
 
 int main(int argc, char *argv[])
 {
+    // Set application settings
+    QCoreApplication::setApplicationVersion(APP_VERSION);
+    QCoreApplication::setOrganizationName("Openambit");
+    QCoreApplication::setApplicationName("Openambit");
+
+    for(int x = 1; x < argc; ++x) {
+        if (QString(argv[x]) == "--version") {
+            printf("%s - Version %s\n", "Openambit", APP_VERSION);
+            return 0;
+        }
+    }
     // Handle foreground arguments
     // NOTE: It would be preferable to handle all arguments at the same place,
     // but fork needs to be done before Qt initialize it seems
@@ -62,11 +73,6 @@ int main(int argc, char *argv[])
         a.sendMessage("focus");
         return 0;
     }
-
-    // Set application settings
-    QCoreApplication::setApplicationVersion(APP_VERSION);
-    QCoreApplication::setOrganizationName("Openambit");
-    QCoreApplication::setApplicationName("Openambit");
 
     // Handle forced localisation / translation
     Q_FOREACH(QString argu, a.arguments()) {

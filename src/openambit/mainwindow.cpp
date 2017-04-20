@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QDesktopServices>
 
 #define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
@@ -217,6 +218,10 @@ void MainWindow::showSettings()
     settingsDialog->setModal(true);
     connect(settingsDialog, SIGNAL(settingsSaved()), this, SLOT(settingsSaved()));
     settingsDialog->show();
+}
+void MainWindow::showReportBug()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/openambitproject/openambit/issues"));
 }
 
 void MainWindow::showAbout()
