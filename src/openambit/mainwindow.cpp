@@ -23,6 +23,7 @@
 #include "ui_mainwindow.h"
 
 #include <QCloseEvent>
+#include <QDebug>
 #include <QListWidgetItem>
 #include <QMessageBox>
 
@@ -99,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(deviceManager, SIGNAL(syncProgressInform(QString,bool,bool,quint8)), this, SLOT(syncProgressInform(QString,bool,bool,quint8)), Qt::QueuedConnection);
     connect(ui->buttonDeviceReload, SIGNAL(clicked()), deviceManager, SLOT(detect()));
     connect(ui->buttonSyncNow, SIGNAL(clicked()), this, SLOT(syncNowClicked()));
-    connect(this, SIGNAL(syncNow(bool,bool,bool,bool,bool)), deviceManager, SLOT(startSync(bool,bool,bool,bool,bool)));
+    connect(this, SIGNAL(syncNow(bool)), deviceManager, SLOT(startSync(bool)));
     deviceWorkerThread.start();
     deviceManager->start();
     deviceManager->detect();
@@ -447,8 +448,6 @@ void MainWindow::updateLogList()
 
 void MainWindow::startSync()
 {
-    bool syncTime, syncOrbit, syncSportMode, syncMovescount;
-
     ui->checkBoxResyncAll->setEnabled(false);
     ui->buttonSyncNow->setEnabled(false);
     trayIconSyncAction->setEnabled(false);
@@ -461,37 +460,29 @@ void MainWindow::startSync()
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
 
-    settings.beginGroup("syncSettings");
-    syncTime = settings.value("syncTime", true).toBool();
-    syncOrbit = settings.value("syncOrbit", true).toBool();
-    syncSportMode = settings.value("syncSportMode", false).toBool();
-    settings.endGroup();
-    settings.beginGroup("movescountSettings");
-    syncMovescount = settings.value("movescountEnable", false).toBool();
-    settings.endGroup();
-
     trayIcon->setIcon(QIcon(":/icon_syncing"));
     if (isHidden()) {
         trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation started"));
     }
-
-    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked(), syncTime, syncOrbit, syncSportMode, syncMovescount);
+    emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked());
 }
 
 void MainWindow::movesCountSetup()
 {
     bool syncOrbit = false;
     bool syncSportMode = false;
+    bool syncNavigation = false;
     bool movescountEnable = false;
 
     settings.beginGroup("syncSettings");
     syncOrbit = settings.value("syncOrbit", true).toBool();
     syncSportMode = settings.value("syncSportMode", false).toBool();
+    syncNavigation = settings.value("syncNavigation", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
     movescountEnable = settings.value("movescountEnable", false).toBool();
-    if (syncOrbit || syncSportMode || movescountEnable) {
+    if (syncOrbit || syncSportMode || syncNavigation || movescountEnable) {
         if (movesCount == NULL) {
             movesCount = MovesCount::instance();
             movesCount->setAppkey(APPKEY);
@@ -542,16 +533,34 @@ void MainWindow::LogMessageRow::setMessage(QString message)
 void MainWindow::LogMessageRow::setStatus(Status status)
 {
     QIcon icon;
+    QString str_icon = "";
 
     if (status == StatusRunning) {
-        icon = QIcon::fromTheme("task-ongoing");
+        if(QIcon::hasThemeIcon("test-ongoing")) {
+            icon = QIcon::fromTheme("task-ongoing");
+        } else {
+            str_icon = QChar(0x1a,0x23);
+        }
     }
     else if (status == StatusSuccess) {
-        icon = QIcon::fromTheme("task-complete");
+        if(QIcon::hasThemeIcon("task-complete")) {
+            icon = QIcon::fromTheme("task-complete");
+        } else {
+            str_icon = QChar(0x13,0x27);
+        }
     }
     else if (status == StatusFailed) {
-        icon = QIcon::fromTheme("task-reject");
+        if(QIcon::hasThemeIcon("task-reject")) {
+            icon = QIcon::fromTheme("task-reject");
+        } else {
+            str_icon = QChar(0x17,0x27);
+        }
     }
-    iconLabel->setPixmap(icon.pixmap(8,8));
+
+    if(str_icon != "") {
+        iconLabel->setText(str_icon);
+    } else {
+        iconLabel->setPixmap(icon.pixmap(8,8));
+    }
 }
 

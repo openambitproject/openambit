@@ -161,7 +161,14 @@
               <item row="4" column="0">
                <widget class="QCheckBox" name="checkBoxSyncSportsMode">
                 <property name="text">
-                 <string>Sync sport modes (from Movescount) (Beta. This will write data to the watch)</string>
+                 <string>Sync sport modes (from Movescount)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QCheckBox" name="checkBoxSyncNavigation">
+                <property name="text">
+                 <string>Sync navigation (from Movescount)</string>
                 </property>
                </widget>
               </item>

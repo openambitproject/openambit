@@ -47,7 +47,7 @@ public:
     ~MainWindow();
 
 signals:
-    void syncNow(bool readAll, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncMovescount);
+    void syncNow(bool readAll);
 
 public slots:
     void singleApplicationMsgRecv(QString msg);
