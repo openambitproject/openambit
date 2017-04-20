@@ -64,6 +64,7 @@ private slots:
     void trayIconClicked(QSystemTrayIcon::ActivationReason reason);
 
     void showSettings();
+    void showReportBug();
     void showAbout();
     void settingsSaved();
 
