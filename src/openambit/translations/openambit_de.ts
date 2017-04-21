@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="de_DE" sourcelanguage="en">
+<TS version="2.1" language="de_DE" sourcelanguage="en">
 <context>
     <name>ConfirmBetaDialog</name>
     <message>
@@ -81,6 +81,30 @@ p, li { white-space: pre-wrap; }
     <message>
         <source>Downloading log %1 of %2</source>
         <translation>Lade Log %1 von %2 herunter</translation>
+    </message>
+    <message>
+        <source>Synchronizing navigation</source>
+        <translation>Synchronisiere Navigation</translation>
+    </message>
+    <message>
+        <source>Write navigation</source>
+        <translation>Schreibe Navigation</translation>
+    </message>
+    <message>
+        <source>Synchronized navigation</source>
+        <translation>Navigation synchronisiert</translation>
+    </message>
+    <message>
+        <source>Fetching sport modes</source>
+        <translation>Hole Sportmodi</translation>
+    </message>
+    <message>
+        <source>Write sport modes</source>
+        <translation>Schreibe Sportmodi</translation>
+    </message>
+    <message>
+        <source>Write apps</source>
+        <translation>Schreibe Apps</translation>
     </message>
 </context>
 <context>
@@ -252,6 +276,10 @@ p, li { white-space: pre-wrap; }
         <source>Downloading %1%</source>
         <translation>Synchronisieren %1%</translation>
     </message>
+    <message>
+        <source>Report bug...</source>
+        <translation>Fehler melden...</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -331,6 +359,14 @@ Zeile %2, Spalte %3</translation>
     <message>
         <source>Email (Movescount account)</source>
         <translation>Email des Movescount-Accounts</translation>
+    </message>
+    <message>
+        <source>Sync sport modes (from Movescount)</source>
+        <translation>Sportmodi (von Movescount) synchronisieren</translation>
+    </message>
+    <message>
+        <source>Sync navigation (from Movescount)</source>
+        <translation>Navigation (von Movescount) synchronisieren</translation>
     </message>
 </context>
 </TS>
