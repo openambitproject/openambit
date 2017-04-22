@@ -64,6 +64,30 @@ p, li { white-space: pre-wrap; }
         <source>Downloading log %1 of %2</source>
         <translation>Henter logg %1 av %2</translation>
     </message>
+    <message>
+        <source>Synchronizing navigation</source>
+        <translation>Synkoroniserer navigasjon</translation>
+    </message>
+    <message>
+        <source>Write navigation</source>
+        <translation>Skriver navigasjon</translation>
+    </message>
+    <message>
+        <source>Synchronized navigation</source>
+        <translation>Navigasjon synkronisert</translation>
+    </message>
+    <message>
+        <source>Fetching sport modes</source>
+        <translation>Henter sportmoduser</translation>
+    </message>
+    <message>
+        <source>Write sport modes</source>
+        <translation>Skriver sportmoduser</translation>
+    </message>
+    <message>
+        <source>Write apps</source>
+        <translation>Skriver apps</translation>
+    </message>
 </context>
 <context>
     <name>LogEntry</name>
@@ -241,6 +265,10 @@ p, li { white-space: pre-wrap; }
         <source>Downloading %1%</source>
         <translation>Laster ned %1%</translation>
     </message>
+    <message>
+        <source>Report bug...</source>
+        <translation>Rapporter feil...</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -291,7 +319,7 @@ Rad %2, kolonne %3</translation>
     </message>
     <message>
         <source>Sync time from computer</source>
-        <translation>Synkroniserer enhet med tid fra PC</translation>
+        <translation>Synkroniser enhet med tid fra PC</translation>
     </message>
     <message>
         <source>Sync orbital data (from Movescount)</source>
@@ -299,7 +327,7 @@ Rad %2, kolonne %3</translation>
     </message>
     <message>
         <source>Start sync automatically when device connected</source>
-        <translation>Start synkroniseringen automatiskt når enheten tilkobles</translation>
+        <translation>Start synkronisering automatiskt når enheten tilkobles</translation>
     </message>
     <message>
         <source>Movescount connectivity</source>
@@ -320,6 +348,14 @@ Rad %2, kolonne %3</translation>
     <message>
         <source>Email (Movescount account)</source>
         <translation>E-post (til din Movescount-konto)</translation>
+    </message>
+    <message>
+        <source>Sync sport modes (from Movescount)</source>
+        <translation>Synkroniser sportmoduser (fra Movescount)</translation>
+    </message>
+    <message>
+        <source>Sync navigation (from Movescount)</source>
+        <translation>Synkroniser navigasjon (fra Movescount)</translation>
     </message>
 </context>
 </TS>
