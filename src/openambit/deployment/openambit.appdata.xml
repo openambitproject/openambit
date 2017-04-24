@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+	<id type="desktop">openambit.desktop</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0+</project_license>
+	<name>Openambit</name>
+	<summary>Open software for the Suunto Ambit(2)</summary>
+	<description>
+		<p>
+			Openambit is application for downloading moves from the Suunto
+			Ambit(2) outdoor watches, and synchronizing them with the
+			movescount website.
+		</p>
+		<p>
+			OpenAmbit an open source alternative to Moveslink application from Suunto.
+		</p>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>http://openambit.org/wp-content/uploads/2014/03/openambit-screenshot.png</image>
+		</screenshot>
+	</screenshots>
+	<url type="homepage">http://openambit.org/</url>
+	<updatecontact>manisandro@gmail.com</updatecontact>
+</application>

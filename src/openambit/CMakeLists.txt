@@ -128,6 +128,8 @@ target_link_libraries(openambit ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS}
 install(TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.desktop
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+install(FILES ${OPENAMBIT_SOURCE_DIR}/deployment/openambit.appdata.xml
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/appdata )
 install(FILES ${APP_ICON}
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
         RENAME openambit.png)
