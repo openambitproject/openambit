@@ -68,7 +68,8 @@ private:
     QDateTime dateTimeRound(QDateTime dateTime, int msecRoundFactor);
     QDateTime dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset);
 
-    QVariantMap parseJson(const QByteArray& input, bool& ok) const;
+    QVariantMap parseJsonMap(const QByteArray& input, bool& ok) const;
+    QVariantList parseJsonList(const QByteArray& input, bool& ok) const;
 };
 
 #endif // MOVESCOUNTJSON_H

@@ -54,7 +54,7 @@ int MovesCountJSON::parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_ver
     }
 
     bool ok = false;
-    QVariantMap result = parseJson(input, ok);
+    QVariantMap result = parseJsonMap(input, ok);
 
     if (ok && result["LatestFirmwareVersion"].toString().length() > 0) {
         if (rx.indexIn(result["LatestFirmwareVersion"].toString()) >= 0) {
@@ -75,7 +75,7 @@ int MovesCountJSON::parseLogReply(QByteArray &input, QString &moveId)
     }
 
     bool ok = false;
-    QVariantMap result = parseJson(input, ok);
+    QVariantMap result = parseJsonMap(input, ok);
 
     if (ok && result["MoveID"].toString().length() > 0 && result["MoveID"].toString() != "0") {
         moveId = result["MoveID"].toString();
@@ -93,7 +93,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     }
 
     bool ok = false;
-    QVariantMap result = parseJson(input, ok);
+    QVariantMap result = parseJsonMap(input, ok);
 
 	 if(!ok) {
         return -1;
@@ -209,7 +209,7 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
     }
 
     bool ok = false;
-    QVariantMap result = parseJson(input, ok);
+    QVariantMap result = parseJsonMap(input, ok);
     QString name = "";
 
 	 if(!ok) {
@@ -263,7 +263,7 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
     }
 
     bool ok = false;
-    QVariantMap result = parseJson(input, ok);
+    QVariantMap result = parseJsonMap(input, ok);
     QVariantList jsonRoutePoints;
     int32_t clat = 0, clon=0;
     uint16_t cur_waypoint_count = 0;
@@ -380,7 +380,7 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     }
 
     bool ok = false;
-    QVariantMap logList = parseJson(input, ok);
+    QVariantMap logList = parseJsonMap(input, ok);
 
     if (ok) {
         foreach(QVariant entryVar, logList) {
@@ -455,15 +455,8 @@ int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *setti
 
 int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettings &movescountSettings)
 {
-    QJson::Parser parser;
-
     bool ok;
-
-    if (input.length() <= 0) {
-        return -1;
-    }
-
-    QVariantMap entry = parser.parse(input, &ok).toMap();
+    QVariantMap entry = parseJsonMap(input, ok);
 
     if (ok) {
         QVariantMap settingsMap = entry["Settings"].toMap();
@@ -477,15 +470,8 @@ int MovesCountJSON::parseDeviceSettingsReply(QByteArray &input, MovescountSettin
 
 int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* ambitApps)
 {
-    QJson::Parser parser;
-
     bool ok;
-
-    if (input.length() <= 0) {
-        return -1;
-    }
-
-    QVariantList appRulesList = parser.parse(input, &ok).toList();
+    QVariantList appRulesList = parseJsonList(input, ok);
 
     if (ok) {
 
@@ -1190,8 +1176,13 @@ QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevD
     return dateTime;
 }
 
-QVariantMap MovesCountJSON::parseJson(const QByteArray& input, bool& ok) const
+QVariantMap MovesCountJSON::parseJsonMap(const QByteArray& input, bool& ok) const
 {
+    if (input.length() <= 0) {
+      ok = false;
+      return QVariantMap();
+    }
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
     QJson::Parser parser;
     return parser.parse(input, &ok).toMap();
@@ -1202,3 +1193,22 @@ QVariantMap MovesCountJSON::parseJson(const QByteArray& input, bool& ok) const
     return json.object().toVariantMap();
 #endif
 }
+
+QVariantList MovesCountJSON::parseJsonList(const QByteArray& input, bool& ok) const
+{
+    if (input.length() <= 0) {
+      ok = false;
+      return QVariantList();
+    }
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    QJson::Parser parser;
+    return parser.parse(input, &ok).toList();
+#else
+    QJsonParseError err;
+    QJsonDocument json = QJsonDocument::fromJson(input, &err);
+    ok = !json.isNull();
+    return json.array().toVariantList();
+#endif
+}
+
