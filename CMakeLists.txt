@@ -22,7 +22,8 @@ cmake_minimum_required(VERSION 3.0)
 project(Openambit
   LANGUAGES NONE)
 
-set(USE_QT5 OFF CACHE PATH "Build against Qt5")
+option(USE_QT5 "Build against Qt5" OFF)
+option(BUILD_EXTRAS "Build examples and wireshark dissector" OFF)
 
 add_subdirectory(src/libambit)
 add_subdirectory(src/movescount)
