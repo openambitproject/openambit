@@ -26,7 +26,8 @@ project(ambit-wireshark-plugin C)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_BACKWARDS_COMPATIBILITY 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_INSTALL_LIBDIR ~/.wireshark)
+set(CMAKE_INSTALL_WIRESHARKPLUGINSDIR ~/.wireshark
+    CACHE PATH "Where to install wireshark plugins")
 
 INCLUDE(UseMakeDissectorReg)
   
@@ -80,6 +81,6 @@ set_target_properties(ws-ambit PROPERTIES LINK_FLAGS "${WS_LINK_FLAGS}")
 target_link_libraries(ws-ambit ${WIRESHARK_LIBRARIES})
 
 install(TARGETS ws-ambit
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/plugins NAMELINK_SKIP
+	LIBRARY DESTINATION ${CMAKE_INSTALL_WIRESHARKPLUGINSDIR} NAMELINK_SKIP
 )
 
