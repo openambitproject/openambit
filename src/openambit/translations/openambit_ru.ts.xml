@@ -178,11 +178,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>Файл</translation>
+        <translation>&amp;Файл</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>Помощь</translation>
+        <translation>&amp;Помощь</translation>
     </message>
     <message>
         <source>About Openambit...</source>
@@ -190,11 +190,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>Выход</translation>
+        <translation>&amp;Выход</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>Настройки</translation>
+        <translation>&amp;Настройки</translation>
     </message>
     <message>
         <source>Minimize</source>
