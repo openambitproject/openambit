@@ -213,19 +213,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Versione %2&lt;/b&gt;&lt;br /&gt;Usando Qt %3</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Sincronizzazione completa</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Sincronizzazione completa</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Sincronizzazione fallita</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Sincronizzazione fallita</translation>
     </message>
     <message>
@@ -241,7 +237,7 @@ p, li { white-space: pre-wrap; }
         <translation>Scrivi file Movescount</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Sincronizzazione iniziata</translation>
     </message>
     <message>
@@ -297,7 +293,7 @@ riga %2, colonna %3</translation>
         <translation>RImani in background anche chiudendo la finestra pincipale</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Impostazioi sincronizzazione</translation>
     </message>
     <message>

@@ -237,19 +237,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Version %2&lt;/b&gt;&lt;br /&gt;Unter Verwendung von Qt %3</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synchronisierung abgeschlossen</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synchronisierung beendet</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Synchronisierung fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Synchronisierung fehlgeschlagen</translation>
     </message>
     <message>
@@ -265,7 +261,7 @@ p, li { white-space: pre-wrap; }
         <translation>Schreibe Movescount-Datei</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Synchronisierung gestartet</translation>
     </message>
     <message>
@@ -325,7 +321,7 @@ Zeile %2, Spalte %3</translation>
         <translation>Im Hintergrund weiter ausführen wenn das Hauptfenster geschlossen wird</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Einstellungen für die Gerätesynchronisierung</translation>
     </message>
     <message>

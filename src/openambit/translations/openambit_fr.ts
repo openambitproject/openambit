@@ -160,19 +160,15 @@ p, li { white-space: pre-wrap; }
         <translation>Pas de périphérique détecté</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synchronisation complète</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synchronisation terminée</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Échec de synchronisation</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Échec de synchronisation</translation>
     </message>
     <message>
@@ -188,7 +184,7 @@ p, li { white-space: pre-wrap; }
         <translation>Écrire le fichier Movescount</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Début de synchronisation</translation>
     </message>
     <message>
@@ -288,7 +284,7 @@ Ligne %2, colonne %3</translation>
         <translation>Poursuivre le fonctionnement en tâche de fond lorsque la fenêtre principale d&apos;Openambit est fermée</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Réglages de synchronisation du périphérique</translation>
     </message>
     <message>

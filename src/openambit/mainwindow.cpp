@@ -337,20 +337,20 @@ void MainWindow::syncFinished(bool success)
     }
     if (success) {
         currentLogMessageRow = new LogMessageRow(0);
-        currentLogMessageRow->setMessage(tr("Syncronization complete"));
+        currentLogMessageRow->setMessage(tr("Synchronization complete"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusSuccess);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
         if (isHidden()) {
-            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation finished"));
+            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization finished"));
         }
     }
     else {
         currentLogMessageRow = new LogMessageRow(0);
-        currentLogMessageRow->setMessage(tr("Syncronization failed"));
+        currentLogMessageRow->setMessage(tr("Synchronization failed"));
         currentLogMessageRow->setStatus(LogMessageRow::StatusFailed);
         ui->verticalLayoutLogMessages->addLayout(currentLogMessageRow);
         if (isHidden()) {
-            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation failed"), QSystemTrayIcon::Critical);
+            trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization failed"), QSystemTrayIcon::Critical);
         }
     }
     ui->checkBoxResyncAll->setChecked(false);
@@ -467,7 +467,7 @@ void MainWindow::startSync()
 
     trayIcon->setIcon(QIcon(":/icon_syncing"));
     if (isHidden()) {
-        trayIcon->showMessage(QCoreApplication::applicationName(), tr("Syncronisation started"));
+        trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization started"));
     }
     emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked());
 }

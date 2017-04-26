@@ -182,19 +182,15 @@ p, li { white-space: pre-wrap; }
         <translation>Finner ingen enhet</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synkronisering fullført</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synkroniseringen er fullført</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Synkroniseringen feilet</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Synkroniseringen feilet</translation>
     </message>
     <message>
@@ -210,7 +206,7 @@ p, li { white-space: pre-wrap; }
         <translation>Skriv Movescount-fil</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Synkronisering startet</translation>
     </message>
     <message>
@@ -314,7 +310,7 @@ Rad %2, kolonne %3</translation>
         <translation>La Openambit kjøre i bakgrunnen selv om du lukker vinduet</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Synkroniseringsinnstillinger</translation>
     </message>
     <message>
