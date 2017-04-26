@@ -213,19 +213,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Версия %2&lt;/b&gt;&lt;br /&gt;Использование Qt %3</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Синхронизация выполнена</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Синхронизация завершена</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Не удалось синхронизировать</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Не удалось синхронизировать</translation>
     </message>
     <message>
@@ -241,7 +237,7 @@ p, li { white-space: pre-wrap; }
         <translation>Записать файл Movescount</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Синхронизация началась</translation>
     </message>
     <message>
@@ -297,7 +293,7 @@ Line %2, column %3</source>
         <translation>Продолжить выполнение в фоновом режиме, когда главное окно Openambit закрыто</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Настройки синхронизации устройства</translation>
     </message>
     <message>

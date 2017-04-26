@@ -135,11 +135,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Variant: %1</source>
-        <translation type="unfinished">Wariant: %1</translation>
+        <translation>Wariant: %1</translation>
     </message>
     <message>
         <source>Serial: %1</source>
-        <translation type="unfinished">Seria: %1</translation>
+        <translation>Seria: %1</translation>
     </message>
 </context>
 <context>
@@ -213,19 +213,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Wersja %2&lt;/b&gt;&lt;br /&gt;Używa Qt %3</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synchronizacja zakończona</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synchronizacja zakończona</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Synchronizacja nieudana</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Synchronizacja nieudana</translation>
     </message>
     <message>
@@ -241,7 +237,7 @@ p, li { white-space: pre-wrap; }
         <translation>Zapisz plik Movescount</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Synchronizacja rozpoczęta</translation>
     </message>
     <message>
@@ -270,7 +266,7 @@ Linia %2, kolumna %3</translation>
     <name>SettingsDialog</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">Dialog</translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <source>General</source>
@@ -297,7 +293,7 @@ Linia %2, kolumna %3</translation>
         <translation>Kontynuuj działanie w tle, gdy główne okno Openambit jest zamknięte</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Synchronizacja ustawień urządzenia</translation>
     </message>
     <message>

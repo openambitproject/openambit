@@ -195,19 +195,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;バージョン %2&lt;/b&gt;&lt;br /&gt;Qt %3を使用</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>同期が終了しました</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>同期が終了しました</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>同期が失敗しました</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>同期が失敗しました</translation>
     </message>
     <message>
@@ -223,7 +219,7 @@ p, li { white-space: pre-wrap; }
         <translation>Movescountへ転送</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>同期開始</translation>
     </message>
     <message>
@@ -266,7 +262,7 @@ p, li { white-space: pre-wrap; }
         <translation>Openambitのメインウィンドウを閉じてもバックグラウンドで実行し続ける</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>デバイス同期設定</translation>
     </message>
     <message>

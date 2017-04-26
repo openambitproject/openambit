@@ -231,7 +231,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
             break;
           case 0x4f:
             log_entries_notsynced = read16(libambit_sbem0102_data_ptr(&reply_data_object), 0);
-            LOG_INFO("Number of logs marked as not syncronized=%d", log_entries_notsynced);
+            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
             break;
           case 0x7e:
             if (parse_log_header(libambit_sbem0102_data_ptr(&reply_data_object), &log_header) == 0) {

@@ -69,7 +69,7 @@ p, li { white-space: pre-wrap; }
     <name>LogEntry</name>
     <message>
         <source>Device</source>
-        <translation type="obsolete">Enhet</translation>
+        <translation>Enhet</translation>
     </message>
 </context>
 <context>
@@ -158,19 +158,15 @@ p, li { white-space: pre-wrap; }
         <translation>Ingen enhet hittades</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synkroniseringen slutförd</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synkroniseringen slutförd</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Synkroniseringen misslyckades</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Synkroniseringen misslyckades</translation>
     </message>
     <message>
@@ -186,7 +182,7 @@ p, li { white-space: pre-wrap; }
         <translation>Skriv Movescount-fil</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Synkronisering startad</translation>
     </message>
     <message>
@@ -286,7 +282,7 @@ Rad %2, kolumn %3</translation>
         <translation>Låt Openambit fortsätta köra i bakgrunden när fönstret stängs</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Synkroniseringsinställningar</translation>
     </message>
     <message>

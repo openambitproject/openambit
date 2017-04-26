@@ -195,19 +195,15 @@ p, li { white-space: pre-wrap; }
         <translation>&lt;h2&gt;%1&lt;/h2&gt;&lt;b&gt;Versie %2&lt;/b&gt;&lt;br /&gt;Qt %3</translation>
     </message>
     <message>
-        <source>Syncronization complete</source>
+        <source>Synchronization complete</source>
         <translation>Synchronisatie compleet</translation>
     </message>
     <message>
-        <source>Syncronisation finished</source>
+        <source>Synchronization finished</source>
         <translation>Synchronisatie beëindigd</translation>
     </message>
     <message>
-        <source>Syncronization failed</source>
-        <translation>Fout bij het synchroniseren</translation>
-    </message>
-    <message>
-        <source>Syncronisation failed</source>
+        <source>Synchronization failed</source>
         <translation>Fout bij het synchroniseren</translation>
     </message>
     <message>
@@ -223,7 +219,7 @@ p, li { white-space: pre-wrap; }
         <translation>Schrijf Movescount bestand</translation>
     </message>
     <message>
-        <source>Syncronisation started</source>
+        <source>Synchronization started</source>
         <translation>Synchronisatie gestart</translation>
     </message>
     <message>
@@ -266,7 +262,7 @@ p, li { white-space: pre-wrap; }
         <translation>In de achtergrond doorgaan als het hoofdvenster wordt gesloten</translation>
     </message>
     <message>
-        <source>Device syncronisation settings</source>
+        <source>Device synchronization settings</source>
         <translation>Installingen voor de apparaatsynchronisatie</translation>
     </message>
     <message>

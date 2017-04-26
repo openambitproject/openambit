@@ -134,7 +134,7 @@
               </sizepolicy>
              </property>
              <property name="title">
-              <string>Device syncronisation settings</string>
+              <string>Device synchronization settings</string>
              </property>
              <layout class="QFormLayout" name="formLayout">
               <item row="1" column="0">
