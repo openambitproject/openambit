@@ -69,7 +69,7 @@ p, li { white-space: pre-wrap; }
     <name>LogEntry</name>
     <message>
         <source>Device</source>
-        <translation type="obsolete">Enhet</translation>
+        <translation>Enhet</translation>
     </message>
 </context>
 <context>

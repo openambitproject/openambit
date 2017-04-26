@@ -135,11 +135,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Variant: %1</source>
-        <translation type="unfinished">Wariant: %1</translation>
+        <translation>Wariant: %1</translation>
     </message>
     <message>
         <source>Serial: %1</source>
-        <translation type="unfinished">Seria: %1</translation>
+        <translation>Seria: %1</translation>
     </message>
 </context>
 <context>
@@ -270,7 +270,7 @@ Linia %2, kolumna %3</translation>
     <name>SettingsDialog</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">Dialog</translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <source>General</source>
