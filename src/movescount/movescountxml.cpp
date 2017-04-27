@@ -324,7 +324,7 @@ bool MovesCountXML::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<
         xml.writeStartElement("Distance");
         xml.writeStartElement("Source");
         for (name_lookup = &sampleDistanceSourceNames[0]; name_lookup->XMLName != ""; name_lookup++) {
-            if (name_lookup->id == sample->u.distance_source) {
+            if (name_lookup->id == sample->u.distance_source.value) {
                 xml.writeCharacters(QString(name_lookup->XMLName));
                 break;
             }
@@ -332,7 +332,7 @@ bool MovesCountXML::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<
         xml.writeEndElement();
         QDateTime dateTime(QDate(sample->utc_time.year, sample->utc_time.month, sample->utc_time.day), QTime(sample->utc_time.hour, sample->utc_time.minute, 0).addMSecs(sample->utc_time.msec));
         dateTime.setTimeSpec(Qt::UTC);
-        if (sample->u.distance_source == 0x02) {
+        if (sample->u.distance_source.value == 0x02) {
             // Only include UTC time for GPS source
             xml.writeTextElement("UTC", dateTimeString(dateTime));
         }

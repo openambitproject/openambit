@@ -50,11 +50,6 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info);
 static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info *dev);
 
 /*
- * Static variables
- */
-static uint8_t komposti_version[] = { 0x02, 0x00, 0x2d, 0x00 };
-
-/*
  * Public functions
  */
 ambit_device_info_t * libambit_enumerate(void)
@@ -548,7 +543,7 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 
     LOG_INFO("Reading device info");
 
-    if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(komposti_version), &reply_data, &replylen, 1) == 0) {
+    if (libambit_protocol_command(object, ambit_command_device_info, info->komposti_version, sizeof(uint8_t)*4, &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
             const char *p = (char *)reply_data;
 
@@ -677,6 +672,7 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
             known_device = libambit_device_support_find(device->vendor_id, device->product_id, device->model, device->fw_version);
             if (known_device != NULL) {
                 device->is_supported = known_device->supported;
+                memcpy(&device->komposti_version, &known_device->komposti_version, sizeof(uint8_t)*4);
                 if (device->name && known_device->name
                     && 0 != strcmp(device->name, known_device->name)) {
                     char *name = strdup(known_device->name);

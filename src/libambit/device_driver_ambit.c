@@ -188,7 +188,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
             libambit_protocol_free(reply_data);
 
             if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) == 0) {
-                if (replylen > 8 && libambit_pmem20_log_parse_header(reply_data + 8, replylen - 8, &log_header) == 0) {
+                if (replylen > 8 && libambit_pmem20_log_parse_header(reply_data + 8, replylen - 8, &log_header, LIBAMBIT_PMEM20_FLAGS_NONE) == 0) {
                     if (skip_cb(userref, &log_header) != 0) {
                         // Header was NOT skipped, break out!
                         read_pmem = true;
@@ -227,7 +227,8 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
         }
 
         // Loop through all log entries, first check headers
-        while (log_entries_walked < log_entries_total && libambit_pmem20_log_next_header(&object->driver_data->pmem20, &log_header) == 1) {
+        while (log_entries_walked < log_entries_total &&
+               libambit_pmem20_log_next_header(&object->driver_data->pmem20, &log_header, LIBAMBIT_PMEM20_FLAGS_NONE) == 1) {
             LOG_INFO("Reading header of log %d of %d", log_entries_walked + 1, log_entries_total);
             if (progress_cb != NULL) {
                 progress_cb(userref, log_entries_total, log_entries_walked+1, 100*log_entries_walked/log_entries_total);
@@ -235,7 +236,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
             // Check if this entry needs to be read
             if (skip_cb == NULL || skip_cb(userref, &log_header) != 0) {
                 LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
-                log_entry = libambit_pmem20_log_read_entry(&object->driver_data->pmem20);
+                log_entry = libambit_pmem20_log_read_entry(&object->driver_data->pmem20, LIBAMBIT_PMEM20_FLAGS_NONE);
                 if (log_entry != NULL) {
                     if (push_cb != NULL) {
                         push_cb(userref, log_entry);
