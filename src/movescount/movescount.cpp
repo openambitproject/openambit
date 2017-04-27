@@ -574,7 +574,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
 
     reply = syncPOST("/moves/", "", output, true);
 
-    if (reply->error() == QNetworkReply::NoError || reply->error() == QNetworkReply::UnknownContentError) {
+    if (reply->error() == QNetworkReply::NoError || reply->error() == QNetworkReply::UnknownContentError || reply->error() == QNetworkReply::ContentConflictError) {
         QByteArray data = reply->readAll();
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
