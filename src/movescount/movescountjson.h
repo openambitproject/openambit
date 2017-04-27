@@ -46,7 +46,7 @@ public:
     int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount);
     int parseRoute(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps, MovesCount *movescount);
     int parseRoutePoints(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps);
-    bool appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, QString route_name, QString waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type);
+    bool appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, char *route_name, char *waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type);
     int parseDeviceSettingsReply(QByteArray &input, MovescountSettings &movescountSettings);
     int parseAppRulesReply(QByteArray &input, ambit_app_rules_t* ambitApps); // QList<uint> &appRulesId, QList<QByteArray> &appRulesData);
 

@@ -292,7 +292,8 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
             appendRoutePoint(route, x, clat, clon, jCurrent["Altitude"].toInt(), (uint32_t)(jCurrent["RelativeDistance"].toDouble()*100000));
 
             if(jCurrent["Name"].toString() != "") {
-                appendWaypoint(cur_waypoint_count, ps, QString(route->name), jCurrent["Name"].toString(), clat, clon, jCurrent["Altitude"].toInt(), jCurrent["Type"].toInt());
+                QByteArray ba1 = jCurrent["Name"].toString().toLatin1();
+                appendWaypoint(cur_waypoint_count, ps, route->name, ba1.data(), clat, clon, jCurrent["Altitude"].toInt(), jCurrent["Type"].toInt());
                 ++cur_waypoint_count;
             }
         }
@@ -321,8 +322,8 @@ int MovesCountJSON::parseRoutePoints(QByteArray &input, ambit_route_t *route, am
     route->mid_lon = route->max_lon - (route->max_lon - route->min_lon)/2;
 
     if(cur_waypoint_count == 0) {
-        appendWaypoint(cur_waypoint_count++, ps, QString(route->name), "A", route->start_lat, route->start_lon, route->points[0].altitude, movescount_waypoint_type_internal_wp_start);
-        appendWaypoint(cur_waypoint_count, ps, QString(route->name), "B", route->end_lat, route->end_lon, route->points[(ret-1)].altitude, movescount_waypoint_type_internal_wp_end);
+        appendWaypoint(cur_waypoint_count++, ps, route->name, (char*)"A", route->start_lat, route->start_lon, route->points[0].altitude, movescount_waypoint_type_internal_wp_start);
+        appendWaypoint(cur_waypoint_count, ps, route->name, (char*)"B", route->end_lat, route->end_lon, route->points[(ret-1)].altitude, movescount_waypoint_type_internal_wp_end);
     }
 
     return ret;
@@ -353,12 +354,12 @@ bool MovesCountJSON::appendRoutePoint(ambit_route_t *route, int point_number, in
     return true;
 }
 
-bool MovesCountJSON::appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, QString route_name, QString waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type) {
+bool MovesCountJSON::appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, char *route_name, char *waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type) {
 
     ambit_waypoint_t wp;
     wp.index = 0;
-    strncpy(wp.name, waypoint_name.toLatin1().data(), 49);
-    strncpy(wp.route_name, route_name.toLatin1().data(), 49);
+    strncpy(wp.name, waypoint_name, 49);
+    strncpy(wp.route_name, route_name, 49);
     wp.ctime_second = count;
     wp.ctime_minute = wp.ctime_hour = 0;
     wp.ctime_day = wp.ctime_month = 1;
@@ -369,7 +370,6 @@ bool MovesCountJSON::appendWaypoint(uint16_t count, ambit_personal_settings_t *p
     wp.type = type;
     wp.status = 0;
     libambit_waypoint_append(ps, &wp, 1);
-
     return true;
 }
 
