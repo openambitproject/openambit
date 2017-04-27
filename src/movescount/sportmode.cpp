@@ -233,7 +233,7 @@ void CustomMode::toAmbitSettings(ambit_sport_mode_settings_t *settings)
 
 void CustomMode::toAmbitName(char ambitName[NAME_SIZE])
 {
-    const char *source = activityName.toStdString().c_str();
+    const char *source = activityName.toLatin1().data();
     int strLen = activityName.length() < NAME_SIZE ? activityName.length() : NAME_SIZE;
     memset(ambitName, 0x00, NAME_SIZE);
     memcpy(ambitName, source, strLen);
