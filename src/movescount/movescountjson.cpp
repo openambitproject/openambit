@@ -433,7 +433,7 @@ int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *setti
                         );
                 c_waypoint.insert("Latitude",  (double)settings->waypoints.data[x].latitude/10000000);
                 c_waypoint.insert("Longitude",  (double)settings->waypoints.data[x].longitude/10000000);
-                c_waypoint.insert("Name", QString(settings->waypoints.data[x].name));
+                c_waypoint.insert("Name", QString::fromLatin1(settings->waypoints.data[x].name));
                 c_waypoint.insert("Type", settings->waypoints.data[x].type);
                 waypoints.append(c_waypoint);
 
