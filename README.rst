@@ -127,6 +127,16 @@ following ought to work:
    cd _build
    cmake ..
    make
+   
+Build Qt5 version directly with ``cmake``.
+
+.. code-block:: sh
+
+   cd /path/to/your/clone/of/openambit
+   mkdir _build
+   cd _build
+   cmake -DUSE_QT5=1 -DCMAKE_BUILD_TYPE=Debug ..
+   make
 
 Install Procedure
 -----------------
