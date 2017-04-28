@@ -542,7 +542,9 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
     size_t replylen;
     int ret = -1;
 
+    printf("Vendor: %x, Product: %x\n", info->vendor_id, info->product_id);
     komposti_version = (uint8_t*)libambit_device_komposti(info->vendor_id, info->product_id, 0);
+    printf("Komposit version: %x %x %x %x\n", komposti_version[0], komposti_version[1], komposti_version[2], komposti_version[3]);
 
     if(komposti_version == NULL) {
         LOG_WARNING("Failed to get komposti version");

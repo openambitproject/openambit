@@ -156,6 +156,7 @@ int libambit_sbem0102_command_request(libambit_sbem0102_t *object, uint16_t comm
                     // Guess number 2: first 4 bytes seems to be copied from
                     // the reply when asking for more data, what the f*ck does
                     // they represent!?
+                    // Might be next memory address to read, because with acitvity name, it gets dynamic?
                     memcpy(send_data, reply, 4);
 
                     // Free old reply before calling again

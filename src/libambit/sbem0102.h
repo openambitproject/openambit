@@ -28,6 +28,12 @@
 #include "debug.h"
 #include "utils.h"
 
+enum ambit3_fw_gen {
+    AMBIT3_FW_GEN1,
+    AMBIT3_FW_GEN2,
+    AMBIT3_FW_GEN3,
+};
+
 typedef struct libambit_sbem0102_s {
     uint16_t chunk_size;
     ambit_object_t *ambit_object;
@@ -156,11 +162,20 @@ static inline const uint8_t *libambit_sbem0102_data_ptr(libambit_sbem0102_data_t
  * \param object Object to iterate over
  * \return 0 on success, else -1
  */
-static inline int libambit_sbem0102_data_next(libambit_sbem0102_data_t *object)
+static inline int libambit_sbem0102_data_next(libambit_sbem0102_data_t *object, enum ambit3_fw_gen fw_gen)
 {
     size_t read_offset;
     uint8_t log_end[] = { 0, 0, 0, 0, 0x7a, 0x44 };
     uint8_t *data;
+
+    if(fw_gen == AMBIT3_FW_GEN3) {
+       log_end[0] = 0;
+       log_end[1] = 0;
+       log_end[2] = 0;
+       log_end[3] = 0;
+       log_end[4] = 0xe1;
+       log_end[5] = 0x2a;
+    }
 
     // Initial state
     if (object->read_ptr == NULL) {

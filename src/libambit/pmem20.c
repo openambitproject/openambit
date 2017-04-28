@@ -419,7 +419,9 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         buffer_offset += 2 + sample_len;
     }
 
+    LOG_INFO("Log entry finish reading  %d samples", log_entry->samples_count);
     correct_samples(log_entry, time_compensators);
+    LOG_INFO("Completed correct_samples()", log_entry->samples_count);
 
     return log_entry;
 }
@@ -934,6 +936,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
         break;
     }
 
+    LOG_INFO("Sample #0x%02x of type 0x%02x", *sample_count,log_entry->samples[*sample_count].type);
     *sample_count += ret;
 
     return ret;

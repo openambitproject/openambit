@@ -23,6 +23,7 @@
 #include "device_driver.h"
 
 #include <string.h>
+#include <stdio.h>
 
 /*
  * Local definitions
@@ -45,8 +46,8 @@ typedef struct int_known_device_s {
  * Static variables
  */
 static int_known_device_t known_devices[] = {
-    { SUUNTO_USB_VENDOR_ID, 0x001c, "Finch", {0x00,0x00,0x00,0x00}, { "Suunto Ambit3 Sport", true, &ambit_device_driver_ambit3, 0x0400,{0x02,0x03,0x06,0x00} } },
-    { SUUNTO_USB_VENDOR_ID, 0x001b, "Emu", {0x00,0x00,0x00,0x00}, { "Suunto Ambit3 Peak", true, &ambit_device_driver_ambit3, 0x0400, {0x02,0x03,0x06,0x00} } },
+    { SUUNTO_USB_VENDOR_ID, 0x001c, "Finch", {0x00,0x00,0x00,0x00}, { "Suunto Ambit3 Sport", true, &ambit_device_driver_ambit3, 0x0400,{0x02,0x04,0x59,0x00} } },
+    { SUUNTO_USB_VENDOR_ID, 0x001b, "Emu", {0x00,0x00,0x00,0x00}, { "Suunto Ambit3 Peak", true, &ambit_device_driver_ambit3, 0x0400, {0x02,0x04,0x59,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x001d, "Greentit", {0x00,0x00,0x00,0x00}, { "Suunto Ambit2 R", true, &ambit_device_driver_ambit, 0x0400, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x01,0x01,0x02,0x00}, { "Suunto Ambit2 S", true, &ambit_device_driver_ambit, 0x0400, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x01,0x01,0x02,0x00}, { "Suunto Ambit2", true, &ambit_device_driver_ambit, 0x0400, {0x02,0x00,0x2d,0x00} } },
@@ -102,6 +103,7 @@ const uint8_t *libambit_device_komposti(uint16_t vendor_id, uint16_t product_id,
         if(vendor_id == known_devices[i].vid &&
             product_id == known_devices[i].pid) {
                 if(next == 0) {
+                    printf("libambit_komposti: %x %x %x %x\n", known_devices[i].public_info.komposti_version[0], known_devices[i].public_info.komposti_version[1], known_devices[i].public_info.komposti_version[2], known_devices[i].public_info.komposti_version[3]);
                     return known_devices[i].public_info.komposti_version;
                 } else {
                     --next;
