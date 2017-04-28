@@ -537,13 +537,20 @@ bool libambit_malloc_app_rule(uint16_t count, ambit_app_rules_t *ambit_app_rules
 
 static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 {
+    uint8_t *komposti_version = NULL;
     uint8_t *reply_data = NULL;
     size_t replylen;
     int ret = -1;
 
+    komposti_version = (uint8_t*)libambit_device_komposti(info->vendor_id, info->product_id, 0);
+
+    if(komposti_version == NULL) {
+        LOG_WARNING("Failed to get komposti version");
+    }
+    
     LOG_INFO("Reading device info");
 
-    if (libambit_protocol_command(object, ambit_command_device_info, info->komposti_version, sizeof(uint8_t)*4, &reply_data, &replylen, 1) == 0) {
+    if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(uint8_t)*4, &reply_data, &replylen, 1) == 0) {
         if (info != NULL) {
             const char *p = (char *)reply_data;
 

@@ -55,7 +55,7 @@ static int_known_device_t known_devices[] = {
     { SUUNTO_USB_VENDOR_ID, 0x001a, "Colibri", {0x00,0x02,0x02,0x00}, { "Suunto Ambit2 S (up to 0.2.2)", false, NULL, 0x0200, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x0019, "Duck", {0x00,0x02,0x02,0x00}, { "Suunto Ambit2 (up to 0.2.2)", false, NULL, 0x0200, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x02,0x01,0x00,0x00}, { "Suunto Ambit", true, &ambit_device_driver_ambit, 0x0200, {0x02,0x00,0x2d,0x00} } },
-    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x09,0x00,0x00}, { "Suunto Ambit", false, NULL, 0x0200 } }, /* First with PMEM 2.0, {0x02,0x00,0x2d,0x00} !? */
+    { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x09,0x00,0x00}, { "Suunto Ambit", false, NULL, 0x0200, {0x02,0x00,0x2d,0x00} } }, /* First with PMEM 2.0, {0x02,0x00,0x2d,0x00} !? */
     { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x06,0x00,0x00}, { "Suunto Ambit", false, NULL, 0, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x01,0x01,0x00,0x00}, { "Suunto Ambit", false, NULL, 0, {0x02,0x00,0x2d,0x00} } },
     { SUUNTO_USB_VENDOR_ID, 0x0010, "Bluebird", {0x00,0x00,0x00,0x00}, { "Suunto Ambit", false, NULL, 0, {0x02,0x00,0x2d,0x00} } },
@@ -93,6 +93,23 @@ const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uin
     }
 
     return device;
+}
+
+const uint8_t *libambit_device_komposti(uint16_t vendor_id, uint16_t product_id, uint8_t next)
+{
+    int i;
+    for (i=0; i<sizeof(known_devices)/sizeof(known_devices[0]); i++) {
+        if(vendor_id == known_devices[i].vid &&
+            product_id == known_devices[i].pid) {
+                if(next == 0) {
+                    return known_devices[i].public_info.komposti_version;
+                } else {
+                    --next;
+                }
+        }
+    }
+
+    return NULL;
 }
 
 uint32_t libambit_fw_version_number(const uint8_t version[4])
