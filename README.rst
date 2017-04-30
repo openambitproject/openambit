@@ -137,6 +137,16 @@ Build Qt5 version directly with ``cmake``.
    cd _build
    cmake -DUSE_QT5=1 -DCMAKE_BUILD_TYPE=Debug ..
    make
+   
+Build options
+
+.. code-block:: sh
+
+   USE_QT5 = 0 | 1 (Default Qt4)
+   BUILD_EXTRAS = 0 | 1 (Default 0)
+   CMAKE_BUILD_TYPE = Debug | Release
+   DEBUG_PRINT_INFO = 0 | 1 (Default 0)
+   
 
 Install Procedure
 -----------------
