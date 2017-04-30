@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 /*
  * Local definitions
@@ -125,10 +126,21 @@ static void deinit(ambit_object_t *object)
     }
 }
 
+static float ieee754_to_float(uint32_t bits)
+{
+    int sign = bits >> 31 ? -1 : 1;
+    int exp = (int)(((bits >> 23) & 0xff) - 127);
+    int frac = (int)((bits & 0x7fffff) | 0x800000);
+
+    return sign * frac * powf(2.0f, exp - 23);
+}
+
 static int personal_settings_get(ambit_object_t *object, ambit_personal_settings_t *settings)
 {
     uint8_t send_data[4] = { 0x00, 0x00, 0x00, 0x00 };
     libambit_sbem0102_data_t reply_data_object;
+    uint32_t alarm_num;
+    uint32_t decli_num;
 
     LOG_INFO("Reading personal settings");
 
@@ -142,24 +154,79 @@ static int personal_settings_get(ambit_object_t *object, ambit_personal_settings
 
     while (libambit_sbem0102_data_next(&reply_data_object) == 0) {
         switch (libambit_sbem0102_data_id(&reply_data_object)) {
+          case 0x01:
+            settings->date_format = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x02:
+            settings->tones_mode = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x03:
+            settings->gps_position_format = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x04:
+            decli_num = read32(libambit_sbem0102_data_ptr(&reply_data_object), 0);
+            settings->compass_declination_f = ieee754_to_float(decli_num);
+            break;
+          case 0x08:
+            settings->units_mode = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x12:
+            settings->language = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x13: // Map orientation
+            settings->navigation_style = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x14:
+            settings->time_format = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x15:
+            settings->sync_time_w_gps = !libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x16: // Dual time enabled
+            break;
+          case 0x17:
+            settings->alarm_enable = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x18:
+            alarm_num = read32(libambit_sbem0102_data_ptr(&reply_data_object), 0);
+            settings->alarm.hour = (alarm_num / 60 / 60);
+            settings->alarm.minute = (alarm_num / 60) % 60;
+            break;
+          case 0x19:
+            settings->is_male = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
           case 0x1a:
             settings->weight = read16(libambit_sbem0102_data_ptr(&reply_data_object), 0);
+            break;
+          case 0x1b:
+            settings->max_hr = libambit_sbem0102_data_ptr(&reply_data_object)[0];
             break;
           case 0x1f:
             if (libambit_sbem0102_data_len(&reply_data_object) == 11) {
                 sscanf((const char*)libambit_sbem0102_data_ptr(&reply_data_object), "%04hu-", &settings->birthyear);
             }
             break;
-          case 0x1b:
-          case 0x1e:
-            // settings->length = libambit_sbem0102_data_ptr(&reply_data_object)[0];
-            //break;
-          case 0x1c:
-            //settings->backlight_brightness = libambit_sbem0102_data_ptr(&reply_data_object)[0];
-            //break;
-          case 0x1d:
-            //settings->display_brightness = libambit_sbem0102_data_ptr(&reply_data_object)[0];
-            //break;
+          case 0x20: // Display contrast
+            settings->display_brightness = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x21:
+            settings->display_is_negative = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x22:
+            settings->backlight_mode = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x23:
+            settings->backlight_brightness = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x26:
+            settings->alti_baro_mode = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x27:
+            settings->fused_alti_disabled = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
+          case 0x28:
+            settings->storm_alarm = libambit_sbem0102_data_ptr(&reply_data_object)[0];
+            break;
           default:
             /*
             printf("Got id=%02x: ", libambit_sbem0102_data_id(&reply_data_object));
