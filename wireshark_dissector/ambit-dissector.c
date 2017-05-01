@@ -86,6 +86,8 @@ static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, pro
 static gint dissect_ambit3_log_headers_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length);
+static gint dissect_ambit3_device_compact_serial_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_device_compact_serial_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 
 /* protocols and header fields */
 #define D_AMBIT_USBID 0x3f
@@ -111,6 +113,7 @@ static int hf_ambit_charge = -1;
 static int hf_ambit_komposti_version = -1;
 static int hf_ambit_model = -1;
 static int hf_ambit_serial = -1;
+static int hf_ambit_compact_serial = -1;
 static int hf_ambit_fw_version = -1;
 static int hf_ambit_hw_version = -1;
 static int hf_ambit_bsl_version = -1;
@@ -495,6 +498,8 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x0b190a00, "Lock status reply", dissect_ambit_lock_status_reply },
     { 0x0b1a0500, "Lock set", dissect_ambit_lock_set },
     { 0x0b1a0a00, "Lock set reply", dissect_ambit_lock_set_reply },
+    { 0x0b1e0500, "Ambit3 - Get Compact serial", dissect_ambit3_device_compact_serial_get },
+    { 0x0b1e0a00, "Ambit3 - Compact serial reply", dissect_ambit3_device_compact_serial_reply },
     { 0x11000500, "Ambit3 - Get settings", dissect_ambit3_settings_get },
     { 0x11000a00, "Ambit3 - Settings reply", dissect_ambit3_settings_reply },
     { 0x11010500, "Ambit3 - Write settings", dissect_ambit3_settings_reply },
@@ -624,6 +629,25 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     offset += 4;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
     offset += 4;
+}
+
+static gint dissect_ambit3_device_compact_serial_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    gint offset = 0;
+    proto_tree_add_string(tree, hf_ambit_compact_serial, tvb, offset, 17, "Ambit3 get compact serial");
+    offset +=17;
+}
+
+static gint dissect_ambit3_device_compact_serial_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    guint8 compact_serial[11];
+    int i;
+    gint offset = 0;
+    offset += 9;
+    compact_serial[10] = 0;
+    for(i=0; i<sizeof(compact_serial)-1; i++)
+        compact_serial[i] = tvb_get_guint8(tvb, offset+i);
+    proto_tree_add_string_format_value(tree, hf_ambit_compact_serial, tvb, offset, 10, "Ambit3 compact serial", "%s", compact_serial);
 }
 
 static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -2771,6 +2795,8 @@ proto_register_ambit(void)
           { "Model", "ambit.model", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_serial,
           { "Serial", "ambit.serial", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_compact_serial,
+          { "Compact Serial", "ambit.compact_serial", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_fw_version,
           { "FW version", "ambit.fwversion", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_hw_version,
