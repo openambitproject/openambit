@@ -360,7 +360,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
                 LOG_INFO("Failed to parse log header");
             }
             log_entries_walked++;
-            if (progress_cb != NULL) {
+            if (progress_cb != NULL && log_entries_total != 0) {
                 progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
             }
             break;
@@ -439,7 +439,7 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
                 log_entries_total = log_entries_walked; // Handle situations where ambit reports wrong number of total entries
             }
 
-            if (progress_cb != NULL) {
+            if (progress_cb != NULL && log_entries_total != 0) {
                 LOG_INFO("Do progress_cb");
                 progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
             }
@@ -576,12 +576,10 @@ static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_
         data += 14;
         break;
       case 0xe1: /* gen3 fw */
-        data += 19;
+        data += 18;
         break;
       case 0x8a: /* gen2+gen3 fw */
-        if (fw_gen == AMBIT3_FW_GEN3)
-            data += 1; // Skip size
-        else
+        if (reply_data_object->read_ptr[1] == 0xff) //If packetsize header is too big, next 4 bytes is size header. We want to skip them.
             data += 4;
         break;
     }
