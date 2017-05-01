@@ -579,7 +579,7 @@ static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_
         data += 19;
         break;
       case 0x8a: /* gen2+gen3 fw */
-        data += 4;
+        data += 1; // Skip size ??
         break;
     }
 
