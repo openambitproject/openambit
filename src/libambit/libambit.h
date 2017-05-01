@@ -39,6 +39,7 @@ typedef struct ambit_device_info_s {
     uint8_t fw_version[4];
     uint8_t hw_version[4];
     uint8_t komposti_version[4];
+    uint8_t compact_serial[11];
 
     const char *path;                   /* file system encoding */
     uint16_t    vendor_id;

@@ -571,6 +571,31 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
 
     libambit_protocol_free(reply_data);
 
+    memset(info->compact_serial, 0, sizeof(info->compact_serial));
+
+    if (info->fw_version[0] == 2 && info->fw_version[1] >= 4)
+    {
+        LOG_INFO("Ambit3 get compact serial");
+
+        uint8_t data[17];
+        data[8] = 1;
+
+        if (libambit_protocol_command(object, ambit_command_ambit3_get_compact_serial, data, sizeof(data), &reply_data, &replylen, 0) == 0) {
+            ret = 0;
+            if (replylen >= sizeof(info->compact_serial))
+            {
+                LOG_INFO("Ambit3 device serial %s\n", &reply_data[9]);
+                strcpy((char*)info->compact_serial, (char*)&reply_data[9]);
+            }
+        }
+        else {
+            LOG_WARNING("Ambit3 get serial failed");
+            ret = -1;
+        }
+
+        libambit_protocol_free(reply_data);
+    }
+
     return ret;
 }
 
@@ -701,9 +726,11 @@ static ambit_device_info_t * ambit_device_info_new(const struct hid_device_info 
                 version_string(fw_version, device->fw_version);
                 version_string(hw_version, device->hw_version);
 
-                LOG_INFO("Ambit: %s: '%s' (serial: %s, VID/PID: %04x/%04x, "
+                LOG_INFO("Ambit: %s: '%s' (serial: %s, compact serial %s, "
+                         "VID/PID: %04x/%04x, "
                          "nick: %s, F/W: %s, H/W: %s, supported: %s)",
                          device->path, device->name, device->serial,
+                         device->compact_serial,
                          device->vendor_id, device->product_id,
                          device->model, fw_version, hw_version,
                          (device->is_supported ? "YES" : "NO"));

@@ -49,7 +49,7 @@ enum ambit_commands_e {
     ambit_command_lock_check            = 0x0b19,
     ambit_command_lock_set              = 0x0b1a,
     ambit_command_write_start           = 0x0b1b, // Really!? Just a guess...
-    ambit_command_unknown3              = 0x0b1e, // Ambit3 Peak fw 2.0.4
+    ambit_command_ambit3_get_compact_serial = 0x0b1e,
     ambit_command_ambit3_memory_map     = 0x0b21,
     ambit_command_unknown4              = 0x0b25, // Ambit3 Peak fw 2.0.4
     ambit_command_unknown5              = 0x0b26, // Ambit3 Peak fw 2.0.4
