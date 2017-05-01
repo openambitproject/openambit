@@ -93,7 +93,7 @@ int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint
 
     // Set memory structure
     object->log.mem_start = mem_start;
-    object->log.mem_size = mem_size;
+    object->log.mem_size = (mem_size) ?:-1; // mem_size is 0 ??
 
     object->log.buffer = malloc(object->log.mem_size + PMEM20_LOG_WRAP_BUFFER_MARGIN);
     object->log.chunks_read = malloc((object->log.mem_size/object->chunk_size)+1);
