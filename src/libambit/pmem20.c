@@ -469,8 +469,11 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->heartrate_min = read8inc(data, &offset);
 
     log_header->unknown2 = read8inc(data, &offset);
-    if (flags & LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48)
-        offset += 48;
+    if (flags & LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48) {
+        offset += 46;
+	log_header->heartrate_min = read8inc(data, &offset);
+	offset += 1;
+    }
 
     log_header->temperature_max = read16inc(data, &offset);
     log_header->temperature_min = read16inc(data, &offset);
