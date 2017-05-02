@@ -48,5 +48,6 @@ void debug_printf(debug_level_t level, const char *file, int line, const char *f
 #else
 #define LOG_INFO(fmt, ...)
 #endif
+#define ONLYDEBUGVAR(x) (void)(x)
 
 #endif /* __DEBUG_H__ */

@@ -946,7 +946,7 @@ static void correct_samples(ambit_log_entry_t *log_entry, int32_t *time_compensa
 {
     size_t sample_count, i;
     ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *altisource = NULL;
-    ambit_date_time_t utcbase;
+    ambit_date_time_t utcbase = { 0, 0, 0, 0, 0, 0 };
     uint32_t altisource_index = 0;
     uint32_t last_base_lat = 0, last_base_long = 0;
     uint32_t last_small_lat = 0, last_small_long = 0;
