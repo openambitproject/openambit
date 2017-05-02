@@ -81,7 +81,9 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
 static int gps_orbit_header_read(ambit_object_t *object, uint8_t data[8]);
 static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen);
 
-static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen);
+static int parse_log_header_deprecated(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen);
+static int parse_log_header_init(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref, uint16_t *log_entries_walked, uint16_t log_entries_total, enum ambit3_fw_gen fw_gen);
+static size_t parse_log_entry(const uint8_t *log_data, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen);
 static int get_memory_maps(ambit_object_t *object);
 
 /*
@@ -161,30 +163,12 @@ static float ieee754_to_float(uint32_t bits)
 
 static int personal_settings_get(ambit_object_t *object, ambit_personal_settings_t *settings)
 {
-    //uint8_t *reply_data = NULL;
-    //size_t replylen = 0;
     uint8_t send_data[4] = { 0x00, 0x00, 0x00, 0x00 };
-    //uint8_t send_data_unknown[17] = { 0x60,0x00,0x00,0x00,0xb0,0x00,0x17,0x00,0x01,0x00,0x00,0x00,0xc0,0xf5,0xdc,0x0a,0xb0 };
     libambit_sbem0102_data_t reply_data_object;
     uint32_t alarm_num;
     uint32_t decli_num;
 
     LOG_INFO("Reading personal settings");
-
-    /*
-    switch (get_ambit3_fw_gen(&object->device_info)) {
-      case AMBIT3_FW_GEN3:
-            if (libambit_protocol_command(object, ambit_command_unknown3, send_data_unknown, sizeof(send_data_unknown), &reply_data, &replylen, 0) != 0 || replylen < 4) {
-                libambit_protocol_free(reply_data);
-                LOG_WARNING("Failed to ambit_command_unknown3");
-                return -1;
-            }
-            libambit_protocol_free(reply_data);
-      case AMBIT3_FW_GEN1:
-      case AMBIT3_FW_GEN2:
-        break;
-    }
-    */
 
     libambit_sbem0102_data_init(&reply_data_object);
     if (libambit_sbem0102_command_request_raw(&object->driver_data->sbem0102, ambit_command_ambit3_settings, send_data, sizeof(send_data), &reply_data_object) != 0) {
@@ -336,7 +320,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
             LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
             break;
           case 0x7e:
-            if (parse_log_header(reply_data_object, &log_header, AMBIT3_FW_GEN1) == 0) {
+            if (parse_log_header_deprecated(reply_data_object, &log_header, AMBIT3_FW_GEN1) == 0) {
                 LOG_INFO("Log header parsed successfully");
                 if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
                     LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
@@ -373,7 +357,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
 }
 
 static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
-                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref,enum ambit3_fw_gen fw_gen)
+                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
 {
     ambit3_log_header_t log_header;
     ambit_log_entry_t *log_entry;
@@ -386,19 +370,11 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
 
     log_header.header.activity_name = NULL;
 
-    while (libambit_sbem0102_data_next(reply_data_object, fw_gen) == 0) {
+    while (libambit_sbem0102_data_next(reply_data_object, AMBIT3_FW_GEN2) == 0) {
         switch (libambit_sbem0102_data_id(reply_data_object)) {
-          case 0x59:
-            if(fw_gen == AMBIT3_FW_GEN3) log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
-            break;
           case 0x5a:
-            if(fw_gen == AMBIT3_FW_GEN3) {
-                log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
-                LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
-            } else {
-                log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
-                LOG_INFO("Number of logs=%d", log_entries_total);
-            }
+            log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs=%d", log_entries_total);
             break;
           case 0x5b:
             log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
@@ -407,7 +383,7 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
           case 0x8a:
           case 0x7a:
           case 0xe1:
-            if (parse_log_header(reply_data_object, &log_header, fw_gen) == 0) {
+            if (parse_log_header_deprecated(reply_data_object, &log_header, AMBIT3_FW_GEN2) == 0) {
                 LOG_INFO("Log header parsed successfully");
                 if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
                     LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
@@ -443,6 +419,40 @@ static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem01
                 LOG_INFO("Do progress_cb");
                 progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
             }
+            break;
+          default:
+            LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
+            break;
+        }
+    }
+
+    return entries_read;
+}
+
+static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
+                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
+{
+    uint16_t log_entries_total = 0;
+    uint16_t log_entries_notsynced = 0;
+    uint16_t log_entries_walked = 0;
+    int entries_read = 0;
+
+    while (libambit_sbem0102_data_next(reply_data_object, AMBIT3_FW_GEN3) == 0) {
+        switch (libambit_sbem0102_data_id(reply_data_object)) {
+          case 0x59:
+            log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            break;
+          case 0x5a:
+            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
+            break;
+          case 0x5b:
+            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
+            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
+            break;
+          case 0x8a:
+          case 0x7a:
+            entries_read = parse_log_header_init(object, reply_data_object, skip_cb, push_cb, progress_cb, userref, &log_entries_walked,log_entries_total, AMBIT3_FW_GEN3); 
             break;
           default:
             LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
@@ -491,8 +501,9 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
         entries_read = process_log_read_replies_gen1(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
         break;
       case AMBIT3_FW_GEN2:
+        entries_read = process_log_read_replies_gen2(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
       case AMBIT3_FW_GEN3:
-        entries_read = process_log_read_replies_gen2(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref, fw_gen);
+        entries_read = process_log_read_replies_gen3(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
         break;
     }
 
@@ -558,35 +569,80 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
     return ret;
 }
 
-static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen)
+static int parse_log_header_init(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref,  uint16_t *log_entries_walked, uint16_t log_entries_total, enum ambit3_fw_gen fw_gen)
 {
-    uint8_t log_type;
+    ambit3_log_header_t log_header;
+    ambit_log_entry_t *log_entry;
+    const uint8_t *data;
+    size_t length = 0;
+    size_t offset = 0;
+    size_t log_read_len = 0;
+    int current_parse_num_log_read = 0;
+
+    length = libambit_sbem0102_data_len(reply_data_object);
+    data = libambit_sbem0102_data_ptr(reply_data_object);
+    int entries_read = 0;
+
+    while(offset<length) {
+        
+        log_header.header.activity_name = NULL;
+        log_read_len = parse_log_entry(&data[offset], &log_header, AMBIT3_FW_GEN3);
+
+        if(log_read_len == 0) {
+            LOG_ERROR("Could not parse log header");
+            return -1;
+        }
+
+        offset += log_read_len;
+
+        LOG_INFO ("Next offset: %d of %d\n", offset, length);
+        
+        if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
+            LOG_INFO("Reading data of log %d of %d", *log_entries_walked + 1, log_entries_total);
+            log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
+                                                               log_header.address,
+                                                               log_header.end_address - log_header.address,
+                                                               log_header.address2,
+                                                               log_header.end_address2 - log_header.address2,
+                                                               LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48);
+            LOG_INFO("Completed data of log %d of %d", *log_entries_walked + 1, log_entries_total);
+            if (log_entry != NULL) {
+                if (push_cb != NULL) {
+                    push_cb(userref, log_entry);
+                    LOG_INFO("Completed push_cb");
+                }
+                entries_read++;
+            }
+        }
+        else {
+            LOG_INFO("Log entry already exists, skipping");
+        }
+
+        (*log_entries_walked)++;
+        current_parse_num_log_read++;
+
+        if(*log_entries_walked > log_entries_total) {
+            log_entries_total = *log_entries_walked; // Handle situations where ambit reports wrong number of total entries
+        }
+
+        if (progress_cb != NULL && log_entries_total != 0) {
+            LOG_INFO("Do progress_cb");
+            progress_cb(userref, log_entries_total, *log_entries_walked, 100*(*log_entries_walked)/log_entries_total);
+        }
+    }
+
+    return current_parse_num_log_read;
+}
+
+static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen)
+{
     struct tm tm;
     char *ptr;
-    const uint8_t *data;
     size_t offset = 0;
-
-    data = libambit_sbem0102_data_ptr(reply_data_object);
-
-    log_type = libambit_sbem0102_data_id(reply_data_object);
-    switch (log_type) {
-      case 0x7e: /* gen1 fw */
-        break;
-      case 0x7a: /* gen2 fw */
-        data += 14;
-        break;
-      case 0xe1: /* gen3 fw */
-        data += 18;
-        break;
-      case 0x8a: /* gen2+gen3 fw */
-        if (reply_data_object->read_ptr[1] == 0xff) //If packetsize header is too big, next 4 bytes is size header. We want to skip them.
-            data += 4;
-        break;
-    }
 
     // Start with parsing the time
     if ((ptr = libambit_strptime((const char *)data, "%Y-%m-%dT%H:%M:%S", &tm)) == NULL) {
-        return -1;
+        return 0;
     }
     log_header->header.date_time.year = 1900 + tm.tm_year;
     log_header->header.date_time.month = tm.tm_mon + 1;
@@ -634,16 +690,48 @@ static int parse_log_header(libambit_sbem0102_data_t *reply_data_object, ambit3_
         free(log_header->header.activity_name);
     }
     log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "ISO-8859-15");
-    switch (log_type) {
-      case 0x7e: /* gen1 fw */
-        break;
-      case 0x7a: /* gen2 fw */
-      case 0x8a: /* gen2 fw */
+    switch (fw_gen) {
+      case AMBIT3_FW_GEN2:
+      case AMBIT3_FW_GEN3:
         offset += (strlen(log_header->header.activity_name)+1);
+        break;
+      default:
         break;
     }
     log_header->header.distance = read32inc(data, &offset);
     log_header->header.energy_consumption = read16inc(data, &offset);
+
+    if(fw_gen == AMBIT3_FW_GEN3) { //parse_log_header_deprecated is happy with all return values above 0
+        offset += 28; //extra unknown data
+    }
+
+    return offset;
+}
+
+static int parse_log_header_deprecated(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen)
+{
+    // This is an function to keep backward compatibility with AMBIT3_FW_GEN1 and AMBIT3_FW_GEN2
+    // AMBIT3_FW_GEN3 will use parse_log_header_init
+
+    uint8_t log_type;
+    const uint8_t *data;
+
+    data = libambit_sbem0102_data_ptr(reply_data_object);
+
+    log_type = libambit_sbem0102_data_id(reply_data_object);
+    switch (log_type) {
+      case 0x7e: /* gen1 fw */
+        break;
+      case 0x7a: /* gen2 fw */
+        data += 14;
+        break;
+      case 0x8a: /* gen2 fw */
+        break;
+    }
+
+    if(parse_log_entry(data, log_header, fw_gen) == 0) {
+        return -1;
+    }
 
     return 0;
 }

@@ -141,9 +141,12 @@ static inline uint8_t libambit_sbem0102_data_id(libambit_sbem0102_data_t *object
  * \param object Object to iterate over
  * \return Current elements data length
  */
-static inline uint8_t libambit_sbem0102_data_len(libambit_sbem0102_data_t *object)
+static inline uint32_t libambit_sbem0102_data_len(libambit_sbem0102_data_t *object)
 {
-    return object->read_ptr[1];
+    if(object->read_ptr[1] == 0xff) {
+       return object->read_ptr[2] | (object->read_ptr[3] << 8) | (object->read_ptr[4] << 16) | (object->read_ptr[5] << 24);
+    }
+    return (uint8_t)object->read_ptr[1];
 }
 
 /**
@@ -153,6 +156,10 @@ static inline uint8_t libambit_sbem0102_data_len(libambit_sbem0102_data_t *objec
  */
 static inline const uint8_t *libambit_sbem0102_data_ptr(libambit_sbem0102_data_t *object)
 {
+    if(libambit_sbem0102_data_len(object)>254) {
+        return &object->read_ptr[6];
+    }
+
     return &object->read_ptr[2];
 }
 
@@ -168,15 +175,6 @@ static inline int libambit_sbem0102_data_next(libambit_sbem0102_data_t *object, 
     uint8_t log_end[] = { 0, 0, 0, 0, 0x7a, 0x44 };
     uint8_t *data;
 
-    if(fw_gen == AMBIT3_FW_GEN3) {
-       log_end[0] = 0;
-       log_end[1] = 0;
-       log_end[2] = 0;
-       log_end[3] = 0;
-       log_end[4] = 0xe1;
-       log_end[5] = 0x2a;
-    }
-
     // Initial state
     if (object->read_ptr == NULL) {
         object->read_ptr = object->data;
@@ -189,17 +187,23 @@ static inline int libambit_sbem0102_data_next(libambit_sbem0102_data_t *object, 
         read_offset = (size_t) (object->read_ptr - object->data);
         data = find_sequence(object->read_ptr, object->size - read_offset,
                              log_end, ARRAY_LENGTH(log_end));
-        if (data) {
-            object->read_ptr = data + 4;
-            return 0;
+
+        if(fw_gen == AMBIT3_FW_GEN2) {
+            read_offset = (size_t) (object->read_ptr - object->data);
+            data = find_sequence(object->read_ptr, object->size - read_offset,
+                                 log_end, ARRAY_LENGTH(log_end));
+            if (data) {
+                object->read_ptr = data + 4;
+                return 0;
+            }
+            else {
+                return -1;
+            }
+            break;
         }
-        else {
-            return -1;
-        }
-        break;
       default:
-        if (object->data + object->size > object->read_ptr + 2 + libambit_sbem0102_data_len(object)) {
-            object->read_ptr += 2 + libambit_sbem0102_data_len(object);
+        if (object->data + object->size > (uint8_t*)libambit_sbem0102_data_ptr(object) + libambit_sbem0102_data_len(object)) {
+            object->read_ptr = (uint8_t*)libambit_sbem0102_data_ptr(object) + libambit_sbem0102_data_len(object);
             return 0;
         }
         break;
