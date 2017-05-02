@@ -693,7 +693,7 @@ static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_head
     switch (fw_gen) {
       case AMBIT3_FW_GEN2:
       case AMBIT3_FW_GEN3:
-        offset += (strlen(log_header->header.activity_name)+1);
+        offset += (strnlen((const char*)(data + offset), 20)+1);
         break;
       default:
         break;
