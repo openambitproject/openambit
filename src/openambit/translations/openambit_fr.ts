@@ -39,31 +39,55 @@ p, li { white-space: pre-wrap; }
     <name>DeviceManager</name>
     <message>
         <source>Reading personal settings</source>
-        <translation>Läser personliga inställningar</translation>
+        <translation>Lecture paramètres personnels</translation>
     </message>
     <message>
         <source>Setting date/time</source>
-        <translation>Skriver datum &amp; tid</translation>
+        <translation>Configuration date &amp; heure</translation>
     </message>
     <message>
         <source>Reading log files</source>
-        <translation>Läser logg-filer</translation>
+        <translation>Lecture des fichiers de log</translation>
     </message>
     <message>
         <source>Fetching orbital data</source>
-        <translation>Hämtar GPS-data</translation>
+        <translation>Récupération des données orbitales</translation>
     </message>
     <message>
         <source>Writing orbital data</source>
-        <translation>Skriver GPS-data</translation>
+        <translation>Écriture des données orbitales</translation>
     </message>
     <message>
         <source>Failed to get orbital data</source>
-        <translation>GPS-data gick ej att hämta</translation>
+        <translation>Erreur lors de la récupération des données orbitales</translation>
     </message>
     <message>
         <source>Downloading log %1 of %2</source>
-        <translation>Läser logg %1 av %2</translation>
+        <translation>Téléchargement des logs %1 sur %2</translation>
+    </message>
+    <message>
+        <source>Synchronizing navigation</source>
+        <translation>Synchronization des données de navigation</translation>
+    </message>
+    <message>
+        <source>Write navigation</source>
+        <translation>Écriture des données de navigation</translation>
+    </message>
+    <message>
+        <source>Synchronized navigation</source>
+        <translation>Données de navigation synchronisées</translation>
+    </message>
+    <message>
+        <source>Fetching sport modes</source>
+        <translation>Récupération des modes de sport</translation>
+    </message>
+    <message>
+        <source>Write sport modes</source>
+        <translation>Écriture des modes de sport</translation>
+    </message>
+    <message>
+        <source>Write apps</source>
+        <translation>Écriture des applications</translation>
     </message>
 </context>
 <context>
@@ -89,7 +113,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Duration: %1</source>
-        <translation>Durée : %1</translation>
+        <translation>Durée : %1</translation>
     </message>
     <message>
         <source>Distance: %1 m</source>
@@ -123,15 +147,15 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Name: %1</source>
-        <translation>Nom : %1</translation>
+        <translation>Nom : %1</translation>
     </message>
     <message>
         <source>Variant: %1</source>
-        <translation>Variante : %1</translation>
+        <translation>Variante : %1</translation>
     </message>
     <message>
         <source>Serial: %1</source>
-        <translation>N/S : %1</translation>
+        <translation>N/S : %1</translation>
     </message>
 </context>
 <context>
@@ -182,7 +206,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Write Movescount file</source>
-        <translation>Écrire le fichier Movescount</translation>
+        <translation>Envoyer le fichier sur Movescount</translation>
     </message>
     <message>
         <source>Synchronization started</source>
@@ -239,6 +263,10 @@ p, li { white-space: pre-wrap; }
     <message>
         <source>Downloading %1%</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Report bug...</source>
+        <translation>Signaler un bug...</translation>
     </message>
 </context>
 <context>
@@ -319,6 +347,14 @@ Ligne %2, colonne %3</translation>
     <message>
         <source>Email (Movescount account)</source>
         <translation>Adresse électronique (du compte Movescount)</translation>
+    </message>
+    <message>
+        <source>Sync sport modes (from Movescount)</source>
+        <translation>Synchroniser les modes de sport (du compte Movescount)</translation>
+    </message>
+    <message>
+        <source>Sync navigation (from Movescount)</source>
+        <translation>Synchroniser les données de navigation (du compte Movescount)</translation>
     </message>
 </context>
 </TS>
