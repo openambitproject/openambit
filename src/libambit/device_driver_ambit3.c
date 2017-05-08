@@ -59,6 +59,7 @@ struct ambit_device_driver_data_s {
         memory_map_entry_t excercise_log;
         memory_map_entry_t event_log;
         memory_map_entry_t ble_pairing;
+        memory_map_entry_t apps;
     } memory_maps;
 };
 
@@ -819,7 +820,9 @@ static int get_memory_maps(ambit_object_t *object)
             else if (strcmp((char*)ptr, "BlePairingInfo") == 0) {
                 mm_entry = &object->driver_data->memory_maps.ble_pairing;
             }
-            /* TODO: add Apps memory map  */
+            else if (strcmp((char*)ptr, "Apps") == 0) {
+                mm_entry = &object->driver_data->memory_maps.apps;
+            }
             else {
                 LOG_WARNING("Unknown memory map type \"%s\"", (char*)ptr);
             }
