@@ -153,9 +153,8 @@ int libambit_sbem0102_command_request(libambit_sbem0102_t *object, uint16_t comm
                 // Check if this reply was just a part (5th byte is the current
                 // guess on how to determine)
                 while (reply[4] != 0x01) {
-                    // Guess number 2: first 4 bytes seems to be copied from
-                    // the reply when asking for more data, what the f*ck does
-                    // they represent!?
+                    // First byte may be 2
+                    // Second byte is (number of read log headers) % 256
                     memcpy(send_data, reply, 4);
 
                     // Free old reply before calling again

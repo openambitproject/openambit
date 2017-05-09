@@ -22,13 +22,13 @@
 #ifndef __LIBAMBIT_H__
 #define __LIBAMBIT_H__
 
-#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
+
+#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+extern "C" {
+#endif
 
 typedef struct ambit_object_s ambit_object_t;
 
@@ -38,6 +38,8 @@ typedef struct ambit_device_info_s {
     char *serial;                                      /* UTF-8 */
     uint8_t fw_version[4];
     uint8_t hw_version[4];
+    uint8_t komposti_version[4];
+    uint8_t compact_serial[11];
 
     const char *path;                   /* file system encoding */
     uint16_t    vendor_id;
@@ -102,6 +104,7 @@ typedef struct ambit_personal_settings_s {
     uint8_t  sportmode_button_lock;
     uint8_t  timemode_button_lock;
     uint16_t compass_declination;
+    float compass_declination_f;      /* Ambit3: 32 bit float containing the radian */
     uint8_t  units_mode;
     struct {
         uint8_t pressure;
@@ -324,13 +327,17 @@ typedef struct ambit_log_sample_s {
             uint8_t ibi_count;
             uint16_t ibi[32];
         } ibi;
-        uint16_t ttff;
-        uint8_t  distance_source;               /* 0x00 = Bikepod,
-                                                   0x01 = Footpod,
-                                                   0x02 = GPS,
-                                                   0x03 = Wrist,
-                                                   0x04 = Indoorswimming,
-                                                   0x05 = Outdoorswimming */
+        struct {
+            uint16_t value;
+        } ttff;
+        struct {
+            uint8_t  value;               /* 0x00 = Bikepod,
+                                             0x01 = Footpod,
+                                             0x02 = GPS,
+                                             0x03 = Wrist,
+                                             0x04 = Indoorswimming,
+                                             0x05 = Outdoorswimming */
+        } distance_source;
         struct {
             uint8_t event_type;                 /* 0x01 = manual lap,
                                                    0x14 = high interval end,
@@ -395,7 +402,9 @@ typedef struct ambit_log_sample_s {
             uint16_t activitytype;
             uint32_t sportmode;
         } activity;
-        uint8_t cadence_source;                 /* 0x40 = Wrist */
+        struct {
+            uint8_t value;                 /* 0x40 = Wrist */
+        } cadence_source;
         struct {
             int32_t  latitude;                  /* degree, scale: 0.0000001, -90 <= latitude <= 90 */
             int32_t  longitude;                 /* degree, scale: 0.0000001, -180 <= latitude <= 180 */

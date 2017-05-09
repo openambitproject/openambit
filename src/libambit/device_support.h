@@ -31,9 +31,12 @@ typedef struct ambit_known_device_s {
     bool supported;
     struct ambit_device_driver_s *driver;
     uint32_t driver_param;
+    uint8_t komposti_version[4];
 } ambit_known_device_t;
 
 bool libambit_device_support_known(uint16_t vendor_id, uint16_t product_id);
 const ambit_known_device_t *libambit_device_support_find(uint16_t vendor_id, uint16_t product_id, const char *model, const uint8_t *fw_version);
+const uint8_t *libambit_device_komposti(uint16_t vendor_id, uint16_t product_id, uint8_t next);
+uint32_t libambit_fw_version_number(const uint8_t version[4]);
 
 #endif /* __DEVICE_SUPPORT_H__ */

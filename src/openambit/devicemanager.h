@@ -35,7 +35,6 @@
 #include <movescount/movescountxml.h>
 #include "udevlistener.h"
 #include <libambit.h>
-
 #include <libudev.h>
 
 class DeviceManager : public QObject

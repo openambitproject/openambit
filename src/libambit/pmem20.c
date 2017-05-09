@@ -93,7 +93,7 @@ int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint
 
     // Set memory structure
     object->log.mem_start = mem_start;
-    object->log.mem_size = mem_size;
+    object->log.mem_size = (mem_size) ?:-1; // mem_size is 0 ??
 
     object->log.buffer = malloc(object->log.mem_size + PMEM20_LOG_WRAP_BUFFER_MARGIN);
     object->log.chunks_read = malloc((object->log.mem_size/object->chunk_size)+1);
@@ -143,7 +143,7 @@ int libambit_pmem20_deinit(libambit_pmem20_t *object)
     return 0;
 }
 
-int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_t *log_header)
+int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_t *log_header, uint32_t flags)
 {
     int ret = -1;
     size_t buffer_offset;
@@ -173,7 +173,7 @@ int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_
             tmp_len = read16inc(object->log.buffer, &buffer_offset);
             buffer_offset += tmp_len;
             tmp_len = read16inc(object->log.buffer, &buffer_offset);
-            if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, log_header) == 0) {
+            if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, log_header, flags) == 0) {
                 LOG_INFO("Log entry header parsed");
                 ret = 1;
             }
@@ -197,7 +197,7 @@ int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_
     return ret;
 }
 
-ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
+ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uint32_t flags)
 {
     // Note! We assume that the caller has called libambit_pmem20_log_next_header just before
     uint8_t *periodic_sample_spec;
@@ -228,7 +228,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     buffer_offset += tmp_len;
     // Parse header
     tmp_len = read16inc(object->log.buffer, &buffer_offset);
-    if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
+    if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, &log_entry->header, flags) != 0) {
         LOG_ERROR("Failed to parse log entry header correctly");
         if (log_entry->header.activity_name) {
             free(log_entry->header.activity_name);
@@ -306,12 +306,45 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object)
     return log_entry;
 }
 
-ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object, uint32_t address, uint32_t length)
+static void libambit_pmem20_log_read_log_data_part(libambit_pmem20_t *object,
+                                                   uint32_t address, uint32_t length,
+                                                   uint8_t *buffer)
 {
-    uint8_t *buffer;
-    uint8_t *periodic_sample_spec;
     uint32_t next_address;
     uint32_t buffer_read = 0, read_length;
+
+    // Handle wrap in "the middle" of the log
+    next_address = address;
+    while (buffer_read < length) {
+        if (next_address >= object->log.mem_start + object->log.mem_size) {
+            next_address = object->log.mem_start + PMEM20_LOG_WRAP_START_OFFSET;
+        }
+        if (length - buffer_read >= object->chunk_size) {
+            read_length = object->chunk_size;
+        }
+        else {
+            read_length = length - buffer_read;
+        }
+        if (next_address + read_length > object->log.mem_start + object->log.mem_size) {
+            read_length = object->log.mem_start + object->log.mem_size - next_address;
+        }
+
+        LOG_INFO("Reading buffer region %p -> %p (%u bytes in total)", next_address, next_address + read_length, buffer_read);
+        read_log_chunk(object, next_address, read_length, buffer + buffer_read);
+
+        next_address += read_length;
+        buffer_read += read_length;
+    }
+}
+
+ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *object,
+                                                          uint32_t address1, uint32_t length1,
+                                                          uint32_t address2, uint32_t length2,
+                                                          uint32_t flags)
+{
+    uint32_t length = length1 + length2;
+    uint8_t *buffer;
+    uint8_t *periodic_sample_spec;
     uint16_t tmp_len, sample_len;
     size_t buffer_offset, sample_count = 0;
     ambit_log_entry_t *log_entry;
@@ -330,29 +363,13 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         return NULL;
     }
 
-    LOG_INFO("Reading log entry from address=%08x", address);
     log_entry->header.activity_name = NULL;
 
-    // Handle wrap in "the middle" of the log
-    next_address = address;
-    while (buffer_read < length) {
-        if (next_address >= object->log.mem_start + object->log.mem_size) {
-            next_address = object->log.mem_start + PMEM20_LOG_WRAP_START_OFFSET;
-        }
-        if (length - buffer_read >= object->chunk_size) {
-            read_length = object->chunk_size;
-        }
-        else {
-            read_length = length - buffer_read;
-        }
-        if (next_address + read_length > object->log.mem_start + object->log.mem_size) {
-            read_length = object->log.mem_start + object->log.mem_size - next_address;
-        }
-
-        read_log_chunk(object, next_address, read_length, buffer + buffer_read);
-
-        next_address += read_length;
-        buffer_read += read_length;
+    LOG_INFO("Reading log entry from address1=%08x", address1);
+    libambit_pmem20_log_read_log_data_part(object, address1, length1, buffer);
+    if (address2) {
+        LOG_INFO("Reading log entry from address2=%08x", address2);
+        libambit_pmem20_log_read_log_data_part(object, address2, length2, buffer + length1);
     }
 
     buffer_offset = 12;
@@ -362,7 +379,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     buffer_offset += tmp_len;
     // Parse header
     tmp_len = read16inc(buffer, &buffer_offset);
-    if (libambit_pmem20_log_parse_header(buffer + buffer_offset, tmp_len, &log_entry->header) != 0) {
+    if (libambit_pmem20_log_parse_header(buffer + buffer_offset, tmp_len, &log_entry->header, flags) != 0) {
         LOG_ERROR("Failed to parse log entry header correctly");
         if (log_entry->header.activity_name) {
             free(log_entry->header.activity_name);
@@ -402,12 +419,14 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         buffer_offset += 2 + sample_len;
     }
 
+    LOG_INFO("Log entry finish reading  %d samples", log_entry->samples_count);
     correct_samples(log_entry, time_compensators);
+    LOG_INFO("Completed correct_samples()", log_entry->samples_count);
 
     return log_entry;
 }
 
-int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header)
+int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_header_t *log_header, uint32_t flags)
 {
     size_t offset = 0;
 
@@ -450,6 +469,11 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
     log_header->heartrate_min = read8inc(data, &offset);
 
     log_header->unknown2 = read8inc(data, &offset);
+    if (flags & LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48) {
+        offset += 46;
+	log_header->heartrate_min = read8inc(data, &offset);
+	offset += 1;
+    }
 
     log_header->temperature_max = read16inc(data, &offset);
     log_header->temperature_min = read16inc(data, &offset);
@@ -779,11 +803,11 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             break;
           case 0x07:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_ttff;
-            log_entry->samples[*sample_count].u.ttff = read16inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.ttff.value = read16inc(buf, &int_offset);
             break;
           case 0x08:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_distance_source;
-            log_entry->samples[*sample_count].u.distance_source = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.distance_source.value = read8inc(buf, &int_offset);
             break;
           case 0x09:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_lapinfo;
@@ -877,7 +901,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             break;
           case 0x1a:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_cadence_source;
-            log_entry->samples[*sample_count].u.cadence_source = read8inc(buf, &int_offset);
+            log_entry->samples[*sample_count].u.cadence_source.value = read8inc(buf, &int_offset);
             break;
           case 0x1b:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_position;
@@ -915,6 +939,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
         break;
     }
 
+    LOG_INFO("Sample #0x%02x of type 0x%02x", *sample_count,log_entry->samples[*sample_count].type);
     *sample_count += ret;
 
     return ret;
@@ -924,7 +949,7 @@ static void correct_samples(ambit_log_entry_t *log_entry, int32_t *time_compensa
 {
     size_t sample_count, i;
     ambit_log_sample_t *last_periodic = NULL, *utcsource = NULL, *altisource = NULL;
-    ambit_date_time_t utcbase;
+    ambit_date_time_t utcbase = { 0, 0, 0, 0, 0, 0 };
     uint32_t altisource_index = 0;
     uint32_t last_base_lat = 0, last_base_long = 0;
     uint32_t last_small_lat = 0, last_small_long = 0;

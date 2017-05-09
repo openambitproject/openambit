@@ -131,12 +131,15 @@ void DeviceManager::startSync(bool readAllLogs = false)
         }
 
         if (res != -1) {
+            qDebug() << "Start reading log...";
             emit this->syncProgressInform(QString(tr("Reading log files")), false, true, 100*currentSyncPart/syncParts);
             res = libambit_log_read(this->deviceObject, readAllLogs ? NULL : &log_skip_cb, &log_push_cb, &log_progress_cb, this);
             currentSyncPart++;
+            qDebug() << "End reading log...";
         }
 
         if (waypoint_sync_res != -1 && syncNavigation) {
+            qDebug() << "Start reading navigation...";
             emit this->syncProgressInform(QString(tr("Synchronizing navigation")), false, true, 100*currentSyncPart/syncParts);
             currentSyncPart++;
 
@@ -147,9 +150,11 @@ void DeviceManager::startSync(bool readAllLogs = false)
                  libambit_navigation_write(this->deviceObject, movecountPersonalSettings);
                  emit this->syncProgressInform(QString(tr("Synchronized navigation")), false, false, 100*currentSyncPart/syncParts);
             }
+            qDebug() << "End reading navigation...";
         }
 
         if (syncSportMode && res != -1) {
+            qDebug() << "Start sport mode";
             emit this->syncProgressInform(QString(tr("Fetching sport modes")), false, true, 100*currentSyncPart/syncParts);
 
             ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
@@ -167,9 +172,13 @@ void DeviceManager::startSync(bool readAllLogs = false)
             libambit_app_rules_free(ambitApps);
 
             currentSyncPart++;
+            qDebug() << "End reading sport mode";
         }
 
+        qDebug() << "Outer space debug message";
+
         if (syncOrbit && res != -1) {
+            qDebug() << "Start sync Orbit";
             emit this->syncProgressInform(QString(tr("Fetching orbital data")), false, true, 100*currentSyncPart/syncParts);
             if ((orbitDataLen = movesCount->getOrbitalData(&orbitData)) != -1) {
                 currentSyncPart++;
@@ -182,6 +191,8 @@ void DeviceManager::startSync(bool readAllLogs = false)
                 emit this->syncProgressInform(QString(tr("Failed to get orbital data")), true, false, 100*currentSyncPart/syncParts);
                 res = -1;
             }
+
+            qDebug() << "End Orbit sync";
 
             currentSyncPart++;
         }
