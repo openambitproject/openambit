@@ -427,11 +427,29 @@ void MainWindow::showContextMenuForLogItem(const QPoint &pos)
 
 void MainWindow::logItemWriteMovescount()
 {
+    bool movescountEnable = settings.value("movescountSettings/movescountEnable", false).toBool();
+    bool movescountInfoEnable = settings.value("generalSettings/movescountInfoEnable", true).toBool();
     LogEntry *logEntry = NULL;
 
     logEntry = logStore.read(ui->logsList->selectedItems().at(0)->data(Qt::UserRole).toString());
     if (logEntry != NULL) {
-        if (movesCount != NULL) {
+        if(!movescountEnable && movescountInfoEnable) {
+            QMessageBox msgBox(QMessageBox::Information,
+                               QCoreApplication::applicationName(),
+                               tr("You must enable synchronization with Movescount in \
+                                   \"File -> Settings\" to upload logs."),
+                               QMessageBox::NoButton, 
+                               this);
+            QAbstractButton* pButtonApply = msgBox.addButton(tr("Don't show this message again"),
+                                                             QMessageBox::ApplyRole);
+            msgBox.addButton(QMessageBox::Ok);
+            msgBox.exec();
+
+            if(msgBox.clickedButton() == pButtonApply) {
+                settings.setValue("generalSettings/movescountInfoEnable", false);
+            }
+        }
+        else if (movescountEnable && movesCount != NULL) {
             movesCount->writeLog(logEntry);
         }
         movesCountXML.writeLog(logEntry);
