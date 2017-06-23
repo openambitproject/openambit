@@ -48,7 +48,8 @@ int ambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *per
     personal_settings->waypoints.data = (ambit_waypoint_t*)malloc(sizeof(ambit_waypoint_t)*ambit_pack_count);
     personal_settings->waypoints.count = ambit_pack_count;
 
-    for(int x=0;x<ambit_pack_count;x++) {
+    int x;
+    for(x=0;x<ambit_pack_count;x++) {
         personal_settings->waypoints.data[x].altitude = 0;
         personal_settings->waypoints.data[x].index = le16toh(pack_data[x].index);
         strncpy(personal_settings->waypoints.data[x].name, pack_data[x].name, 15);
@@ -80,7 +81,8 @@ int ambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *pe
         ambit_pack_waypoint_t *pack_data;
         pack_data = (ambit_pack_waypoint_t*)calloc(personal_settings->waypoints.count,sizeof(ambit_pack_waypoint_t));
 
-        for(int x=0; x<personal_settings->waypoints.count; x++) {
+        int x;
+        for(x=0; x<personal_settings->waypoints.count; x++) {
             //pack_data[x].index = le16toh(pack_data[x].index);
             pack_data[x].index = 0;
             strncpy(pack_data[x].name, personal_settings->waypoints.data[x].name, 15);
@@ -198,8 +200,8 @@ int ambit_navigation_waypoint_write(ambit_object_t *object,ambit_pack_waypoint_t
         uint8_t *send_data = NULL;
         ambit_pack_waypoint_t send_pack;
         send_data = malloc(sizeof(ambit_pack_waypoint_t));
-
-        for(int x=0; x < waypoint_count; x++) {
+        int x;
+        for(x=0; x < waypoint_count; x++) {
             waypoint_data[x].index = x;
             waypoint_data[x].index = 0;
             send_pack = waypoint_data[x];
@@ -267,8 +269,8 @@ void ambit_navigation_route_free(ambit_pack_routes_t routes) {
 
 void debug_print_hex(uint8_t *data, size_t datalen) {
     printf("Data:");
-
-    for(int x=0; x<datalen; ++x) {
+    int x;
+    for(x=0; x<datalen; ++x) {
         if(x%2==0) printf(" ");
         printf("%02x", data[x]);
     }
@@ -283,13 +285,13 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
 
 
     //calculate total number of routepoints
-    for(int x=0; x<ps->routes.count;++x) {
+    int x;
+    for(x=0; x<ps->routes.count;++x) {
         routepoints_count_tot += ps->routes.data[x].points_count;
     }
     
     ambit_pack_routes_t routes = ambit_navigation_route_init(ps->routes.count, routepoints_count_tot);
-
-    for(int x=0;x<ps->routes.count;++x) {
+    for(x=0;x<ps->routes.count;++x) {
         ambit_pack_route_info_t *cur = &(routes.data_route_info[x]);
         ambit_route_t *cur_ps = &(ps->routes.data[x]);
 
@@ -311,8 +313,8 @@ int ambit_navigation_route_write(ambit_object_t *object, ambit_personal_settings
         //pack routepoints
         current_point_offset = cur->routepoint_start_index;
 
-
-        for(int y=0;y<cur_ps->points_count;++y) {
+	int y;
+        for(y=0;y<cur_ps->points_count;++y) {
             int32_t rel_x = (int32_t)(distance_calc((double)(cur_ps->mid_lat)/10000000, (double)(cur_ps->mid_lon)/10000000, (double)(cur_ps->mid_lat)/10000000, (double)(cur_ps->points[y].lon)/10000000)*1000);
 
             if(cur_ps->points[y].lon<cur_ps->mid_lon) {
@@ -463,8 +465,9 @@ void ambit_navigation_route_add_checksum(ambit_pack_routes_t *routes)
 
     size_t datalen = datalen_info_packs + datalen_point_packs;
     data = (uint8_t*)malloc(datalen);
-
-    for(int x=0; x<routes->data_head->route_count;++x) {
+    
+    int x;
+    for(x=0; x<routes->data_head->route_count;++x) {
 
         memcpy(data+(sizeof(ambit_pack_route_info_t)*x),
                 &(routes->data_route_info[x]),
