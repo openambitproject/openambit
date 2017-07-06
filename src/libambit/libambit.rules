@@ -19,7 +19,7 @@ SUBSYSTEMS=="usb", ATTRS{idProduct}=="001a", ENV{openambit}="yes"
 # Emu (a.k.a Suunto Ambit3 Peak)
 SUBSYSTEMS=="usb", ATTRS{idProduct}=="001b", ENV{openambit}="yes"
 
-# Emu (a.k.a Suunto Ambit3 Vertical)
+# Kaka (a.k.a Suunto Ambit3 Vertical)
 SUBSYSTEMS=="usb", ATTRS{idProduct}=="002c", ENV{openambit}="yes"
 
 # Finch (a.k.a Suunto Ambit3 Sport)
