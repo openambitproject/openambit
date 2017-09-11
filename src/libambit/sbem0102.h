@@ -31,7 +31,10 @@
 enum ambit3_fw_gen {
     AMBIT3_FW_GEN1,
     AMBIT3_FW_GEN2,
-    AMBIT3_FW_GEN3,
+    AMBIT3_FW_GEN3A,
+    AMBIT3_FW_GEN3B,
+    TRAVERSE_FW_GENX,
+    AMBIT3_VERT_FW_GENX,
 };
 
 typedef struct libambit_sbem0102_s {
