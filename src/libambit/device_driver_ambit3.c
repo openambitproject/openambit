@@ -652,7 +652,6 @@ static int parse_log_header_init(ambit_object_t *object, libambit_sbem0102_data_
 
     length = libambit_sbem0102_data_len(reply_data_object);
     data = libambit_sbem0102_data_ptr(reply_data_object);
-    int entries_read = 0;
 
     while(offset<length) {
         
@@ -682,7 +681,6 @@ static int parse_log_header_init(ambit_object_t *object, libambit_sbem0102_data_
                     push_cb(userref, log_entry);
                     LOG_INFO("Completed push_cb");
                 }
-                entries_read++;
             }
         }
         else {
