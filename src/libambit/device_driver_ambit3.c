@@ -904,7 +904,7 @@ static int get_memory_maps(ambit_object_t *object)
                 mm_entry = &object->driver_data->memory_maps.waypoints;
             }
             else if (strcmp((char*)ptr, "Routes") == 0) {
-                mm_entry = &object->driver_data->memory_maps.waypoints;
+                mm_entry = &object->driver_data->memory_maps.routes;
             }
             else if (strcmp((char*)ptr, "Rules") == 0) {
                 mm_entry = &object->driver_data->memory_maps.rules;
