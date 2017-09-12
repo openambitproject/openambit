@@ -780,17 +780,7 @@ static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_head
         free(log_header->header.activity_name);
     }
     log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "ISO-8859-15");
-    switch (fw_gen) {
-      case AMBIT3_FW_GEN2:
-      case AMBIT3_FW_GEN3A:
-      case AMBIT3_FW_GEN3B:
-      case TRAVERSE_FW_GENX:
-      case AMBIT3_VERT_FW_GENX:
-        offset += (strnlen((const char*)(data + offset), 20)+1);
-        break;
-      default:
-        break;
-    }
+    offset += (strnlen((const char*)(data + offset), 20)+1);
     log_header->header.distance = read32inc(data, &offset);
     log_header->header.energy_consumption = read16inc(data, &offset);
 
