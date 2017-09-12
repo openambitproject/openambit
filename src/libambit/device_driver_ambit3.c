@@ -60,7 +60,7 @@ struct ambit_device_driver_data_s {
         memory_map_entry_t event_log;
         memory_map_entry_t ble_pairing;
         memory_map_entry_t apps;
-        memory_map_entry_t glonass; // Ambit2 Vertical / Traverse
+        memory_map_entry_t glonass; // Ambit3 Vertical / Traverse
         memory_map_entry_t track_log; // Traverse
     } memory_maps;
 };
