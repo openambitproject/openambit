@@ -845,8 +845,6 @@ static int get_memory_maps(ambit_object_t *object)
         legacy_format = 2;
         break;
       case AMBIT3_FW_GEN2:
-        legacy_format = 3;
-        break;
       case AMBIT3_FW_GEN3A:
       case AMBIT3_FW_GEN3B:
       case TRAVERSE_FW_GENX:
