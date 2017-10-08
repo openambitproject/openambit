@@ -493,20 +493,19 @@ static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem01
 
     while (libambit_sbem0102_data_next(reply_data_object, fw_gen) == 0) {
         switch (libambit_sbem0102_data_id(reply_data_object)) {
-          case 0x59:
+          case 0x59: // Ambit3 gen3A/gen3B
           case 0x55: // Traverse genX
           case 0x57: // Ambit3 Vert genX
             log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
             break;
-          case 0x5a:
-          case 0x5b:
+          case 0x5a: // Ambit3 gen3A/gen3B
+          case 0x56: // Traverse genX
           case 0x58: // Ambit3 Vert genX
             log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
             LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
             break;
-          case 0x8a:
-          case 0x7a:
           case 0x89: // Ambit3 gen3A
+          case 0x8a: // Ambit3 gen3B
           case 0x86: // Traverse genX
           case 0x88: // Ambit3 Vert genX
             entries_read = parse_log_header_init(object, reply_data_object, skip_cb, push_cb, progress_cb, userref, &log_entries_walked,log_entries_total, fw_gen);
