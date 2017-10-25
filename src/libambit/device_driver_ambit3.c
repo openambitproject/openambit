@@ -149,6 +149,7 @@ static enum ambit3_fw_gen get_ambit3_fw_gen(ambit_device_info_t *device_info)
         }
         break;
       case 0x2b: // Traverse
+      case 0x2d: // Traverse Alpha
         for (size_t i = 0; i < sizeof (traverse_gen) / sizeof ((traverse_gen)[0]) && (iter = &traverse_gen[i]); i++) {
             if (libambit_fw_version_number(iter->fw_version) <= libambit_fw_version_number(device_info->fw_version))
                 return iter->gen;
@@ -559,7 +560,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
     }
 
     // Initialize PMEM20 log before starting to read logs
-    libambit_pmem20_log_init(&object->driver_data->pmem20, object->driver_data->memory_maps.excercise_log.start, object->driver_data->memory_maps.excercise_log.size);
+    libambit_pmem20_log_init(&object->driver_data->pmem20, object->driver_data->memory_maps.exercise_log.start, object->driver_data->memory_maps.exercise_log.size);
 
     switch (fw_gen) {
       case AMBIT3_FW_GEN1:

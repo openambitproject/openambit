@@ -34,6 +34,9 @@ SUBSYSTEMS=="usb", ATTRS{idProduct}=="002b", ENV{openambit}="yes"
 # Kaka (a.k.a Suunto Ambit3 Vertical)
 SUBSYSTEMS=="usb", ATTRS{idProduct}=="002c", ENV{openambit}="yes"
 
+# ? (a.k.a Suunto Traverse Alpha)
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="002d", ENV{openambit}="yes"
+
 ENV{openambit}=="yes", MODE="0666", OWNER="root", GROUP="root"
 
 LABEL="openambit_rules_end"
