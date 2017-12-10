@@ -79,8 +79,8 @@ RUN  apt-get update \
 RUN  apt-get update \
      && apt-get install ${APT_OPTS} \
              g++ \
-	     libqjson-dev \
-             libqt4-dev \
+             qtbase5-dev \
+             qttools5-dev \
              zlib1g-dev
 
 # wireshark dissector build dependencies
