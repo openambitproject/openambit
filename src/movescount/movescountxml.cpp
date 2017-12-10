@@ -20,6 +20,7 @@
  *
  */
 #include "movescountxml.h"
+#include <QDir>
 #include <QFile>
 
 #define _USE_MATH_DEFINES
