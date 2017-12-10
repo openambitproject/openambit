@@ -164,6 +164,7 @@ MovesCountXML::MovesCountXML(QObject *parent) :
     QObject(parent)
 {
     storagePath = QString(getenv("HOME")) + "/.openambit/movescount";
+    QDir().mkpath(storagePath);
 }
 
 void MovesCountXML::writeLog(LogEntry *logEntry)
