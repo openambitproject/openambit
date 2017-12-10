@@ -70,10 +70,12 @@ Requirements
 
 In order to build Openambit from source you need a couple of tools and
 libraries.  To begin with, you will need ``cmake``, ``make`` and C and
-C++ compilers.  You will need C and C++ libraries, Qt4, ``libqjson``
-and ``zlib`` as well as one of ``libudev`` and ``libusb-1.0``.  For
-all these libraries you will also need their header files (typically
-provided in ``*-dev`` or ``*-devel`` packages).
+C++ compilers.  You will need C and C++ libraries, ``zlib`` as well as
+one of ``libudev`` and ``libusb-1.0``. You also need Qt5 or Qt4 +
+``libqjson``. The former is preferred as we will drop Qt4 support in
+the future.
+For all these libraries you will also need their header files
+(typically provided in ``*-dev`` or ``*-devel`` packages).
 
 
 Build Procedure
@@ -128,21 +130,21 @@ following ought to work:
    cmake ..
    make
    
-Build Qt5 version directly with ``cmake``.
+Build Qt4 version directly with ``cmake`` (deprecated).
 
 .. code-block:: sh
 
    cd /path/to/your/clone/of/openambit
    mkdir _build
    cd _build
-   cmake -DUSE_QT5=1 -DCMAKE_BUILD_TYPE=Debug ..
+   cmake -DUSE_QT5=0 -DCMAKE_BUILD_TYPE=Debug ..
    make
    
 Build options
 
 .. code-block:: sh
 
-   USE_QT5 = 0 | 1 (Default Qt4)
+   USE_QT5 = 0 | 1 (Default Qt5)
    BUILD_EXTRAS = 0 | 1 (Default 0)
    CMAKE_BUILD_TYPE = Debug | Release
    DEBUG_PRINT_INFO = 0 | 1 (Default 0)

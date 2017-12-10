@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.0)
 project(Openambit
   LANGUAGES NONE)
 
-option(USE_QT5 "Build against Qt5" OFF)
+option(USE_QT5 "Build against Qt5" ON)
 option(BUILD_EXTRAS "Build examples and wireshark dissector" OFF)
 
 add_subdirectory(src/libambit)
