@@ -126,6 +126,7 @@ static enum ambit3_fw_gen get_ambit3_fw_gen(ambit_device_info_t *device_info)
     struct generation ambit3_vert_gen[] = {
             {{1, 1, 22, 0}, AMBIT3_VERT_FW_GENX},
             {{1, 0, 27, 0}, AMBIT3_VERT_FW_GENW},
+            {{1, 0, 0, 0}, AMBIT3_VERT_FW_GEN1},
     };
 
     struct generation traverse_gen[] = {
@@ -418,80 +419,7 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
     return entries_read;
 }
 
-static int process_log_read_replies_gen2(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
-                                         ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref)
-{
-    ambit3_log_header_t log_header;
-    ambit_log_entry_t *log_entry;
-
-    int entries_read = 0;
-
-    uint16_t log_entries_total = 0;
-    uint16_t log_entries_walked = 0;
-    uint16_t log_entries_notsynced;
-    ONLYDEBUGVAR(log_entries_notsynced);
-
-    log_header.header.activity_name = NULL;
-
-    while (libambit_sbem0102_data_next(reply_data_object, AMBIT3_FW_GEN2) == 0) {
-        switch (libambit_sbem0102_data_id(reply_data_object)) {
-          case 0x5a:
-            log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
-            LOG_INFO("Number of logs=%d", log_entries_total);
-            break;
-          case 0x5b:
-            log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
-            LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
-            break;
-          case 0x8a:
-          case 0x7a:
-            if (parse_log_header_deprecated(reply_data_object, &log_header, AMBIT3_FW_GEN2) == 0) {
-                LOG_INFO("Log header parsed successfully");
-                if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
-                    LOG_INFO("Reading data of log %d of %d", log_entries_walked + 1, log_entries_total);
-                    log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
-                                                                       log_header.address,
-                                                                       log_header.end_address - log_header.address,
-                                                                       log_header.address2,
-                                                                       log_header.end_address2 - log_header.address2,
-                                                                       LIBAMBIT_PMEM20_FLAGS_UNKNOWN2_PADDING_48);
-                    LOG_INFO("Completed data of log %d of %d", log_entries_walked + 1, log_entries_total);
-                    if (log_entry != NULL) {
-                        if (push_cb != NULL) {
-                            push_cb(userref, log_entry);
-                            LOG_INFO("Completed push_cb");
-                        }
-                        entries_read++;
-                    }
-                }
-                else {
-                    LOG_INFO("Log entry already exists, skipping");
-                }
-            }
-            else {
-                LOG_INFO("Failed to parse log header");
-            }
-            log_entries_walked++;
-
-            if(log_entries_walked > log_entries_total) {
-                log_entries_total = log_entries_walked; // Handle situations where ambit reports wrong number of total entries
-            }
-
-            if (progress_cb != NULL && log_entries_total != 0) {
-                LOG_INFO("Do progress_cb");
-                progress_cb(userref, log_entries_total, log_entries_walked, 100*log_entries_walked/log_entries_total);
-            }
-            break;
-          default:
-            LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
-            break;
-        }
-    }
-
-    return entries_read;
-}
-
-static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
+static int process_log_read_replies(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object,
                                          ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref, enum ambit3_fw_gen fw_gen)
 {
 
@@ -502,7 +430,8 @@ static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem01
     ONLYDEBUGVAR(log_entries_notsynced);
 
     while (libambit_sbem0102_data_next(reply_data_object, fw_gen) == 0) {
-        if ((libambit_sbem0102_data_id(reply_data_object) == 0x59 && (fw_gen == AMBIT3_FW_GEN3A || fw_gen == AMBIT3_FW_GEN3B )) || // Ambit3 gen3A/gen3B
+        if ((libambit_sbem0102_data_id(reply_data_object) == 0x5a && fw_gen == AMBIT3_FW_GEN2)|| // Ambit3 gen2
+                (libambit_sbem0102_data_id(reply_data_object) == 0x59 && (fw_gen == AMBIT3_FW_GEN3A || fw_gen == AMBIT3_FW_GEN3B || fw_gen == AMBIT3_VERT_FW_GEN1)) || // Ambit3 gen3A/gen3B, Ambit3 Vert gen1
                 libambit_sbem0102_data_id(reply_data_object) == 0x55 || // Traverse genX
                 (libambit_sbem0102_data_id(reply_data_object) == 0x57 && fw_gen == AMBIT3_VERT_FW_GENX) || // Ambit3 Vert genX
                 (libambit_sbem0102_data_id(reply_data_object) == 0x58 && fw_gen == AMBIT3_VERT_FW_GENW) || // Ambit3 Vert genW
@@ -510,8 +439,8 @@ static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem01
                 ) {
             log_entries_total = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
         }
-        else if (libambit_sbem0102_data_id(reply_data_object) == 0x5a || // Ambit3 gen3A/gen3B
-                libambit_sbem0102_data_id(reply_data_object) == 0x56 || // Traverse genX
+        else if (libambit_sbem0102_data_id(reply_data_object) == 0x5b || // Ambit3 gen2
+                (libambit_sbem0102_data_id(reply_data_object) == 0x5a && (fw_gen == AMBIT3_FW_GEN3A || fw_gen == AMBIT3_FW_GEN3B  || fw_gen == AMBIT3_VERT_FW_GEN1)) || // Ambit3 gen3A/gen3B, Ambit3 Vert gen1
                 libambit_sbem0102_data_id(reply_data_object) == 0x56 || // Traverse genX
                 (libambit_sbem0102_data_id(reply_data_object) == 0x58 && fw_gen == AMBIT3_VERT_FW_GENX) || // Ambit3 Vert genX
                 (libambit_sbem0102_data_id(reply_data_object) == 0x59 && fw_gen == AMBIT3_VERT_FW_GENW) || // Ambit3 Vert genW
@@ -520,7 +449,7 @@ static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem01
             log_entries_notsynced = read16(libambit_sbem0102_data_ptr(reply_data_object), 0);
             LOG_INFO("Number of logs marked as not synchronized=%d", log_entries_notsynced);
         }
-        else if (libambit_sbem0102_data_id(reply_data_object) == 0x8a || // Ambit3 gen3B
+        else if (libambit_sbem0102_data_id(reply_data_object) == 0x8a || // Ambit3 gen2/gen3B, Ambit3 Vert gen1
                 libambit_sbem0102_data_id(reply_data_object) == 0x89 || // Ambit3 gen3A / Ambit3 Vert genW
                 libambit_sbem0102_data_id(reply_data_object) == 0x86 || // Traverse genX
                 libambit_sbem0102_data_id(reply_data_object) == 0x87 || // Traverse gen1
@@ -532,7 +461,6 @@ static int process_log_read_replies_gen3(ambit_object_t *object, libambit_sbem01
             LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
         }
     }
-
     return entries_read;
 }
 
@@ -554,6 +482,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
         init_log_read_send_data_object_gen2(&send_data_object);
         break;
       case AMBIT3_FW_GEN3A:
+      case AMBIT3_VERT_FW_GEN1:
         init_log_read_send_data_object_gen3A(&send_data_object);
         break;
       case TRAVERSE_FW_GENX:
@@ -587,15 +516,14 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
         entries_read = process_log_read_replies_gen1(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
         break;
       case AMBIT3_FW_GEN2:
-        entries_read = process_log_read_replies_gen2(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref);
-        break;
       case AMBIT3_FW_GEN3A:
       case AMBIT3_FW_GEN3B:
-      case TRAVERSE_FW_GENX:
       case TRAVERSE_FW_GEN1:
-      case AMBIT3_VERT_FW_GENX:
+      case TRAVERSE_FW_GENX:
+      case AMBIT3_VERT_FW_GEN1:
       case AMBIT3_VERT_FW_GENW:
-        entries_read = process_log_read_replies_gen3(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref, fw_gen);
+      case AMBIT3_VERT_FW_GENX:
+        entries_read = process_log_read_replies(object, &reply_data_object, skip_cb, push_cb, progress_cb, userref, fw_gen);
         break;
     }
 
@@ -765,10 +693,11 @@ static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_head
         break;
       case AMBIT3_FW_GEN3A:
       case AMBIT3_FW_GEN3B:
-      case AMBIT3_VERT_FW_GENX:
+      case AMBIT3_VERT_FW_GEN1:
       case AMBIT3_VERT_FW_GENW:
-      case TRAVERSE_FW_GENX:
+      case AMBIT3_VERT_FW_GENX:
       case TRAVERSE_FW_GEN1:
+      case TRAVERSE_FW_GENX:
         // min before max for gen3
         log_header->header.heartrate_min_time = read32inc(data, &offset);
         log_header->header.heartrate_max_time = read32inc(data, &offset);
@@ -809,16 +738,17 @@ static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_head
 
     switch (fw_gen) {
       case AMBIT3_FW_GEN1:
-      case AMBIT3_FW_GEN2:
         break;
+      case AMBIT3_FW_GEN2:
       case AMBIT3_FW_GEN3A:
         offset += 26; //extra unknown data
         break;
       case AMBIT3_FW_GEN3B:
-      case TRAVERSE_FW_GENX:
       case TRAVERSE_FW_GEN1:
-      case AMBIT3_VERT_FW_GENX:
+      case TRAVERSE_FW_GENX:
+      case AMBIT3_VERT_FW_GEN1:
       case AMBIT3_VERT_FW_GENW:
+      case AMBIT3_VERT_FW_GENX:
         offset += 28; //extra unknown data
         break;
     }
@@ -828,8 +758,8 @@ static size_t parse_log_entry(const uint8_t *data, ambit3_log_header_t *log_head
 
 static int parse_log_header_deprecated(libambit_sbem0102_data_t *reply_data_object, ambit3_log_header_t *log_header, enum ambit3_fw_gen fw_gen)
 {
-    // This is an function to keep backward compatibility with AMBIT3_FW_GEN1 and AMBIT3_FW_GEN2
-    // AMBIT3_FW_GEN3 will use parse_log_header_init
+    // This is an function to keep backward compatibility with AMBIT3_FW_GEN1
+    // Other versions will use parse_log_header_init
 
     uint8_t log_type;
     const uint8_t *data;
@@ -837,15 +767,6 @@ static int parse_log_header_deprecated(libambit_sbem0102_data_t *reply_data_obje
     data = libambit_sbem0102_data_ptr(reply_data_object);
 
     log_type = libambit_sbem0102_data_id(reply_data_object);
-    switch (log_type) {
-      case 0x7e: /* gen1 fw */
-        break;
-      case 0x7a: /* gen2 fw */
-        data += 14;
-        break;
-      case 0x8a: /* gen2 fw */
-        break;
-    }
 
     if(parse_log_entry(data, log_header, fw_gen) == 0) {
         return -1;
@@ -873,10 +794,11 @@ static int get_memory_maps(ambit_object_t *object)
       case AMBIT3_FW_GEN2:
       case AMBIT3_FW_GEN3A:
       case AMBIT3_FW_GEN3B:
-      case TRAVERSE_FW_GENX:
       case TRAVERSE_FW_GEN1:
-      case AMBIT3_VERT_FW_GENX:
+      case TRAVERSE_FW_GENX:
+      case AMBIT3_VERT_FW_GEN1:
       case AMBIT3_VERT_FW_GENW:
+      case AMBIT3_VERT_FW_GENX:
         legacy_format = 0;
         break;
     }
@@ -903,10 +825,11 @@ static int get_memory_maps(ambit_object_t *object)
         break;
       case AMBIT3_FW_GEN3A:
       case AMBIT3_FW_GEN3B:
-      case TRAVERSE_FW_GENX:
       case TRAVERSE_FW_GEN1:
-      case AMBIT3_VERT_FW_GENX:
+      case TRAVERSE_FW_GENX:
+      case AMBIT3_VERT_FW_GEN1:
       case AMBIT3_VERT_FW_GENW:
+      case AMBIT3_VERT_FW_GENX:
         mm_entry_data_id = 0x4a;
         break;
     }
