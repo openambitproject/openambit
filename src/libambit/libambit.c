@@ -787,7 +787,8 @@ void libambit_personal_settings_free(ambit_personal_settings_t *personal_setting
 ambit_route_t* libambit_route_alloc(uint16_t route_count) {
     ambit_route_t *routes;
     routes = (ambit_route_t*)calloc(route_count, sizeof(ambit_route_t));
-    for(int x=0; x<route_count; ++x) {
+    int x;
+    for(x=0; x<route_count; ++x) {
         routes[x].points = NULL;
     }
     return routes;
@@ -796,7 +797,8 @@ ambit_route_t* libambit_route_alloc(uint16_t route_count) {
 void libambit_route_free(ambit_route_t *routes, uint16_t route_count) {
 
     if(route_count!=0) {
-        for(int x=0; x<route_count; ++x) {
+        int x;
+        for(x=0; x<route_count; ++x) {
             if(routes[x].points != NULL) {
                 free(routes[x].points);
             }

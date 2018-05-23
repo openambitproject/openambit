@@ -111,6 +111,6 @@ static inline uint8_t *find_sequence(uint8_t *buf, size_t size, const uint8_t *s
 
 #define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
 #define ARRAY_FOR_EACH(_arr, _elem) \
-    for (size_t _i = 0; _i < ARRAY_LENGTH(_arr) && (_elem = &_arr[_i]); _i++)
+    size_t _i; for (_i = 0; _i < ARRAY_LENGTH(_arr) && (_elem = &_arr[_i]); _i++)
 
 #endif /* __UTILS_H__ */
