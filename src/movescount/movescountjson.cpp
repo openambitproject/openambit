@@ -27,14 +27,9 @@
 #include <QVariantList>
 #include <QStringList>
 #include <QDebug>
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-# include <qjson/parser.h>
-# include <qjson/serializer.h>
-#else
-# include <QJsonArray>
-# include <QJsonDocument>
-# include <QJsonObject>
-#endif
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <zlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -396,11 +391,6 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
 
 int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *settings, DeviceInfo &device_info, QByteArray &output)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QJson::Serializer serializer;
-    serializer.setDoublePrecision(16);
-    serializer.setIndentMode(QJson::IndentCompact);
-#endif
     bool ok;
     QVariantMap content;
 
@@ -443,12 +433,8 @@ int MovesCountJSON::generateNewPersonalSettings(ambit_personal_settings_t *setti
 
     content.insert("Waypoints", waypoints);
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    output = serializer.serialize(content, &ok);
-#else
     output = QJsonDocument(QJsonObject::fromVariantMap(content)).toJson(QJsonDocument::Compact);
     ok = !output.isEmpty();
-#endif
 
     return (ok ? 0 : -1);
 }
@@ -521,11 +507,6 @@ int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* amb
  */
 int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QJson::Serializer serializer;
-    serializer.setDoublePrecision(16);
-    serializer.setIndentMode(QJson::IndentCompact);
-#endif
     bool ok, inPause = false;
     QVariantMap content;
     QVariantList IBIContent;
@@ -802,11 +783,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
         content.insert("HighAltitude", QVariant::Invalid);
     }
     if (IBIContent.count() > 0) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-        uncompressedData = serializer.serialize(IBIContent);
-#else
         uncompressedData = QJsonDocument(QJsonArray::fromVariantList(IBIContent)).toJson(QJsonDocument::Compact);
-#endif
         compressData(uncompressedData, compressedData);
         QVariantMap IBIDataMap;
         IBIDataMap.insert("CompressedValues", compressedData.toBase64());
@@ -829,11 +806,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("PeakTrainingEffect", (double)logEntry->logEntry->header.peak_training_effect/10.0);
     content.insert("RecoveryTime", (double)logEntry->logEntry->header.recovery_time/1000.0);
     if (periodicSamplesContent.count() > 0) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-        uncompressedData = serializer.serialize(periodicSamplesContent);
-#else
         uncompressedData = QJsonDocument(QJsonArray::fromVariantList(periodicSamplesContent)).toJson(QJsonDocument::Compact);
-#endif
         compressData(uncompressedData, compressedData);
         QVariantMap periodicSamplesDataMap;
         periodicSamplesDataMap.insert("CompressedSampleSets", compressedData.toBase64());
@@ -843,23 +816,15 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("StartLatitude", QVariant::Invalid);
     content.insert("StartLongitude", QVariant::Invalid);
     if (GPSSamplesContent.count() > 0) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-        uncompressedData = serializer.serialize(GPSSamplesContent);
-#else
         uncompressedData = QJsonDocument(QJsonArray::fromVariantList(GPSSamplesContent)).toJson(QJsonDocument::Compact);
-#endif
         compressData(uncompressedData, compressedData);
         QVariantMap GPSSamplesDataMap;
         GPSSamplesDataMap.insert("CompressedTrackPoints", compressedData.toBase64());
         content.insert("Track", GPSSamplesDataMap);                   /* compressed */
     }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    output = serializer.serialize(content, &ok);
-#else
     output = QJsonDocument(QJsonObject::fromVariantMap(content)).toJson(QJsonDocument::Compact);
     ok = !output.isEmpty();
-#endif
 
     return (ok ? 0 : -1);
 }
@@ -1183,15 +1148,10 @@ QVariantMap MovesCountJSON::parseJsonMap(const QByteArray& input, bool& ok) cons
       return QVariantMap();
     }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QJson::Parser parser;
-    return parser.parse(input, &ok).toMap();
-#else
     QJsonParseError err;
     QJsonDocument json = QJsonDocument::fromJson(input, &err);
     ok = !json.isNull();
     return json.object().toVariantMap();
-#endif
 }
 
 QVariantList MovesCountJSON::parseJsonList(const QByteArray& input, bool& ok) const
@@ -1201,14 +1161,9 @@ QVariantList MovesCountJSON::parseJsonList(const QByteArray& input, bool& ok) co
       return QVariantList();
     }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QJson::Parser parser;
-    return parser.parse(input, &ok).toList();
-#else
     QJsonParseError err;
     QJsonDocument json = QJsonDocument::fromJson(input, &err);
     ok = !json.isNull();
     return json.array().toVariantList();
-#endif
 }
 
