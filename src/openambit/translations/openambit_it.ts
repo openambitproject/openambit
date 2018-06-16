@@ -291,7 +291,7 @@ riga %2, colonna %3</translation>
     </message>
     <message>
         <source>Continue running in background when Openambit main window is closed</source>
-        <translation>RImani in background anche chiudendo la finestra pincipale</translation>
+        <translation>Rimani in background anche chiudendo la finestra pincipale</translation>
     </message>
     <message>
         <source>Device synchronization settings</source>
@@ -303,7 +303,7 @@ riga %2, colonna %3</translation>
     </message>
     <message>
         <source>Sync orbital data (from Movescount)</source>
-        <translation>Syicronizza dati orbitali (da movescount.com)</translation>
+        <translation>Sincronizza dati orbitali (da movescount.com)</translation>
     </message>
     <message>
         <source>Start sync automatically when device connected</source>
@@ -323,7 +323,7 @@ riga %2, colonna %3</translation>
     </message>
     <message>
         <source>Sync logs with Movescount</source>
-        <translation>Syicronizza dati con movescount.com</translation>
+        <translation>Sincronizza dati con movescount.com</translation>
     </message>
     <message>
         <source>Email (Movescount account)</source>
