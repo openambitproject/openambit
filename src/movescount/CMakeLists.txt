@@ -65,7 +65,7 @@ target_link_libraries(
   movescount
   ${LIBAMBIT_LIBS}
   ${ZLIB_LIBRARIES}
-  movescount Qt5::Core Qt5::Network
+  Qt5::Core Qt5::Network
 )
 
 set_target_properties(movescount
