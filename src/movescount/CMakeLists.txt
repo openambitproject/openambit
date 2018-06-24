@@ -59,12 +59,13 @@ add_library(
   movescountlogchecker.cpp
   )
 
-QT5_USE_MODULES(movescount Core Network)
+#QT5_USE_MODULES(movescount Core Network)
 
 target_link_libraries(
   movescount
   ${LIBAMBIT_LIBS}
   ${ZLIB_LIBRARIES}
+  movescount Qt5::Core Qt5::Network
 )
 
 set_target_properties(movescount
