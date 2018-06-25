@@ -101,8 +101,6 @@ add_definitions(-DAPP_VERSION="${OPENAMBIT_VERSION}")
 
 add_executable(openambit ${openambit_HDRS} ${openambit_SRCS} ${UIS} ${RSCS})
 
-#QT5_USE_MODULES(openambit Core Widgets Network)
-
 target_link_libraries(openambit ${LIBAMBIT_LIBS} ${MOVESCOUNT_LIBS} ${UDEV_LIBS} Qt5::Core Qt5::Widgets Qt5::Network )
 
 install(TARGETS openambit DESTINATION ${CMAKE_INSTALL_BINDIR})
