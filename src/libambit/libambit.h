@@ -465,6 +465,8 @@ typedef struct ambit_log_header_s {
     uint32_t swimming_pool_length;  /* m */
     uint8_t  unknown5[4];
     uint8_t  unknown6[24];
+    uint16_t avgpower;              /* watts */
+    uint16_t maxpower;              /* watts */
 } ambit_log_header_t;
 
 typedef struct ambit_log_entry_s {

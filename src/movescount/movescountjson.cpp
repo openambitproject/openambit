@@ -767,6 +767,10 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     content.insert("AscentTime", (double)logEntry->logEntry->header.ascent_time/1000.0);
     content.insert("AvgCadence", logEntry->logEntry->header.cadence_avg);
     content.insert("AvgHR", logEntry->logEntry->header.heartrate_avg);
+    if (logEntry->logEntry->header.avgpower != 0xffff){
+        content.insert("AvgPower", logEntry->logEntry->header.avgpower);
+        content.insert("MaxPower", logEntry->logEntry->header.maxpower);
+    }
     content.insert("AvgSpeed", (double)logEntry->logEntry->header.speed_avg/3600.0);
     content.insert("DescentAltitude", (double)logEntry->logEntry->header.descent);
     content.insert("DescentTime", (double)logEntry->logEntry->header.descent_time/1000.0);

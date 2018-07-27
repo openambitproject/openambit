@@ -722,6 +722,12 @@ void LogStore::XMLReader::readLogHeader()
                 }
             }
         }
+        else if (xml.name() == "AvgPower") {
+            logEntry->logEntry->header.avgpower = xml.readElementText().toUInt();
+        }
+        else if (xml.name() == "MaxPower") {
+            logEntry->logEntry->header.maxpower = xml.readElementText().toUInt();
+        }
         else if (xml.name() == "Unknown1") {
             QByteArray val = xml.readElementText().toLocal8Bit();
             const char *c_str = val.data();
@@ -1511,6 +1517,12 @@ bool LogStore::XMLWriter::writeLogEntry()
     xml.writeTextElement("PoolLengths", QString("%1").arg(logEntry->header.swimming_pool_lengths));
     xml.writeTextElement("PoolLength", QString("%1").arg(logEntry->header.swimming_pool_length));
     xml.writeEndElement();
+
+    if (logEntry->header.avgpower != 0xffff){
+        xml.writeTextElement("AvgPower", QString("%1").arg(logEntry->header.avgpower));
+        xml.writeTextElement("MaxPower", QString("%1").arg(logEntry->header.maxpower));
+    }
+
 
     QString hexstring;
     hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x", logEntry->header.unknown1[0],

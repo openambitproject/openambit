@@ -506,6 +506,11 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
 
     log_header->distance_before_calib = read32inc(data, &offset);
 
+    if (datalen >= offset + 8) {
+        log_header->avgpower = read16(data, offset + 8);
+        log_header->maxpower = read16(data, offset + 10);
+    }
+
     if (datalen >= offset + 24) {
         memcpy(log_header->unknown6, data+offset, 24);
         offset += 24;
