@@ -225,10 +225,6 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
     xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.cadence_max/60.0, 'g', 16));
     xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.cadence_max_time/1000.0, 'g', 16));
     xml.writeEndElement();
-    if (logEntry->logEntry->header.avgpower != 0xffff){
-        xml.writeTextElement("AvgPower", QString("%1").arg(logEntry->logEntry->header.avgpower));
-        xml.writeTextElement("MaxPower", QString("%1").arg(logEntry->logEntry->header.maxpower));
-    }
 
     xml.writeStartElement("Altitude");
     xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
