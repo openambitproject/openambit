@@ -977,7 +977,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             break;
         case ambit_log_sample_periodic_type_bikepower:
             if (value->u.bikepower != 0xffff) {
-                output.insert("BikePower", value->u.bikepower);
+                output.insert("Power", value->u.bikepower);
             }
             break;
         case ambit_log_sample_periodic_type_swimingstrokecnt:
