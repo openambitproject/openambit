@@ -81,14 +81,14 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Downloading log %1 of %2</source>
-        <translation>Sacricando log %1 di %2</translation>
+        <translation>Scaricando log %1 di %2</translation>
     </message>
 </context>
 <context>
     <name>LogView</name>
     <message>
         <source>see on movescount.com</source>
-        <translation>Vedi su movescount.com</translation>
+        <translation>vedi su movescount.com</translation>
     </message>
     <message>
         <source>Not uploaded yet</source>
@@ -112,15 +112,15 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Avg HR: %1 bpm</source>
-        <translation>Frequenza cardicaca media: %1 bpm</translation>
+        <translation>Frequenza cardiaca media: %1 bpm</translation>
     </message>
     <message>
         <source>Max HR: %1 bpm</source>
-        <translation>Frequenza cardicaca max: %1 bpm</translation>
+        <translation>Frequenza cardiaca max: %1 bpm</translation>
     </message>
     <message>
         <source>Min HR: %1 bpm</source>
-        <translation>Frequenza cardicaca min: %1 bpm</translation>
+        <translation>Frequenza cardiaca min: %1 bpm</translation>
     </message>
     <message>
         <source>PTE: %1</source>
@@ -175,7 +175,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Sync now</source>
-        <translation>Sincronizza ora</translation>
+        <translation>Sincronizza adesso</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -254,7 +254,7 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <source>The file is not an openambit version 1.0 file.</source>
-        <translation>Il file non é un file openambit versione 1.0.</translation>
+        <translation>Il file non è un file openambit versione 1.0.</translation>
     </message>
     <message>
         <source>%1
@@ -291,19 +291,19 @@ riga %2, colonna %3</translation>
     </message>
     <message>
         <source>Continue running in background when Openambit main window is closed</source>
-        <translation>RImani in background anche chiudendo la finestra pincipale</translation>
+        <translation>Rimani in background anche chiudendo la finestra pincipale</translation>
     </message>
     <message>
         <source>Device synchronization settings</source>
-        <translation>Impostazioi sincronizzazione</translation>
+        <translation>Impostazioni sincronizzazione</translation>
     </message>
     <message>
         <source>Sync time from computer</source>
-        <translation>Sincronizzazione completa</translation>
+        <translation>Sincronizzazione orario dal computer</translation>
     </message>
     <message>
         <source>Sync orbital data (from Movescount)</source>
-        <translation>Syicronizza dati orbitali (da movescount.com)</translation>
+        <translation>Sincronizza dati orbitali (da movescount.com)</translation>
     </message>
     <message>
         <source>Start sync automatically when device connected</source>
@@ -323,7 +323,7 @@ riga %2, colonna %3</translation>
     </message>
     <message>
         <source>Sync logs with Movescount</source>
-        <translation>Syicronizza dati con movescount.com</translation>
+        <translation>Sincronizza dati con Movescount</translation>
     </message>
     <message>
         <source>Email (Movescount account)</source>
