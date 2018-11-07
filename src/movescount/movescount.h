@@ -67,6 +67,7 @@ public:
     void checkLatestFirmwareVersion();
     void writePersonalSettings(ambit_personal_settings_t *settings);
     void writeLog(LogEntry *logEntry);
+    void createUserDevice();
 
 signals:
     void newerFirmwareExists(QByteArray fw_version);

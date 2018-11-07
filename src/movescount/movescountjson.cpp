@@ -1141,6 +1141,19 @@ QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevD
     return dateTime;
 }
 
+int MovesCountJSON::generateUserdevice(const DeviceInfo& device, QByteArray& output)
+{
+    QVariantMap content;
+
+    content.insert("DeviceName", device.model);
+    content.insert("SerialNumber", device.serial);
+    QString firmwareVersion = QString("%1.%2.%3").arg(device.fw_version[0]).arg(device.fw_version[1]).arg(device.fw_version[2]);
+    content.insert("FirmwareVersion", firmwareVersion);
+
+    output = QJsonDocument(QJsonObject::fromVariantMap(content)).toJson(QJsonDocument::Compact);
+    return !output.isEmpty() ? 0 : -1;
+}
+
 QVariantMap MovesCountJSON::parseJsonMap(const QByteArray& input, bool& ok) const
 {
     if (input.length() <= 0) {

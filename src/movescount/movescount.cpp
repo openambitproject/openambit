@@ -587,6 +587,20 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     }
 }
 
+void MovesCount::createUserDevice()
+{
+    QByteArray output;
+    QNetworkReply *reply;
+
+    jsonParser.generateUserdevice(device_info, output);
+
+    reply = syncPOST("/userdevices/", "", output, true);
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Failed to create device, movescount.com replied with \"" << reply->readAll() << "\"";
+    }
+}
+
 MovesCount::MovesCount() :
     exiting(false), authorized(false), firmwareCheckReply(NULL), authCheckReply(NULL)
 {

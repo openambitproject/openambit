@@ -52,6 +52,7 @@ public:
 
     int generateNewPersonalSettings(ambit_personal_settings_t *settings, DeviceInfo &device_info, QByteArray &output);
     int generateLogData(LogEntry *logEntry, QByteArray &output);
+    int generateUserdevice(const DeviceInfo& device, QByteArray& output);
 
 signals:
 

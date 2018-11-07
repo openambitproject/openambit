@@ -319,6 +319,13 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="createUserDevice">
+             <property name="text">
+              <string>Add device to Movescount</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
