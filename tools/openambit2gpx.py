@@ -155,7 +155,7 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
             if speed!=None: etree.SubElement(extGpx,"gpxdata:speed").text=speed
             if airpressure!=None: etree.SubElement(extGpx,"gpxdata:SeaLevelPressure").text=airpressure
 
-        fOut.write("   "+etree.tostring(trk)+"\n")
+        fOut.write("   "+etree.tostring(trk).decode()+"\n")
 
     latLast=lat
     lonLast=lon
@@ -263,7 +263,7 @@ for i in range(0,len(lapArray)):
         
         lapCount+=1
 
-        fOut.write("  "+etree.tostring(lap)+"\n")
+        fOut.write("  "+etree.tostring(lap).decode()+"\n")
 
 fOut.write(" </extensions>\n")
 
