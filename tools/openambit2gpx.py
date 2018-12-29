@@ -82,10 +82,52 @@ def timeDiff(utcTime1,utcTime2):
 
     return secs2-secs1
 
+class ibiToHr(object):
+    def __init__(self):
+        self.ibitimeLast = None
+        self.hrLast = 0
+        self.hrlist = []
+
+    def ibiToHr(self, element):
+        '''Parse a list of IBI times to heart rates, always return some hr rate'''
+        sampType = element.findtext("Type")
+
+        if sampType == 'ibi':
+            ibitime = element.findtext("Time")
+            if self.ibitimeLast != ibitime:
+                # del hrlist  # deleted anyway one row below
+                self.hrlist = [int(element.text) for element in element.findall('IBI')]
+
+                # filter 1: average hr data, flatten data
+                tmpav = sum(self.hrlist) / len(self.hrlist)
+
+                ## why is this here? What does it?
+                #for i in self.hrlist:
+                #    if abs(i-tmpav)>20:
+                #        self.hrlist = [tmpav if x==i else x for x in self.hrlist]
+            self.ibitimeLast = ibitime
+
+        if len(self.hrlist) > 0:
+            # take first element of list to convert to HR
+            hr = 60./ (self.hrlist[0] / 1000.)  # convert IBI to beats/min
+            del self.hrlist[0]
+        else:
+            # no data is available anymore
+            return self.hrLast
+
+        #filter 2: sensor errors
+        hrmin = 40  # Mimimum heart rate for humans
+        hrmax = 220  # Maximum heart rate for hiumans
+        if hr > hrmax or  hr < hrmin: 
+            hr = self.hrLast
+        
+        self.hrLast = str(int(hr))
+        return self.hrLast
 
 ###########################
 ## getting activity data ##
 ###########################
+ibiconvertor = ibiToHr()
 
 for element in rootIn.iterfind("Log/Samples/Sample"):
 
@@ -102,7 +144,8 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
     time=element.findtext("UTC")
 
     altitude=element.findtext("Altitude") if element.findtext("Altitude")!=None else altitudeLast
-    hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
+    #hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
+    hr = ibiconvertor.ibiToHr(element)
     cadence=element.findtext("Cadence") if element.findtext("Cadence")!=None else cadenceLast
     power=element.findtext("BikePower") if element.findtext("BikePower")!=None else powerLast
     speed=str(float(element.findtext("Speed"))/100) if element.findtext("Speed")!=None else speedLast
