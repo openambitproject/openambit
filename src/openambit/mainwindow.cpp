@@ -320,7 +320,7 @@ void MainWindow::deviceRemoved(void)
     trayIconSyncAction->setDisabled(true);
     ui->syncProgressBar->setHidden(true);
 
-    trayIcon->toolTip();
+    trayIcon->setToolTip(tr("No device detected"));
     trayIcon->setIcon(QIcon(":/icon_disconnected"));
 }
 
