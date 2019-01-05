@@ -141,9 +141,9 @@ Install Procedure
 -----------------
 
 If you have built from source with ``build.sh``, you can install with
-``install.sh``.  This only installs the ``openambit`` application and
-the ``libambit`` library it needs.  When you have built only selected
-parts, simply install them with:
+``install.sh``.  This installs the ``openambit`` application and the
+``libambit`` library it needs and the ``openambit2gpx.py`` script.
+When you have built only selected parts, simply install them with:
 
 .. code-block:: sh
 
