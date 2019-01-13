@@ -324,8 +324,8 @@ if __name__ == "__main__":
                         help='Overwrite gpx file',
                         default=False,
                         )
-    parser.add_argument('-no-avg-heart-rate',
-                        dest='no-avg-hr',
+    parser.add_argument('-no-avg-hr',
+                        dest='no_avg_hr',
                         action='store_false',
                         help='Do not average hr over 32 heart beats',
                         default=False,
@@ -341,5 +341,5 @@ if __name__ == "__main__":
     if not args.force and os.path.isfile(args.out):
             print('Output file {} already exists. Skip file'.format(args.out))
     else:
-        main(args.log_in, args.out, args.no-avg-heart-rate)
+        main(args.log_in, args.out, args.no_avg_hr)
 
