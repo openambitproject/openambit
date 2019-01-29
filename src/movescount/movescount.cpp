@@ -564,6 +564,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     QByteArray output;
     QNetworkReply *reply;
     QString moveId;
+    QByteArray data;
 
     jsonParser.generateLogData(logEntry, output);
 
@@ -574,16 +575,22 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
 
     reply = syncPOST("/moves/", "", output, true);
 
-    if (reply->error() == QNetworkReply::NoError || reply->error() == QNetworkReply::ContentConflictError) {
-        QByteArray data = reply->readAll();
+    if (reply->error() == QNetworkReply::NoError){
+        data = reply->readAll();
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         } else {
             qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
+            emit uploadError(data);
         }
     } 
+    else if(reply->error() == QNetworkReply::ContentConflictError){
+        emit uploadError("Move already uploaded");
+    }
     else {
+        data = reply->readAll();
         qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << reply->readAll() << "\"";
+        emit uploadError(data);
     }
 }
 
