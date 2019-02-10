@@ -52,6 +52,7 @@ latLatest=None
 lonLatest=None
 timeGPSLatest=None
 
+lapCheck=0
 lapCount=0
 lapArray=[0]
 maxLap=0
@@ -216,7 +217,10 @@ for i in range(0,len(lapArray)):
             t2=lapArray[i][10]
             lat1=float(lapArray[i][5])
             lat2=float(lapArray[i][8])
-            latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+            if t2!=0:
+                latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+            else:
+                latInterPolEP=lat1
         if i==maxLap:
             lonInterPolEP=lapArray[i][6]
         else:
@@ -225,7 +229,10 @@ for i in range(0,len(lapArray)):
             t2=lapArray[i][10]
             lon1=float(lapArray[i][6])
             lon2=float(lapArray[i][9])
-            lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+            if t2!=0:
+                lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+            else:
+                lonInterPolEP=lon1
         previousLatEP=latInterPolEP
         previousLonEP=lonInterPolEP
         SP=etree.SubElement(lap,'startPoint')
