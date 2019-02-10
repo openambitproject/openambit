@@ -75,6 +75,11 @@ well as one of ``libudev`` and ``libusb-1.0``.
 For all these libraries you will also need their header files
 (typically provided in ``*-dev`` or ``*-devel`` packages).
 
+For ubuntu, these requirements can be fullfilled by running:
+
+.. code-block:: sh
+    sudo apt-get install cmake make zlib1g-dev libudev-dev libusb-1.0-0-dev qtdeclarative5-dev qttools5-dev
+
 
 Build Procedure
 ---------------
