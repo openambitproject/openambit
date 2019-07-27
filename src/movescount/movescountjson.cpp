@@ -968,7 +968,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_verticalspeed:
-            if (value->u.verticalspeed >= -59 && value->u.verticalspeed <= 59){
+            if ((value->u.verticalspeed/100.0) >= -59 && (value->u.verticalspeed/100.0) <= 59){
                 output.insert("VerticalSpeed", (double)value->u.verticalspeed/100.0);
             }
             break;
