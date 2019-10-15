@@ -223,9 +223,6 @@ LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, const Devi
     logfile.open(QIODevice::ReadOnly);
     XMLReader reader(retEntry);
     if (!reader.read(&logfile)) {
-        if (retEntry->logEntry && retEntry->logEntry->header.activity_name) {
-            free(retEntry->logEntry->header.activity_name);
-        }
         delete retEntry;
         retEntry = NULL;
     }
