@@ -177,6 +177,9 @@ void libambit_close(ambit_object_t *object)
         if (object->handle != NULL) {
             hid_close(object->handle);
         }
+        if(object->driver_data != NULL) {
+            free(object->driver_data);
+        }
 
         free((char *) object->device_info.path);
         free(object);

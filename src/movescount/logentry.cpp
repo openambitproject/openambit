@@ -93,36 +93,12 @@ LogEntry& LogEntry::operator=(const LogEntry &rhs)
 
 LogEntry::~LogEntry()
 {
-    u_int32_t i;
-
     if (personalSettings != NULL) {
         free(personalSettings);
         personalSettings = NULL;
     }
 
-    if (logEntry != NULL) {
-        if (logEntry->samples != NULL) {
-            for (i=0; i<logEntry->samples_count; i++) {
-                if (logEntry->samples[i].type == ambit_log_sample_type_periodic) {
-                    if (logEntry->samples[i].u.periodic.values != NULL) {
-                        free(logEntry->samples[i].u.periodic.values);
-                    }
-                }
-                if (logEntry->samples[i].type == ambit_log_sample_type_gps_base) {
-                    if (logEntry->samples[i].u.gps_base.satellites != NULL) {
-                        free(logEntry->samples[i].u.gps_base.satellites);
-                    }
-                }
-                if (logEntry->samples[i].type == ambit_log_sample_type_unknown) {
-                    if (logEntry->samples[i].u.unknown.data != NULL) {
-                        free(logEntry->samples[i].u.unknown.data);
-                    }
-                }
-            }
-            free(logEntry->samples);
-        }
-        free(logEntry);
-    }
+    libambit_log_entry_free(logEntry);
 
     logEntry = NULL;
 }

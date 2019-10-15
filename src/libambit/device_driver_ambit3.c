@@ -477,6 +477,8 @@ static int process_log_read_replies_gen1(ambit_object_t *object, libambit_sbem01
             LOG_INFO("Unknown data id 0x%x", libambit_sbem0102_data_id(reply_data_object));
         }
     }
+    
+    // is released somewhere else as well?!? libambit_log_entry_free(log_entry);
 
     return entries_read;
 }

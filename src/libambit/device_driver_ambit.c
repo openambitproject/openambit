@@ -255,6 +255,12 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
     }
 
     LOG_INFO("%d entries read", entries_read);
+    
+    if(log_header.activity_name != NULL) {
+        free(log_header.activity_name);
+    }
+    
+    // this is released somewhere else as well?!? libambit_log_entry_free(log_entry);
 
     return entries_read;
 }
