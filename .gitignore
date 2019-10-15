@@ -31,3 +31,5 @@ moc_*.cpp
 # Files created by IntelliJ Idea
 /.idea
 *.iml
+
+/core
