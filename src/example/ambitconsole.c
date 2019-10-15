@@ -36,6 +36,10 @@ int main(int argc, char *argv[])
             }
 
             if (libambit_personal_settings_get(ambit_object, &settings) == 0) {
+                printf("Personal settings: \n");
+                printf("sportmode_button_lock: %d\n", settings.sportmode_button_lock);
+                printf("weight: %d\n", settings.weight);
+                printf("birthyear: %d\n", settings.birthyear);
             }
             else {
                 printf("Failed to read personal settings\n");
