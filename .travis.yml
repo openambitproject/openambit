@@ -1,0 +1,15 @@
+# This file defines a CI build via travis-ci 
+# https://docs.travis-ci.com/user/languages/cpp/
+# https://docs.travis-ci.com/user/installing-dependencies/
+# https://docs.travis-ci.com/user/reference/bionic/
+#
+# See https://travis-ci.org/organizations/openambit/repositories for the actual builds
+language: cpp
+dist: bionic
+install: debhelper cmake libusb-1.0-0-dev libudev-dev qtbase5-dev qttools5-dev-tools zlib1g-dev libpcap-dev libglib2.0-dev wireshark-dev qttools5-dev
+compiler: gcc
+os: linux
+script: ./build.sh
+env:
+  global:
+  - BUILD_EXTRAS=1 
