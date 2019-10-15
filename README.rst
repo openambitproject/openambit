@@ -75,6 +75,10 @@ well as one of ``libudev`` and ``libusb-1.0``.
 For all these libraries you will also need their header files
 (typically provided in ``*-dev`` or ``*-devel`` packages).
 
+On Debian/Ubuntu based distributions the following should install the
+necessary packages:
+
+``sudo apt-get install debhelper gcc g++ make cmake libusb-1.0-0-dev libudev-dev qtbase5-dev qttools5-dev-tools zlib1g-dev libpcap-dev libglib2.0-dev wireshark-dev qttools5-dev``
 
 Build Procedure
 ---------------
