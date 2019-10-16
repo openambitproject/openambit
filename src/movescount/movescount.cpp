@@ -41,8 +41,9 @@ MovesCount* MovesCount::instance()
     if (!m_Instance) {
         mutex.lock();
 
-        if (!m_Instance)
+        if (!m_Instance) {
             m_Instance = new MovesCount;
+        }
 
         mutex.unlock();
     }
@@ -61,8 +62,7 @@ void MovesCount::exit()
         workerThread.quit();
         workerThread.wait();
 
-        delete logChecker;
-
+        delete m_Instance;
         m_Instance = NULL;
     }
     mutex.unlock();
@@ -604,6 +604,9 @@ MovesCount::~MovesCount()
 {
     workerThread.exit();
     workerThread.wait();
+
+    delete this->logChecker;
+    delete this->manager;
 }
 
 bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
