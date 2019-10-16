@@ -41,12 +41,14 @@ public:
 
 signals:
     void settingsSaved();
+    void settingsError(QString msg);
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
     void accept();
     void showHideUserSettings();
-    
+    void showSettingsError(QString msg);
+
 private:
     void readSettings();
     void writeSettings();

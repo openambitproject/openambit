@@ -21,6 +21,7 @@
  */
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
+#include <QMessageBox>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -32,6 +33,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     showHideUserSettings();
 
+    connect(this, SIGNAL(settingsError(QString)), this, SLOT(showSettingsError(QString)));
     connect(ui->listSettingGroups, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(changePage(QListWidgetItem*,QListWidgetItem*)));
     connect(ui->checkBoxMovescountEnable, SIGNAL(clicked()), this, SLOT(showHideUserSettings()));
 }
@@ -115,5 +117,32 @@ void SettingsDialog::writeSettings()
     settings.setValue("storeDebugFiles", ui->checkBoxDebugFiles->isChecked());
     settings.endGroup();
 
-    emit settingsSaved();
+    // ensure settings are written to have an up-to-date status for informing the user 
+    // if settings cannot be written
+    settings.sync();
+
+    switch (settings.status()) {
+        case QSettings::AccessError: {
+            emit settingsError("Could not write settings-file, maybe the config-file is write-only or owned by a different user.");
+            break;
+        }
+        case QSettings::FormatError: {
+            emit settingsError("Could not read settings-file, probably the format of the file is invalid.");
+            break;
+        }
+        case QSettings::NoError: {
+            // everything fine
+            emit settingsSaved();
+            break;
+        }
+    }
+}
+
+void SettingsDialog::showSettingsError(QString msg)
+{
+    QMessageBox msgBox;
+    msgBox.setIcon(QMessageBox::Critical);
+    msgBox.setText(msg);
+    msgBox.setInformativeText(QString(getenv("HOME")) + "/.openambit/openambit.conf");
+    msgBox.exec();
 }
