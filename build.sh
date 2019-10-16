@@ -10,7 +10,7 @@ if [ -r /proc/cpuinfo ]; then
    CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
 fi
 
-for target in libambit movescount openambit
+for target in libambit movescount openambit openambit-cli
 do
     cd ${SOURCE_LOCATION}
     echo "------building $target------"
