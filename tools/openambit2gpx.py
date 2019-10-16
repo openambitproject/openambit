@@ -32,7 +32,7 @@ Openambit *.log files can normally be found in ~/.openambit/
 fOut=open(fileOut, 'w')
 
 fOut.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n\n")
-fOut.write('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Ascent 1.11.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gpxdata="http://www.cluetrust.com/XML/GPXDATA/1/0" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.cluetrust.com/XML/GPXDATA/1/0 http://www.cluetrust.com/Schemas/gpxdata10.xsd">')
+fOut.write('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="openambit2gpx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gpxdata="http://www.cluetrust.com/XML/GPXDATA/1/0" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.cluetrust.com/XML/GPXDATA/1/0 http://www.cluetrust.com/Schemas/gpxdata10.xsd">')
 fOut.write(" <trk>\n")
 fOut.write("  <trkseg>\n")
 
@@ -155,7 +155,7 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
             if speed!=None: etree.SubElement(extGpx,"gpxdata:speed").text=speed
             if airpressure!=None: etree.SubElement(extGpx,"gpxdata:SeaLevelPressure").text=airpressure
 
-        fOut.write("   "+etree.tostring(trk)+"\n")
+        fOut.write("   "+etree.tostring(trk).decode()+"\n")
 
     latLast=lat
     lonLast=lon
@@ -263,7 +263,7 @@ for i in range(0,len(lapArray)):
         
         lapCount+=1
 
-        fOut.write("  "+etree.tostring(lap)+"\n")
+        fOut.write("  "+etree.tostring(lap).decode()+"\n")
 
 fOut.write(" </extensions>\n")
 
