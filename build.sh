@@ -19,6 +19,18 @@ do
     fi
 done
 
+for target in tools
+do
+    if [ "$DO_INSTALL" == "1" ]; then
+	cd $SOURCE_LOCATION
+	mkdir -p $target-build
+	cd $target-build
+	cmake "$@" ../$target
+	echo "------installing $target------"
+	sudo make install
+    fi
+done
+
 if [ "$BUILD_EXTRAS" == "1" ]; then
     cd $SOURCE_LOCATION
     echo "------building example------"

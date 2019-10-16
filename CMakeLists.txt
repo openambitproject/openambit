@@ -27,6 +27,7 @@ option(BUILD_EXTRAS "Build examples and wireshark dissector" OFF)
 add_subdirectory(src/libambit)
 add_subdirectory(src/movescount)
 add_subdirectory(src/openambit)
+add_subdirectory(tools)
 
 if (NOT ${LIBAMBIT_FOUND})
   add_dependencies(movescount ambit)

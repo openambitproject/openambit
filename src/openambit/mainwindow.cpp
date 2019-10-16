@@ -27,6 +27,9 @@
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <QDesktopServices>
+#include <QProcess>
+#include <QTextCodec>
+#include <QDir>
 
 #define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
@@ -422,6 +425,9 @@ void MainWindow::showContextMenuForLogItem(const QPoint &pos)
     QAction *action = new QAction(tr("Write Movescount file"), this);
     connect(action, SIGNAL(triggered()), this, SLOT(logItemWriteMovescount()));
     contextMenu.addAction(action);
+    QAction *action2 = new QAction(tr("Write GPX file"), this);
+    connect(action2, SIGNAL(triggered()), this, SLOT(logItemWriteGPX()));
+    contextMenu.addAction(action2);
     contextMenu.exec(mapToGlobal(pos));
 }
 
@@ -488,6 +494,84 @@ void MainWindow::startSync()
         trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization started"));
     }
     emit MainWindow::syncNow(ui->checkBoxResyncAll->isChecked());
+}
+
+void MainWindow::logItemWriteGPX()
+{
+    const QString logfile = ui->logsList->selectedItems().at(0)->data(Qt::UserRole).toString();
+    const QString program = "openambit2gpx.py";
+    QStringList arguments;
+    const QString inLogfile = LogStore::getStoragePath() + "/" + logfile;
+    const QString dirStr = LogStore::getStoragePath() + "/GPX";
+    QString outfile = dirStr + "/" + logfile;
+
+    // Ensure directory exists
+    QDir dir(dirStr);
+    if (!dir.exists()) {
+      if ( !dir.mkpath(".") ) {
+            QMessageBox msgBox(QMessageBox::Critical,
+                               QCoreApplication::applicationName(),
+                               tr("Directory '%1' not available.").arg(dir.path()),
+                               QMessageBox::Close,
+                               this);
+            msgBox.exec();
+	    return;
+	};
+    }
+
+    outfile.replace(QRegExp("\\.log"), ".gpx");
+    arguments << inLogfile << outfile;
+
+    // Could run in the background and signal when complete or similar
+    // but that requires more complex code.
+    // The process shouldn't take too long...
+    // So for convience simply show it being busy for the moment
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    //int result = QProcess::execute(program, arguments);
+    // Using this way allows capturing stdout & stderr
+    QProcess *myProcess = new QProcess(this);
+    myProcess->start(program, arguments);
+    bool finished = myProcess->waitForFinished();
+
+    QApplication::restoreOverrideCursor();
+    QApplication::processEvents();
+
+    if ( finished ) {
+        const int result = myProcess->exitCode();
+
+        if ( result == 2 ) {
+            QMessageBox msgBox(QMessageBox::Critical,
+                               QCoreApplication::applicationName(),
+                               tr("Ensure openambit2gpx.py is installed."),
+                               QMessageBox::Close,
+                               this);
+            msgBox.exec();
+        }
+	else if ( result != 0 ) {
+             // Capture any output should something have gone wrong and display it
+             QByteArray baOut = myProcess->readAllStandardOutput();
+             QByteArray baErr = myProcess->readAllStandardError();
+
+             QTextCodec *codec = QTextCodec:: codecForLocale();
+             QString output = codec->toUnicode(baOut) + "\n" + codec->toUnicode(baErr);
+
+             QMessageBox msgBox(QMessageBox::Critical,
+                                QCoreApplication::applicationName(),
+                                tr("GPX conversion failed :( - reason %1\n%2").arg(result).arg(output),
+                                QMessageBox::Close,
+                                this);
+             msgBox.exec();
+        }
+    } else {
+      QMessageBox msgBox(QMessageBox::Critical,
+                         QCoreApplication::applicationName(),
+                         tr("Conversion process timed out."),
+                         QMessageBox::Close,
+			 this);
+      msgBox.exec();
+    }
 }
 
 void MainWindow::movesCountSetup()

@@ -32,6 +32,7 @@
 
 #include "deviceinfo.h"
 #include "logentry.h"
+#include "logstore.h"
 
 class LogStore : public QObject
 {
@@ -54,6 +55,8 @@ public:
     LogEntry *read(LogDirEntry dirEntry);
     LogEntry *read(QString filename);
     QList<LogDirEntry> dir(QString device = "");
+    static QString getStoragePath();
+
 signals:
     
 public slots:
@@ -63,7 +66,7 @@ private:
     LogEntry *storeInternal(QString serial, QDateTime dateTime, const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId = "");
     LogEntry *readInternal(QString path);
 
-    QString storagePath;
+    static QString storagePath;
 
     class XMLReader
     {

@@ -82,6 +82,7 @@ private slots:
     void logItemSelected(QListWidgetItem *current,QListWidgetItem *previous);
     void showContextMenuForLogItem(const QPoint &pos);
     void logItemWriteMovescount();
+    void logItemWriteGPX();
     void updateLogList();
     
 private:

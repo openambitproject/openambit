@@ -122,10 +122,17 @@ static sample_swimming_style_name_t sampleSwimmingStyleNames[] = {
     { 0, "" }
 };
 
+QString LogStore::storagePath;
+
 LogStore::LogStore(QObject *parent) :
     QObject(parent)
 {
     storagePath = QString(getenv("HOME")) + "/.openambit";
+}
+
+QString LogStore::getStoragePath()
+{
+  return storagePath;
 }
 
 LogEntry *LogStore::store(const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry)
