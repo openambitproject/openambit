@@ -351,8 +351,11 @@ void libambit_sport_mode_device_settings_free(ambit_sport_mode_device_settings_t
     if (settings->sport_modes != NULL) {
         for (i=0; i<settings->sport_modes_count; i++) {
             if (settings->sport_modes[i].display != NULL) {
-                if (settings->sport_modes[i].display->view != NULL) {
-                    free(settings->sport_modes[i].display->view);
+                int j;
+                for(j = 0;j < settings->sport_modes[i].displays_count;j++) {
+                    if (settings->sport_modes[i].display[j].view != NULL) {
+                        free(settings->sport_modes[i].display[j].view);
+                    }
                 }
                 free(settings->sport_modes[i].display);
             }
@@ -371,6 +374,8 @@ void libambit_sport_mode_device_settings_free(ambit_sport_mode_device_settings_t
         }
         free(settings->sport_mode_groups);
     }
+
+    free(settings);
 }
 
 ambit_sport_mode_device_settings_t *libambit_malloc_sport_mode_device_settings(void)
@@ -381,6 +386,7 @@ ambit_sport_mode_device_settings_t *libambit_malloc_sport_mode_device_settings(v
     ambit_device_settings->sport_mode_groups = NULL;
     ambit_device_settings->sport_mode_groups_count = 0;
     ambit_device_settings->app_ids_count = 0;
+    memset(ambit_device_settings->app_ids, 0, sizeof(ambit_device_settings->app_ids));
 
     return ambit_device_settings;
 }
@@ -431,6 +437,12 @@ bool libambit_malloc_sport_mode_groups(uint16_t count, ambit_sport_mode_device_s
 
 bool libambit_malloc_sport_mode_app_ids(uint16_t count, ambit_sport_mode_t *ambit_sport_mode)
 {
+    if(count == 0) {
+        ambit_sport_mode->apps_list = NULL;
+        ambit_sport_mode->apps_list_count = 0;
+        return false;
+    }
+
     ambit_apps_list_t *ambit_app_ids = (ambit_apps_list_t *)malloc(sizeof(ambit_apps_list_t) * count);
     if (ambit_app_ids != NULL) {
         ambit_sport_mode->apps_list = ambit_app_ids;
@@ -445,6 +457,12 @@ bool libambit_malloc_sport_mode_app_ids(uint16_t count, ambit_sport_mode_t *ambi
 
 bool libambit_malloc_sport_mode_displays(uint16_t count, ambit_sport_mode_t *ambit_sport_mode)
 {
+    if(count == 0) {
+        ambit_sport_mode->display = NULL;
+        ambit_sport_mode->displays_count = 0;
+        return false;
+    }
+
     ambit_sport_mode_display_t *ambit_displays = (ambit_sport_mode_display_t *)malloc(sizeof(ambit_sport_mode_display_t) * count);
     if (ambit_displays != NULL) {
         ambit_sport_mode->display = ambit_displays;
@@ -465,6 +483,12 @@ bool libambit_malloc_sport_mode_displays(uint16_t count, ambit_sport_mode_t *amb
 
 bool libambit_malloc_sport_mode_view(uint16_t count, ambit_sport_mode_display_t *ambit_displays)
 {
+    if(count == 0) {
+        ambit_displays->view = NULL;
+        ambit_displays->views_count = 0;
+        return false;
+    }
+
     uint16_t *ambit_views = (uint16_t *)malloc(sizeof(uint16_t) * count);
     if (ambit_views != NULL) {
         ambit_displays->view = ambit_views;
