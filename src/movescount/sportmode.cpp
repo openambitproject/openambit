@@ -233,10 +233,10 @@ void CustomMode::toAmbitSettings(ambit_sport_mode_settings_t *settings)
 
 void CustomMode::toAmbitName(char ambitName[NAME_SIZE])
 {
-    const char *source = activityName.toLatin1().data();
+    const QByteArray &source = activityName.toLatin1();
     int strLen = activityName.length() < NAME_SIZE ? activityName.length() : NAME_SIZE;
     memset(ambitName, 0x00, NAME_SIZE);
-    memcpy(ambitName, source, strLen);
+    memcpy(ambitName, source.data(), strLen);
 }
 
 u_int16_t CustomMode::hrbeltAndPods()

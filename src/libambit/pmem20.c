@@ -585,12 +585,12 @@ int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_a
     size_t offset = 0;
 
     bufptrs[0] = data;
-    bufsizes = object->chunk_size;
+    bufsizes = datalen > object->chunk_size ? object->chunk_size : datalen;
 
     // Write first chunk
     ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, &bufsizes);
     offset += bufsizes;
-    address += object->chunk_size;
+    address += bufsizes;
 
     // Write rest of the chunks
     while (ret == 0 && offset < datalen) {

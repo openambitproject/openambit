@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     ambit_object_t *ambit_object;
     ambit_device_status_t status;
     ambit_personal_settings_t settings;
+    memset(&settings, 0, sizeof(ambit_personal_settings_t));
 
     if (info) {
         printf("Device: %s, serial: %s\n", info->name, info->serial);

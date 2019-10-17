@@ -141,6 +141,7 @@ int ambit_navigation_waypoint_read(ambit_object_t *object, ambit_pack_waypoint_t
     for(x=0; x<(*way_point_count); ++x) {
 
         send_waypoint_data = malloc(sizeof(ambit_pack_waypoint_t));
+        memset(send_waypoint_data, 0, sizeof(ambit_pack_waypoint_t));
         send_data = malloc(sizeof(ambit_pack_waypoint_t));
 
         send_waypoint_data->index = htole16(x);
