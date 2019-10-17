@@ -58,7 +58,7 @@ private:
         QString dateTimeString(QDateTime &dateTime);
         QList<int> rearrangeSamples();
 
-        LogEntry *logEntry;
+        LogEntry *logEntry = NULL;
         QXmlStreamWriter xml;
     };
 };

@@ -32,11 +32,11 @@ struct DeviceInfo
     QString model;
     QString serial;
 
-    int fw_version[3];
-    int hw_version[3];
+    int fw_version[3] = { 0, 0, 0 };
+    int hw_version[3] = { 0, 0, 0 };
 
-    int access_status;
-    bool is_supported;
+    int access_status = 0;
+    bool is_supported = false;
 
     DeviceInfo& operator= (const ambit_device_info_t& devinfo);
 };

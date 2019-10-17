@@ -26,10 +26,10 @@ public slots:
 private:
     void toAmbitName(char ambitName[]);
 
-    int activityId;
-    int customModeGroupsId;
+    int activityId = 0;
+    int customModeGroupsId = 0;
     QList<int> customModeIds;
-    bool isVisible;
+    bool isVisible = false;
     QString activityName;
 
     QList<uint> customModeIndex;

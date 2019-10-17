@@ -112,8 +112,8 @@ private:
     void writeJsonToStorage(QString filename, QByteArray &data);
 #endif
 
-    bool exiting;
-    bool authorized;
+    bool exiting = false;
+    bool authorized = false;
 
     QString baseAddress;
     QString appkey;
@@ -128,8 +128,6 @@ private:
     QNetworkReply *authCheckReply;
 
     MovesCountJSON jsonParser;
-
-    LogStore logStore;
 
     MovesCountLogChecker *logChecker;
 
