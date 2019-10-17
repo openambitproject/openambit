@@ -84,7 +84,7 @@ private:
         void readLogSamples();
         void readPeriodicSample(QList<ambit_log_sample_periodic_value_t> *valueContent);
         QXmlStreamReader xml;
-        LogEntry *logEntry;
+        LogEntry *logEntry = NULL;
     };
 
     class XMLWriter
@@ -104,8 +104,8 @@ private:
         QDateTime time;
         QString movescountId;
         QXmlStreamWriter xml;
-        ambit_personal_settings_t *personalSettings;
-        ambit_log_entry_t *logEntry;
+        ambit_personal_settings_t *personalSettings = NULL;
+        ambit_log_entry_t *logEntry = NULL;
     };
 };
 

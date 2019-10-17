@@ -22,8 +22,8 @@ private slots:
     void checkUploadedLogs();
 
 private:
-    bool running;
-    bool cancelRun;
+    bool running = false;
+    bool cancelRun = false;
 
     LogStore logStore;
     QThread workerThread;
