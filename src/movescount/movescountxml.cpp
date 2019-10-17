@@ -208,82 +208,116 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
 {
     u_int32_t i;
 
-    xml.writeStartElement("header");
-    xml.writeTextElement("Duration", QString::number((double)logEntry->logEntry->header.duration/1000.0, 'g', 16));
-    xml.writeTextElement("Ascent", QString("%1").arg(logEntry->logEntry->header.ascent));
-    xml.writeTextElement("Descent", QString("%1").arg(logEntry->logEntry->header.descent));
-    xml.writeTextElement("AscentTime", QString::number((double)logEntry->logEntry->header.ascent_time/1000.0, 'g', 16));
-    xml.writeTextElement("DescentTime", QString::number((double)logEntry->logEntry->header.descent_time/1000.0, 'g', 16));
-    xml.writeTextElement("RecoveryTime", QString::number((double)logEntry->logEntry->header.recovery_time/1000.0, 'g', 16));
-    xml.writeStartElement("Speed");
-    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.speed_avg/3600.0, 'g', 16));
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.speed_max/3600.0, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.speed_max_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeStartElement("Cadence");
-    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.cadence_avg/60.0, 'g', 16));
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.cadence_max/60.0, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.cadence_max_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeStartElement("Altitude");
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
-    xml.writeTextElement("Min", QString("%1").arg(logEntry->logEntry->header.altitude_min));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.altitude_max_time/1000.0, 'g', 16));
-    xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.altitude_min_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    // Only include HR if heartrate seems to be present
-    if (logEntry->logEntry->header.heartrate_avg != 0) {
-        xml.writeStartElement("HR");
-        xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.heartrate_avg/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.heartrate_max/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.heartrate_min/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.heartrate_max_time/1000.0, 'g', 16));
-        xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.heartrate_min_time/1000.0, 'g', 16));
+    if(logEntry != NULL && logEntry->logEntry != NULL) {
+        xml.writeStartElement("header");
+        xml.writeTextElement("Duration",
+                             QString::number((double) logEntry->logEntry->header.duration / 1000.0, 'g', 16));
+        xml.writeTextElement("Ascent", QString("%1").arg(logEntry->logEntry->header.ascent));
+        xml.writeTextElement("Descent", QString("%1").arg(logEntry->logEntry->header.descent));
+        xml.writeTextElement("AscentTime",
+                             QString::number((double) logEntry->logEntry->header.ascent_time / 1000.0, 'g', 16));
+        xml.writeTextElement("DescentTime",
+                             QString::number((double) logEntry->logEntry->header.descent_time / 1000.0, 'g', 16));
+        xml.writeTextElement("RecoveryTime",
+                             QString::number((double) logEntry->logEntry->header.recovery_time / 1000.0, 'g', 16));
+        xml.writeStartElement("Speed");
+        xml.writeTextElement("Avg", QString::number((double) logEntry->logEntry->header.speed_avg / 3600.0, 'g', 16));
+        xml.writeTextElement("Max", QString::number((double) logEntry->logEntry->header.speed_max / 3600.0, 'g', 16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.speed_max_time / 1000.0, 'g', 16));
         xml.writeEndElement();
-        xml.writeTextElement("PeakTrainingEffect", QString::number((double)logEntry->logEntry->header.peak_training_effect/10.0, 'g', 16));
-    }
-    xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString::fromUtf8(logEntry->logEntry->header.activity_name));
-    xml.writeStartElement("Temperature");
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.temperature_max/10.0 + 273.15, 'g', 16));
-    xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.temperature_min/10.0 + 273.15, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.temperature_max_time/1000.0, 'g', 16));
-    xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.temperature_min_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeTextElement("Distance", QString("%1").arg(logEntry->logEntry->header.distance));
-    xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->logEntry->header.samples_count));
-    // Only include energy if heartrate seems to be present
-    if (logEntry->logEntry->header.heartrate_avg != 0) {
-        xml.writeTextElement("Energy", QString::number((double)logEntry->logEntry->header.energy_consumption*4186.8, 'g', 16)); // kcal to Joule
-    }
-    xml.writeTextElement("TimeToFirstFix", QString::number((double)logEntry->logEntry->header.first_fix_time/1000.0, 'g', 16));
-    xml.writeTextElement("BatteryChargeAtStart", QString::number((double)logEntry->logEntry->header.battery_start/100.0, 'g', 16));
-    xml.writeTextElement("BatteryCharge", QString::number((double)logEntry->logEntry->header.battery_end/100.0, 'g', 16));
-    xml.writeTextElement("DistanceBeforeCalibrationChange", QString("%1").arg(logEntry->logEntry->header.distance_before_calib));
-    QDateTime dateTime(QDate(logEntry->logEntry->header.date_time.year,
-                             logEntry->logEntry->header.date_time.month,
-                             logEntry->logEntry->header.date_time.day),
-                       QTime(logEntry->logEntry->header.date_time.hour,
-                             logEntry->logEntry->header.date_time.minute, 0).addMSecs(logEntry->logEntry->header.date_time.msec));
-    xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
-    xml.writeEndElement();
-    QList<quint16> ibis;
-    xml.writeStartElement("Samples");
-    QList<int> order = rearrangeSamples();
-    foreach(int index, order) {
-        writeLogSample(&logEntry->logEntry->samples[index], &ibis);
-    }
-
-    xml.writeEndElement();
-    if (ibis.count() > 0) {
-        xml.writeStartElement("IBI");
-        for (i=0; i<(u_int32_t)ibis.count(); i++) {
-            if (i > 0) {
-                xml.writeCharacters(" ");
-            }
-            xml.writeCharacters(QString("%1").arg(ibis.at(i)));
+        xml.writeStartElement("Cadence");
+        xml.writeTextElement("Avg", QString::number((double) logEntry->logEntry->header.cadence_avg / 60.0, 'g', 16));
+        xml.writeTextElement("Max", QString::number((double) logEntry->logEntry->header.cadence_max / 60.0, 'g', 16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.cadence_max_time / 1000.0, 'g', 16));
+        xml.writeEndElement();
+        xml.writeStartElement("Altitude");
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
+        xml.writeTextElement("Min", QString("%1").arg(logEntry->logEntry->header.altitude_min));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.altitude_max_time / 1000.0, 'g', 16));
+        xml.writeTextElement("MinTime",
+                             QString::number((double) logEntry->logEntry->header.altitude_min_time / 1000.0, 'g', 16));
+        xml.writeEndElement();
+        // Only include HR if heartrate seems to be present
+        if (logEntry->logEntry->header.heartrate_avg != 0) {
+            xml.writeStartElement("HR");
+            xml.writeTextElement("Avg", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_avg / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("Max", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_max / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("Min", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_min / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("MaxTime",
+                                 QString::number((double) logEntry->logEntry->header.heartrate_max_time / 1000.0, 'g',
+                                                 16));
+            xml.writeTextElement("MinTime",
+                                 QString::number((double) logEntry->logEntry->header.heartrate_min_time / 1000.0, 'g',
+                                                 16));
+            xml.writeEndElement();
+            xml.writeTextElement("PeakTrainingEffect",
+                                 QString::number((double) logEntry->logEntry->header.peak_training_effect / 10.0, 'g',
+                                                 16));
         }
+        xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
+        xml.writeTextElement("Activity", QString::fromUtf8(logEntry->logEntry->header.activity_name));
+        xml.writeStartElement("Temperature");
+        xml.writeTextElement("Max",
+                             QString::number((double) logEntry->logEntry->header.temperature_max / 10.0 + 273.15, 'g',
+                                             16));
+        xml.writeTextElement("Min",
+                             QString::number((double) logEntry->logEntry->header.temperature_min / 10.0 + 273.15, 'g',
+                                             16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.temperature_max_time / 1000.0, 'g',
+                                             16));
+        xml.writeTextElement("MinTime",
+                             QString::number((double) logEntry->logEntry->header.temperature_min_time / 1000.0, 'g',
+                                             16));
         xml.writeEndElement();
+        xml.writeTextElement("Distance", QString("%1").arg(logEntry->logEntry->header.distance));
+        xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->logEntry->header.samples_count));
+        // Only include energy if heartrate seems to be present
+        if (logEntry->logEntry->header.heartrate_avg != 0) {
+            xml.writeTextElement("Energy",
+                                 QString::number((double) logEntry->logEntry->header.energy_consumption * 4186.8, 'g',
+                                                 16)); // kcal to Joule
+        }
+        xml.writeTextElement("TimeToFirstFix",
+                             QString::number((double) logEntry->logEntry->header.first_fix_time / 1000.0, 'g', 16));
+        xml.writeTextElement("BatteryChargeAtStart",
+                             QString::number((double) logEntry->logEntry->header.battery_start / 100.0, 'g', 16));
+        xml.writeTextElement("BatteryCharge",
+                             QString::number((double) logEntry->logEntry->header.battery_end / 100.0, 'g', 16));
+        xml.writeTextElement("DistanceBeforeCalibrationChange",
+                             QString("%1").arg(logEntry->logEntry->header.distance_before_calib));
+        QDateTime dateTime(QDate(logEntry->logEntry->header.date_time.year,
+                                 logEntry->logEntry->header.date_time.month,
+                                 logEntry->logEntry->header.date_time.day),
+                           QTime(logEntry->logEntry->header.date_time.hour,
+                                 logEntry->logEntry->header.date_time.minute, 0).addMSecs(
+                                   logEntry->logEntry->header.date_time.msec));
+        xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
+        xml.writeEndElement();
+        QList<quint16> ibis;
+        xml.writeStartElement("Samples");
+        QList<int> order = rearrangeSamples();
+                foreach(int index, order) {
+                writeLogSample(&logEntry->logEntry->samples[index], &ibis);
+            }
+
+        xml.writeEndElement();
+        if (ibis.count() > 0) {
+            xml.writeStartElement("IBI");
+            for (i = 0; i < (u_int32_t) ibis.count(); i++) {
+                if (i > 0) {
+                    xml.writeCharacters(" ");
+                }
+                xml.writeCharacters(QString("%1").arg(ibis.at(i)));
+            }
+            xml.writeEndElement();
+        }
     }
 
     return true;
