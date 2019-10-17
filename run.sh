@@ -19,6 +19,7 @@ case "$application" in
     openambit)          builddir=${application}-build;;
     ambitconsole)       builddir=example-build;;
     openambit-cli)      builddir=${application}-build;;
+    unittest)           builddir=${application}-build;;
     *)
 	echo "$application: not supported" >&2
 	exit 1
