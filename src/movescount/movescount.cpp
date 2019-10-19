@@ -110,6 +110,10 @@ void MovesCount::setDevice(const DeviceInfo& device_info)
     this->device_info = device_info;
 }
 
+void MovesCount::setUploadLogs(bool uploadLogs) {
+    this->uploadLogs = uploadLogs;
+}
+
 bool MovesCount::isAuthorized()
 {
     return authorized;
@@ -302,7 +306,7 @@ void MovesCount::recheckAuthorization()
 
 void MovesCount::handleAuthorizationSignal(bool authorized)
 {
-    if (authorized) {
+    if (authorized && uploadLogs) {
         logChecker->run();
     }
 }

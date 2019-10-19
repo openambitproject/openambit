@@ -51,6 +51,7 @@ public:
     void setUserkey(QString userkey);
     QString generateUserkey();
     void setDevice(const DeviceInfo& device_info);
+    void setUploadLogs(bool uploadLogs);
 
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
@@ -114,6 +115,7 @@ private:
 
     bool exiting = false;
     bool authorized = false;
+    bool uploadLogs = true;
 
     QString baseAddress;
     QString appkey;
