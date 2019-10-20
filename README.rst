@@ -182,3 +182,9 @@ will use the latest and greatest(?) version.
 .. _Ubuntu: http://packages.ubuntu.com/search?keywords=openambit
 .. _OSWatershed.org: http://oswatershed.org/pkg/openambit
 .. _release: https://github.com/openambitproject/openambit/releases
+
+More information
+----------------
+
+Look at the wiki at https://github.com/openambitproject/openambit/wiki for
+more information.
