@@ -468,7 +468,10 @@ int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* amb
             appRulesId.append(entry["RuleID"].toUInt());
             QByteArray binary;
             foreach (QVariant binaryVar, entry["Binary"].toList()) {
-                binary.append(binaryVar.toChar());
+                binary.append(binaryVar.toInt(&ok));
+                if(!ok) {
+                    return -1;
+                }
             }
             appRulesData.append(binary);
         }
