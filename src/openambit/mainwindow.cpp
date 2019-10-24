@@ -253,6 +253,7 @@ void MainWindow::deviceDetected(const DeviceInfo& deviceInfo)
     }
     ui->labelDeviceDetected->setText(deviceInfo.name);
     ui->labelSerial->setText(deviceInfo.serial);
+    trayIcon->setToolTip(tr("Device connected"));
     trayIcon->setIcon(QIcon(":/icon_connected"));
     if (0 != deviceInfo.access_status || !deviceInfo.is_supported) {
         ui->labelNotSupportedIcon->setHidden(false);
