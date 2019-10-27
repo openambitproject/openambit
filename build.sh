@@ -1,11 +1,14 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 set -e
 
 SOURCE_LOCATION="`dirname \"$0\"`"
 SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
 
-CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
+CORES=1
+if test -r /proc/cpuinfo
+   CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
+fi
 
 for target in libambit movescount openambit
 do
