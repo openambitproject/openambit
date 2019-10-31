@@ -143,7 +143,7 @@ Build options
    BUILD_EXTRAS = 0 | 1 (Default 0)
    CMAKE_BUILD_TYPE = Debug | Release
    DEBUG_PRINT_INFO = 0 | 1 (Default 0)
-   HIDAPI_DRIVER = libusb | pcapsimulate | mac | windows (Default <empty> => linux)
+   HIDAPI_DRIVER = libudev | libusb | pcapsimulate | mac | windows (Default <empty> => libudev)
 
 
 Install Procedure

@@ -1,6 +1,6 @@
 # - Resolve what hidapi driver to use
 # This module is affected by the following defines
-#  HIDAPI_DRIVER (possible values: usbraw, libusb, pcapsimulate)
+#  HIDAPI_DRIVER (possible values: libudev, libusb, pcapsimulate, mac, windows)
 #
 # This module defines
 #  HIDAPI_INCLUDE_DIR
