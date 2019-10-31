@@ -80,6 +80,10 @@ necessary packages:
 
 ``sudo apt-get install debhelper gcc g++ make cmake libusb-1.0-0-dev libudev-dev qtbase5-dev qttools5-dev-tools zlib1g-dev libpcap-dev libglib2.0-dev wireshark-dev qttools5-dev``
 
+Openambit also makes use of the hidapi library from https://github.com/signal11/hidapi
+The source is currently included, so no dependency needs to be installed
+for it.
+
 Build Procedure
 ---------------
 
@@ -178,3 +182,9 @@ will use the latest and greatest(?) version.
 .. _Ubuntu: http://packages.ubuntu.com/search?keywords=openambit
 .. _OSWatershed.org: http://oswatershed.org/pkg/openambit
 .. _release: https://github.com/openambitproject/openambit/releases
+
+More information
+----------------
+
+Look at the wiki at https://github.com/openambitproject/openambit/wiki for
+more information.

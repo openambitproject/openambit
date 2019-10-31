@@ -41,8 +41,9 @@ MovesCount* MovesCount::instance()
     if (!m_Instance) {
         mutex.lock();
 
-        if (!m_Instance)
+        if (!m_Instance) {
             m_Instance = new MovesCount;
+        }
 
         mutex.unlock();
     }
@@ -61,8 +62,7 @@ void MovesCount::exit()
         workerThread.quit();
         workerThread.wait();
 
-        delete logChecker;
-
+        delete m_Instance;
         m_Instance = NULL;
     }
     mutex.unlock();
@@ -108,6 +108,10 @@ QString MovesCount::generateUserkey()
 void MovesCount::setDevice(const DeviceInfo& device_info)
 {
     this->device_info = device_info;
+}
+
+void MovesCount::setUploadLogs(bool uploadLogs) {
+    this->uploadLogs = uploadLogs;
 }
 
 bool MovesCount::isAuthorized()
@@ -302,7 +306,7 @@ void MovesCount::recheckAuthorization()
 
 void MovesCount::handleAuthorizationSignal(bool authorized)
 {
-    if (authorized) {
+    if (authorized && uploadLogs) {
         logChecker->run();
     }
 }
@@ -604,6 +608,9 @@ MovesCount::~MovesCount()
 {
     workerThread.exit();
     workerThread.wait();
+
+    delete this->logChecker;
+    delete this->manager;
 }
 
 bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
