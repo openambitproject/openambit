@@ -6,7 +6,7 @@ SOURCE_LOCATION="`dirname \"$0\"`"
 SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
 
 CORES=1
-if test -r /proc/cpuinfo
+if [ -r /proc/cpuinfo ]; then
    CORES=$(cat /proc/cpuinfo | grep processor | wc -l)
 fi
 
@@ -18,9 +18,9 @@ do
     cd ${target}-build
     cmake "$@" ../src/${target}
     make -j${CORES}
-    if [ "${DO_INSTALL}" == "1" ]; then
-		echo "------installing $target------"
-		sudo make install
+    if [ "${DO_INSTALL-0}" == "1" ]; then
+      echo "------installing $target------"
+      sudo make install
     fi
 done
 
