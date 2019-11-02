@@ -400,6 +400,11 @@ void MainWindow::movesCountAuth(bool authorized)
     ui->labelMovescountAuthIcon->setHidden(authorized);
 }
 
+void MainWindow::showUploadError(QByteArray data)
+{
+    QMessageBox::warning(nullptr, QObject::tr("Upload error"), data, QMessageBox::Ok);
+}
+
 void MainWindow::logItemSelected(QListWidgetItem *current,QListWidgetItem *previous)
 {
     LogEntry *logEntry = NULL;
@@ -517,6 +522,7 @@ void MainWindow::movesCountSetup()
 
             connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
             connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
+            connect(movesCount, SIGNAL(uploadError(QByteArray)), this, SLOT(showUploadError(QByteArray)));
         }
         if (movescountEnable) {
             movesCount->setUsername(settings.value("email").toString());

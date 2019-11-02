@@ -73,6 +73,7 @@ signals:
     void newerFirmwareExists(QByteArray fw_version);
     void movesCountAuth(bool authorized);
     void logMoveID(QString device, QDateTime time, QString moveID);
+    void uploadError(QByteArray data);
 
 private slots:
     void authCheckFinished();
