@@ -24,16 +24,13 @@
 
 #include <QRegExp>
 #include <QVariantMap>
-#include <QVariantList>
 #include <QStringList>
-#include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <zlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <algorithm>
+#include <cmath>
+#include <cstdio>
 
 MovesCountJSON::MovesCountJSON(QObject *parent) :
     QObject(parent)
@@ -148,7 +145,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
             waypoints_to_append[x].type = (uint8_t)(jsonWp["Type"].toInt());
             this->copyDataString(jsonWp["Name"],waypoints_to_append[x].name, 49);
             strncpy(waypoints_to_append[x].route_name, "", 49);
-            dt = dt.fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
+            dt = QDateTime::fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
             waypoints_to_append[x].ctime_second = (uint8_t)dt.toString("s").toInt();
             waypoints_to_append[x].ctime_minute = (uint8_t)dt.toString("m").toInt();
             waypoints_to_append[x].ctime_hour = (uint8_t)dt.toString("h").toInt();
@@ -190,7 +187,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     return 0;
 }
 
-bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength)
+bool MovesCountJSON::copyDataString(const QVariant& entry, char *data, size_t maxlength)
 {
     QByteArray ba=entry.toString().toLatin1();
     strncpy(data, ba.data(), maxlength);
@@ -663,7 +660,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
                 marksContent.append(tmpMap);
                 break;
             }
-            };
+            }
             break;
         case ambit_log_sample_type_swimming_turn:
         {
@@ -1116,7 +1113,7 @@ QList<int> MovesCountJSON::rearrangeSamples(LogEntry *logEntry)
     return sampleList;
 }
 
-QString MovesCountJSON::dateTimeString(QDateTime dateTime)
+QString MovesCountJSON::dateTimeString(const QDateTime& dateTime)
 {
     if (dateTime.time().msec() != 0) {
         return dateTime.toString("yyyy-MM-ddThh:mm:ss.zzz");
@@ -1136,7 +1133,7 @@ QDateTime MovesCountJSON::dateTimeRound(QDateTime dateTime, int msecRoundFactor)
     }
 }
 
-QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset)
+QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, const QDateTime& prevDateTime, int minOffset)
 {
     if (dateTime <= prevDateTime) {
         return prevDateTime.addMSecs(minOffset);
