@@ -191,7 +191,7 @@ void CustomMode::toAmbitCustomModeData(ambit_sport_mode_t *ambitCustomMode, ambi
     if (libambit_malloc_sport_mode_app_ids(appRuleIds.count(), ambitCustomMode)) {
         for(int i = 0; i < appRuleIds.count(); i++) {
             ambitCustomMode->apps_list[i].index = ambitSettings->app_ids_count;
-            ambitCustomMode->apps_list[i].logging = (loggedAppRuleIds.at(i) != 0);
+            ambitCustomMode->apps_list[i].logging = (loggedAppRuleIds.size() > i && loggedAppRuleIds.at(i) != 0);
 
             ambitSettings->app_ids[ambitSettings->app_ids_count] = appRuleIds.at(i);
             ambitSettings->app_ids_count++;
@@ -373,16 +373,12 @@ u_int16_t CustomModeDisplay::ambitDisplayType()
     switch (type) {
     case MOVESCOUNT_TRIPLE_ROW_DISPLAY_TYPE:
         return AMBIT_TRIPLE_ROW_DISPLAY_TYPE;
-        break;
     case MOVESCOUNT_DOUBLE_ROWS_DISPLAY_TYPE:
         return AMBIT_DOUBLE_ROWS_DISPLAY_TYPE;
-        break;
     case MOVESCOUNT_BAROGRAPH_DISPLAY_TYPE:
         return AMBIT_GRAPH_DISPLAY_TYPE;
-        break;
     case MOVESCOUNT_LINEGRAPH_DISPLAY_TYPE:
         return AMBIT_GRAPH_DISPLAY_TYPE;
-        break;
     case MOVESCOUNT_SINGLE_ROW_DISPLAY_TYPE:
         return AMBIT_SINGLE_ROW_DISPLAY_TYPE;
     default:
