@@ -589,7 +589,10 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
         }
     } 
     else if(reply->error() == QNetworkReply::ContentConflictError){
-        emit uploadError("Move already uploaded");
+        // this is not useful currently as it seems that we re-visit some logs every time
+        //emit uploadError("Move already uploaded");
+        qDebug() << "Movescount replied with ContentConflictError for move '" << logEntry->logEntry->header.activity_name <<
+            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
     }
     else {
         data = reply->readAll();
