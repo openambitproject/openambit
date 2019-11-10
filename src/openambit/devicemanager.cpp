@@ -42,6 +42,9 @@ DeviceManager::~DeviceManager()
     if(currentPersonalSettings != NULL) {
         libambit_personal_settings_free(currentPersonalSettings);
     }
+    if(deviceObject != NULL) {
+        libambit_close(deviceObject);
+    }
 
     mutex.unlock();
 }
