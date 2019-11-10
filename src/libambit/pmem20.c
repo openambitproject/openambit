@@ -920,7 +920,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             log_entry->samples[*sample_count].u.fwinfo.build_date.msec = read16inc(buf, &int_offset);
             break;
           default:
-            LOG_WARNING("Found unknown episodic sample type (0x%02x)", episodic_type);
+            LOG_WARNING("Found unknown episodic sample type (0x%02x): len: %d", episodic_type, sample_len);
             log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
             log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
             log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
