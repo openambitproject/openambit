@@ -1013,15 +1013,16 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
 int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
 {
     int ret = -1, res, deflate_res;
-    z_stream strm;
-    gz_header header;
     size_t destLen = compressBound(content.length());
-
-    memset(&strm, 0, sizeof(z_stream));
-    memset(&header, 0, sizeof(gz_header));
 
     if (destLen > 0) {
         u_int8_t *buf = (u_int8_t*)malloc(destLen);
+
+        z_stream strm;
+        gz_header header;
+        memset(&strm, 0, sizeof(z_stream));
+        memset(&header, 0, sizeof(gz_header));
+
         strm.zalloc = Z_NULL;
         strm.zfree = Z_NULL;
         strm.opaque = Z_NULL;
@@ -1044,11 +1045,14 @@ int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
             }
 
             if (deflate_res == Z_STREAM_END) {
-                output.setRawData((char*)buf, destLen - strm.avail_out);
+                // make sure to copy the data and free buf to not cause a memory leak
+                output.clear();
+                output.append((char*)buf, destLen - strm.avail_out);
                 ret = 0;
             }
         }
 
+        free(buf);
         deflateEnd(&strm);
     }
 
