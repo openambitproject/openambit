@@ -24,16 +24,13 @@
 
 #include <QRegExp>
 #include <QVariantMap>
-#include <QVariantList>
 #include <QStringList>
-#include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <zlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <algorithm>
+#include <cmath>
+#include <cstdio>
 
 MovesCountJSON::MovesCountJSON(QObject *parent) :
     QObject(parent)
@@ -660,7 +657,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
                 marksContent.append(tmpMap);
                 break;
             }
-            };
+            }
             break;
         case ambit_log_sample_type_swimming_turn:
         {
@@ -859,7 +856,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_hr:
-            if (value->u.hr != 0xff && value->u.hr < 300) {
+            if (value->u.hr != 0xff) {
                 output.insert("HeartRate", value->u.hr);
             }
             break;
@@ -973,12 +970,12 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_cadence:
-            if (value->u.cadence != 0xff && value->u.cadence <= 1000) {
+            if (value->u.cadence != 0xff) {
                 output.insert("Cadence", value->u.cadence);
             }
             break;
         case ambit_log_sample_periodic_type_bikepower:
-            if (value->u.bikepower != 0xffff && value->u.bikepower <= 2000) {
+            if (value->u.bikepower <= 2000) {
                 output.insert("BikePower", value->u.bikepower);
             }
             break;
