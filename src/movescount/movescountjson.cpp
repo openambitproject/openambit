@@ -836,12 +836,12 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
 
         switch(value->type) {
         case ambit_log_sample_periodic_type_latitude:
-            if (value->u.latitude != 0xffffffff && value->u.latitude <= 90 && value->u.latitude >= -90){
+            if (value->u.latitude <= 90 && value->u.latitude >= -90){
                 output.insert("Latitude", (double)value->u.latitude/10000000);
             }
             break;
         case ambit_log_sample_periodic_type_longitude:
-            if (value->u.longitude != 0xffffffff && value->u.longitude <= 180 && value->u.longitude >= -180){
+            if (value->u.longitude <= 180 && value->u.longitude >= -180){
                 output.insert("Longitude", (double)value->u.longitude/10000000);
             }
             break;
