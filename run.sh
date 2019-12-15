@@ -23,4 +23,4 @@ case "$application" in
 esac
 
 echo "------running $application------"
-LD_LIBRARY_PATH=./libambit-build ./${builddir}/${application}
+LD_LIBRARY_PATH=./libambit-build ./${builddir}/${application} "$@"
