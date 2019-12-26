@@ -4,6 +4,9 @@
 
 #include "Task.h"
 #include <movescount/movescount.h>
+#include <movescount/logstore.h>
+#include <movescount/movescountxml.h>
+#include <libambit_int.h>
 
 #define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
@@ -16,6 +19,16 @@ static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
 int readSportModesFromFile(const char *file, ambit_sport_mode_device_settings_t *ambitDeviceSettings);
+
+LogStore logStore;
+MovesCountXML movesCountXML;
+
+typedef struct syncData_s {
+    ambit_object_t *deviceObject;
+    ambit_personal_settings_t *currentPersonalSettings;
+    bool syncMovescount;
+    MovesCount *movesCount;
+} syncData_t;
 
 void Task::run() {
     printf("Running openambit-cli\n");
@@ -57,8 +70,6 @@ void Task::run() {
             else {
                 printf("Failed to read personal settings\n");
             }
-
-            //libambit_log_read(ambit_object, log_skip_cb, log_data_cb, NULL, ambit_object);
 
             if (0 != info->access_status || !info->is_supported) {
                 printf("Device not supported\n");
@@ -165,7 +176,13 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             } else {
                 qDebug() << "Start reading log...";
 
-                res = libambit_log_read(deviceObject, &log_skip_cb, &log_data_cb, NULL, deviceObject);
+                syncData_t syncData;
+                syncData.deviceObject = deviceObject;
+                syncData.currentPersonalSettings = currentPersonalSettings;
+                syncData.syncMovescount = true;
+                syncData.movesCount = movesCount;
+
+                res = libambit_log_read(deviceObject, &log_skip_cb, &log_data_cb, NULL, &syncData);
                 if (res == -1) {
                     qDebug() << "Failed to read logs";
                 }
@@ -273,13 +290,16 @@ int readSportModesFromFile(const char *settingsInputFile, ambit_sport_mode_devic
     return 0;
 }
 
-static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header)
+static int log_skip_cb(void *object, ambit_log_header_t *log_header)
 {
-    static int log_count = 0;
+    syncData_t *syncData = static_cast<syncData_t *>(object);
 
-    printf("Got log header \"%s\" %d-%02d-%02d %02d:%02d:%02d\n", log_header->activity_name, log_header->date_time.year, log_header->date_time.month, log_header->date_time.day, log_header->date_time.hour, log_header->date_time.minute, log_header->date_time.msec/1000);
+    printf("Got log header \"%s\" %d-%02d-%02d %02d:%02d:%02d\n",
+            log_header->activity_name, log_header->date_time.year, log_header->date_time.month,
+            log_header->date_time.day, log_header->date_time.hour, log_header->date_time.minute,
+            log_header->date_time.msec/1000);
 
-    if (log_count++ > 1) {
+    if (logStore.logExists(syncData->deviceObject->device_info.serial, log_header)) {
         return 0;
     }
 
@@ -288,10 +308,21 @@ static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header)
 
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry)
 {
+    syncData_t *syncData = static_cast<syncData_t *>(object);
+
     printf("Got log entry \"%s\" %d-%02d-%02d %02d:%02d:%02d\n", log_entry->header.activity_name, log_entry->header.date_time.year, log_entry->header.date_time.month, log_entry->header.date_time.day, log_entry->header.date_time.hour, log_entry->header.date_time.minute, log_entry->header.date_time.msec/1000);
 
-    /*int i;
-    for (i=0; i<log_entry->header.samples_count; i++) {
-        printf("Sample #%d, type: %d, time: %04u-%02u-%02u %02u:%02u:%2.3f\n", i, log_entry->samples[i].type, log_entry->samples[i].utc_time.year, log_entry->samples[i].utc_time.month, log_entry->samples[i].utc_time.day, log_entry->samples[i].utc_time.hour, log_entry->samples[i].utc_time.minute, (1.0*log_entry->samples[i].utc_time.msec)/1000);
-    }*/
+    DeviceInfo deviceInfo;
+    deviceInfo = syncData->deviceObject->device_info;
+
+    LogEntry *entry = logStore.store(deviceInfo, syncData->currentPersonalSettings, log_entry);
+    if (entry != NULL) {
+        movesCountXML.writeLog(entry);
+
+        if (syncData->syncMovescount) {
+            syncData->movesCount->writeLog(entry);
+        }
+
+        delete entry;
+    }
 }
