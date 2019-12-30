@@ -2494,7 +2494,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
             memset(reassembly_entries+reassembly_entries_alloc, 0, sizeof(ambit_reassembly_entry_t)*10000);
             reassembly_entries_alloc += 10000;
         }
-        if (!pinfo->fd->flags.visited) {
+        if (!PINFO_FD_VISITED(pinfo)) {
             if (msg_part == 0x5d && msg_count > 1) {
                 reassembly_entries[pinfo->fd->num].valid = 2;
                 reassembly_entries[pinfo->fd->num].command = command;
