@@ -72,7 +72,7 @@ LogEntry::LogEntry(const LogEntry &other)
         if (other.logEntry->samples != NULL) {
             logEntry->samples = (ambit_log_sample_t*)malloc(sizeof(ambit_log_sample_t)*other.logEntry->samples_count);
             memcpy(logEntry->samples, other.logEntry->samples, sizeof(ambit_log_sample_t)*other.logEntry->samples_count);
-            for (int i=0; i<other.logEntry->samples_count; i++) {
+            for (unsigned int i=0; i<other.logEntry->samples_count; i++) {
                 if (other.logEntry->samples[i].type == ambit_log_sample_type_periodic) {
                     if (other.logEntry->samples[i].u.periodic.values != NULL) {
                         logEntry->samples[i].u.periodic.values = (ambit_log_sample_periodic_value_t*)malloc(sizeof(ambit_log_sample_periodic_value_t)*other.logEntry->samples[i].u.periodic.value_count);
