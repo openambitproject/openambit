@@ -21,6 +21,7 @@
  */
 #include <QString>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QCommandLineParser>
 #include "Task.h"
 
 int main(int argc, char *argv[]) {
@@ -29,24 +30,62 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("Openambit");
     QCoreApplication::setApplicationName("Openambit-cli");
 
-    for (int x = 1; x < argc; ++x) {
-        if (QString(argv[x]) == "--version") {
-            printf("%s - Version %s\n", "Openambit", APP_VERSION);
-            return 0;
-        }
-    }
-
-    if (argc < 3) {
-        printf ("Usage: openambit-cli <username> <userkey>");
-        return 1;
-    }
-
     QCoreApplication a(argc, argv);
 
+    QCommandLineParser parser;
+    parser.setApplicationDescription("\nCommandline application to perform sync between the watch and movescount.com.\n"
+                                     "\n"
+                                     "Certain features/syncs can be disabled via commandline options.\n"
+                                     "For syncing to movescount.com you need to provide the username and userkey as used by OpenAmbit GUI\n");
+    parser.addHelpOption();
+    parser.addVersionOption();
+
+    parser.addPositionalArgument("username", QCoreApplication::translate("main", "Username for connecting to Movescount."));
+    parser.addPositionalArgument("userkey", QCoreApplication::translate("main", "User-key for connecting to Movescount."));
+
+    QCommandLineOption noReadLogsOption(QStringList() << "r" << "no-read-logs",
+                                        QCoreApplication::translate("main", "Do not read logs from the watch."));
+    parser.addOption(noReadLogsOption);
+
+    QCommandLineOption noSyncTimeOption(QStringList() << "t" << "no-sync-time",
+                                        QCoreApplication::translate("main", "Do not sync the time on the watch."));
+    parser.addOption(noSyncTimeOption);
+
+    QCommandLineOption noSyncOrbitOption(QStringList() << "o" << "no-sync-orbit",
+                                         QCoreApplication::translate("main", "Do not sync GPS orbits on the watch."));
+    parser.addOption(noSyncOrbitOption);
+
+    QCommandLineOption noSyncSportModeOption(QStringList() << "s" << "no-sync-sport-mode",
+                                             QCoreApplication::translate("main", "Do not sync sport modes to the watch."));
+    parser.addOption(noSyncSportModeOption);
+
+    QCommandLineOption noSyncNavigationOption(QStringList() << "n" << "no-sync-navigation",
+                                             QCoreApplication::translate("main", "Do not sync navigation to the watch."));
+    parser.addOption(noSyncNavigationOption);
+
+    QCommandLineOption customConfigFileOption(QStringList() << "c" << "custom-config",
+                                              QCoreApplication::translate("main", "A custom JSON config file to load configuration for the watch."),
+                                              QCoreApplication::translate("main", "json-file"));
+    parser.addOption(customConfigFileOption);
+
+    // Process the actual command line arguments given by the user
+    parser.process(a);
+
+    const QStringList args = parser.positionalArguments();
+    // source is args.at(0), destination is args.at(1)
+
+    const QString customConfig = parser.value(customConfigFileOption);
+
     // make the app parent of the task
-    Task *task = new Task(&a, argv[1], argv[2],
-            true, true, true, true, true,
-            /*"test-data/settings.json"*/ NULL);
+    Task *task = new Task(&a,
+            args.length() < 1 ? NULL : args.at(0).toStdString().c_str(),
+            args.length() < 2 ? NULL : args.at(1).toStdString().c_str(),
+            !parser.isSet(noReadLogsOption),
+            !parser.isSet(noSyncTimeOption),
+            !parser.isSet(noSyncOrbitOption),
+            !parser.isSet(noSyncSportModeOption),
+            !parser.isSet(noSyncNavigationOption),
+            customConfig.length() == 0 ? NULL : customConfig.toStdString().c_str());
 
     // make application stop when the task is done
     QObject::connect(task, SIGNAL(finished()), &a, SLOT(quit()));
