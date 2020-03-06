@@ -172,6 +172,17 @@ your ``~/.wireshark/plugins/`` directory.  You can also put a symbolic
 link there pointing to the build result so your next ``wireshark`` run
 will use the latest and greatest(?) version.
 
+Device setup
+------------
+
+In order to allow access to the device, you may need to do the following.
+
+.. code-block:: sh
+
+    sudo cp ./src/libambit/libambit.rules /etc/udev/rules.d/
+    sudo udevadm control --reload-rules && udevadm trigger
+
+This configures access to the device via udev.
 
 .. _Movescount: http://www.movescount.com/
 .. _Moveslink2: http://www.movescount.com/connect/moveslink/Suunto_Ambit
