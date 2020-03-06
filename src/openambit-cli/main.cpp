@@ -76,10 +76,20 @@ int main(int argc, char *argv[]) {
 
     const QString customConfig = parser.value(customConfigFileOption);
 
+    std::string username;
+    if(args.length() >= 1) {
+        username = args.at(0).toStdString();
+    }
+
+    std::string userkey;
+    if(args.length() >= 2) {
+        userkey = args.at(1).toStdString();
+    }
+
     // make the app parent of the task
     Task *task = new Task(&a,
-            args.length() < 1 ? NULL : args.at(0).toStdString().c_str(),
-            args.length() < 2 ? NULL : args.at(1).toStdString().c_str(),
+            args.length() < 1 ? NULL : username.c_str(),
+            args.length() < 2 ? NULL : userkey.c_str(),
             !parser.isSet(noReadLogsOption),
             !parser.isSet(noSyncTimeOption),
             !parser.isSet(noSyncOrbitOption),
