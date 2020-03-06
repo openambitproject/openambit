@@ -130,11 +130,16 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
     MovesCount *movesCount = MovesCount::instance();
     movesCount->setAppkey(APPKEY);
     movesCount->setBaseAddress(MOVESCOUNT_DEFAULT_URL);
-    movesCount->setUserkey(/*movesCount->generateUserkey()*/ userkey);
+
+    if(userkey != NULL) {
+        movesCount->setUserkey(/*movesCount->generateUserkey()*/ userkey);
+    }
 
     //connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
 
-    movesCount->setUsername(username);
+    if(username != NULL) {
+        movesCount->setUsername(username);
+    }
 
     // don't upload logs in the background for now
     movesCount->setUploadLogs(false);
