@@ -1,6 +1,6 @@
-#!/bin/bash -eu
+#!/bin/bash
 
-set -e
+set -eu
 
 SOURCE_LOCATION="`dirname \"$0\"`"
 SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
@@ -24,7 +24,7 @@ do
     fi
 done
 
-if [ "${BUILD_EXTRAS}" == "1" ]; then
+if [ "${BUILD_EXTRAS:-0}" == "1" ]; then
     cd ${SOURCE_LOCATION}
     echo "------building example------"
     mkdir -p example-build

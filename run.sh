@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eu
 
 SOURCE_LOCATION="`dirname \"$0\"`"
 SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
@@ -8,10 +8,13 @@ SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
 cd ${SOURCE_LOCATION}
 
 application=openambit
-if test -n "$1"; then
-     application=$1
-     shift
+
+if [ $# -gt 0 ];then
+    echo running $1
+    application=$1
+    shift
 fi
+
 case "$application" in
     openambit)          builddir=${application}-build;;
     ambitconsole)       builddir=example-build;;

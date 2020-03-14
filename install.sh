@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eu
 
 export DO_INSTALL=1
 
