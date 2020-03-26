@@ -9,6 +9,9 @@ import xml.etree.ElementTree as etree
 import math
 import sys
 
+# Look at http://www.topografix.com/GPX/1/1/gpx.xsd and https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd for XML Schemata for GPX files
+
+
 ##############################
 ## getting input parameters ##
 ##############################
@@ -141,9 +144,9 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
         elif altitudeLast!=None:
             etree.SubElement(trk,"ele").text=altitudeLast
  
-        if time!=None:
+        if time!=None and len(time) > 0:
             etree.SubElement(trk,"time").text=time 
-        elif timeLast!=None:
+        elif timeLast!=None and len(timeLast) > 0:
             etree.SubElement(trk,"time").text=timeLast 
 
         if hr!=None or cadence!=None or power!=None or speed!=None or temp!=None or airpressure!=None:
@@ -192,6 +195,8 @@ previousEndTime=0
 
 fOut.write(" <extensions>\n")
 
+previousLatEP=0
+previousLonEP=0
 for i in range(0,len(lapArray)):
     if lapArray[i][0]=='Manual':
         lap=etree.Element("gpxdata:lap")
@@ -214,18 +219,28 @@ for i in range(0,len(lapArray)):
             t=lapArray[i][4]
             t1=lapArray[i][7]
             t2=lapArray[i][10]
-            lat1=float(lapArray[i][5])
-            lat2=float(lapArray[i][8])
-            latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+            lat1=float(lapArray[i][5]) if lapArray[i][5]!=None else 0.0
+            lat2=float(lapArray[i][8]) if lapArray[i][8]!=None else 0.0
+            # only try to parse time difference if both times look like valid timestamps
+            if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
+                latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+            else:
+                latInterPolEP=0
+
         if i==maxLap:
             lonInterPolEP=lapArray[i][6]
         else:
             t=lapArray[i][4]
             t1=lapArray[i][7]
             t2=lapArray[i][10]
-            lon1=float(lapArray[i][6])
-            lon2=float(lapArray[i][9])
-            lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+            lon1=float(lapArray[i][6]) if lapArray[i][6]!=None else 0.0
+            lon2=float(lapArray[i][9]) if lapArray[i][9]!=None else 0.0
+            # only try to parse time difference if both times look like valid timestamps
+            if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
+                lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+            else:
+                lonInterPolEP=0
+
         previousLatEP=latInterPolEP
         previousLonEP=lonInterPolEP
         SP=etree.SubElement(lap,'startPoint')
