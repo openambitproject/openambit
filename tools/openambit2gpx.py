@@ -95,7 +95,7 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
     hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
     cadence=element.findtext("Cadence") if element.findtext("Cadence")!=None else cadenceLast
     power=element.findtext("BikePower") if element.findtext("BikePower")!=None else powerLast
-    speed=element.findtext("Speed") if element.findtext("Speed")!=None else speedLast
+    speed=str(float(element.findtext("Speed"))/100) if element.findtext("Speed")!=None else speedLast
     temp=str(float(element.findtext("Temperature"))/10) if element.findtext("Temperature")!=None else tempLast
     airpressure=element.findtext("SeaLevelPressure") if element.findtext("SeaLevelPressure")!=None else airpressureLast
 
