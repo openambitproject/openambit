@@ -225,6 +225,7 @@ for i in range(0,len(lapArray)):
             if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
                 latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
             else:
+                print("Failed to interpolate with t1: ", t1, ", t2: ", t2)
                 latInterPolEP=0
 
         if i==maxLap:
@@ -239,6 +240,7 @@ for i in range(0,len(lapArray)):
             if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
                 lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
             else:
+                print("Failed to interpolate with t1: ", t1, ", t2: ", t2)
                 lonInterPolEP=0
 
         previousLatEP=latInterPolEP
