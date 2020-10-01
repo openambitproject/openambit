@@ -5,6 +5,7 @@
 UdevListener::UdevListener(QObject *parent) :
     QObject(parent)
 {
+#if UDEV_FOUND
     udev = udev_new();
 
     if (!udev) {
@@ -20,18 +21,22 @@ UdevListener::UdevListener(QObject *parent) :
 
     socketNotifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
     connect(socketNotifier, SIGNAL(activated(int)), this, SLOT(fdActivated(int)));
+#endif
 }
 
 UdevListener::~UdevListener()
 {
+#if UDEV_FOUND
     delete socketNotifier;
 
     udev_monitor_unref(mon);
     udev_unref(udev);
+#endif
 }
 
 void UdevListener::fdActivated(int fd)
 {
+#if UDEV_FOUND
     struct udev_device *device;
     const char *vendorId;
 
@@ -48,4 +53,5 @@ void UdevListener::fdActivated(int fd)
             udev_device_unref(device);
         }
     }
+#endif
 }

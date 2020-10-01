@@ -19,7 +19,7 @@ MACRO(REGISTER_DISSECTOR_FILES _outputfile _registertype )
 	ADD_CUSTOM_COMMAND(
 	    OUTPUT 
 	      ${_outputfile}
-	    COMMAND ${PYTHON_EXECUTABLE}
+	    COMMAND ${Python_EXECUTABLE}
 	      ${CMAKE_CURRENT_SOURCE_DIR}/tools/make-dissector-reg.py
 	      ${CMAKE_CURRENT_SOURCE_DIR}
 	      ${_registertype}

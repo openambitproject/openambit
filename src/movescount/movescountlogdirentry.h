@@ -16,7 +16,7 @@ public:
 
     QString moveId;
     QDateTime time;
-    u_int8_t activityId;
+    u_int8_t activityId = 0;
 signals:
 
 public slots:

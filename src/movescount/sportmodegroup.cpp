@@ -70,8 +70,8 @@ void CustomModeGroup::toAmbitData(ambit_sport_mode_group_t *ambitCustomModeGroup
 
 void CustomModeGroup::toAmbitName(char ambitName[GROUP_NAME_SIZE])
 {
-    const char *source = activityName.toLatin1().data();
+    const QByteArray &source = activityName.toLatin1();
     int strLen = activityName.length() < GROUP_NAME_SIZE ? activityName.length() : GROUP_NAME_SIZE;
     memset(ambitName, 0x00, GROUP_NAME_SIZE);
-    memcpy(ambitName, source, strLen);
+    memcpy(ambitName, source.data(), strLen);
 }

@@ -585,12 +585,12 @@ int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_a
     size_t offset = 0;
 
     bufptrs[0] = data;
-    bufsizes = object->chunk_size;
+    bufsizes = datalen > object->chunk_size ? object->chunk_size : datalen;
 
     // Write first chunk
     ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, &bufsizes);
     offset += bufsizes;
-    address += object->chunk_size;
+    address += bufsizes;
 
     // Write rest of the chunks
     while (ret == 0 && offset < datalen) {
@@ -920,7 +920,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
             log_entry->samples[*sample_count].u.fwinfo.build_date.msec = read16inc(buf, &int_offset);
             break;
           default:
-            LOG_WARNING("Found unknown episodic sample type (0x%02x)", episodic_type);
+            LOG_WARNING("Found unknown episodic sample type (0x%02x): len: %d", episodic_type, sample_len);
             log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
             log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
             log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
@@ -1162,12 +1162,11 @@ static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_
     outtime->minute = tm->tm_min;
     outtime->hour = tm->tm_hour;
     outtime->day = tm->tm_mday;
-    outtime->month = tm->tm_mon;
-    outtime->year = tm->tm_year;
+    outtime->month = tm->tm_mon + 1;
+    outtime->year = tm->tm_year + 1900;
 }
 
 static int is_leap(unsigned int y) {
-    y += 1900;
     return (y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0);
 }
 
@@ -1180,11 +1179,11 @@ static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval) {
     timeval->tv_usec = 0;
     int i;
 
-    for (i = 70; i < ambit_time->year; ++i) {
+    for (i = 1970; i < ambit_time->year; ++i) {
         timeval->tv_sec += is_leap(i) ? 366 : 365;
     }
 
-    for (i = 0; i < ambit_time->month; ++i) {
+    for (i = 0; i < ambit_time->month-1; ++i) {
         timeval->tv_sec += ndays[is_leap(ambit_time->year)][i];
     }
     timeval->tv_sec += ambit_time->day - 1;

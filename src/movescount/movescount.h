@@ -51,6 +51,7 @@ public:
     void setUserkey(QString userkey);
     QString generateUserkey();
     void setDevice(const DeviceInfo& device_info);
+    void setUploadLogs(bool uploadLogs);
 
     bool isAuthorized();
     int getOrbitalData(u_int8_t **data);
@@ -72,6 +73,7 @@ signals:
     void newerFirmwareExists(QByteArray fw_version);
     void movesCountAuth(bool authorized);
     void logMoveID(QString device, QDateTime time, QString moveID);
+    void uploadError(QByteArray data);
 
 private slots:
     void authCheckFinished();
@@ -112,8 +114,9 @@ private:
     void writeJsonToStorage(QString filename, QByteArray &data);
 #endif
 
-    bool exiting;
-    bool authorized;
+    bool exiting = false;
+    bool authorized = false;
+    bool uploadLogs = true;
 
     QString baseAddress;
     QString appkey;
@@ -128,8 +131,6 @@ private:
     QNetworkReply *authCheckReply;
 
     MovesCountJSON jsonParser;
-
-    LogStore logStore;
 
     MovesCountLogChecker *logChecker;
 

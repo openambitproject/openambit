@@ -42,8 +42,8 @@ public:
     QDateTime time;
     QString movescountId;
     DeviceInfo deviceInfo;
-    ambit_personal_settings_t *personalSettings;
-    ambit_log_entry_t *logEntry;
+    ambit_personal_settings_t *personalSettings = NULL;
+    ambit_log_entry_t *logEntry = NULL;
 };
 
 #endif // LOGENTRY_H

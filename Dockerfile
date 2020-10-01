@@ -75,7 +75,6 @@ RUN  apt-get update \
              libpcap-dev
 
 # openambit build dependencies
-# Note that libqjson-dev needs to be >= 0.8
 RUN  apt-get update \
      && apt-get install ${APT_OPTS} \
              g++ \

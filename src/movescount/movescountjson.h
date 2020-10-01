@@ -59,14 +59,14 @@ public slots:
 
 private:
     bool writePeriodicSample(ambit_log_sample_t *sample, QVariantMap &output);
-    bool copyDataString(QVariant entry, char *data, size_t maxlength);
+    bool copyDataString(const QVariant& entry, char *data, size_t maxlength);
     bool appendRoutePoint(ambit_route_t *route, int point_number, int32_t lat, int32_t lon, int32_t altitude, uint32_t distance);
 
     int compressData(QByteArray &content, QByteArray &output);
     QList<int> rearrangeSamples(LogEntry *logEntry);
-    QString dateTimeString(QDateTime dateTime);
+    QString dateTimeString(const QDateTime& dateTime);
     QDateTime dateTimeRound(QDateTime dateTime, int msecRoundFactor);
-    QDateTime dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset);
+    QDateTime dateTimeCompensate(QDateTime dateTime, const QDateTime& prevDateTime, int minOffset);
 
     QVariantMap parseJsonMap(const QByteArray& input, bool& ok) const;
     QVariantList parseJsonList(const QByteArray& input, bool& ok) const;

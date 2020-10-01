@@ -41,8 +41,9 @@ MovesCount* MovesCount::instance()
     if (!m_Instance) {
         mutex.lock();
 
-        if (!m_Instance)
+        if (!m_Instance) {
             m_Instance = new MovesCount;
+        }
 
         mutex.unlock();
     }
@@ -61,8 +62,7 @@ void MovesCount::exit()
         workerThread.quit();
         workerThread.wait();
 
-        delete logChecker;
-
+        delete m_Instance;
         m_Instance = NULL;
     }
     mutex.unlock();
@@ -108,6 +108,10 @@ QString MovesCount::generateUserkey()
 void MovesCount::setDevice(const DeviceInfo& device_info)
 {
     this->device_info = device_info;
+}
+
+void MovesCount::setUploadLogs(bool uploadLogs) {
+    this->uploadLogs = uploadLogs;
 }
 
 bool MovesCount::isAuthorized()
@@ -302,7 +306,7 @@ void MovesCount::recheckAuthorization()
 
 void MovesCount::handleAuthorizationSignal(bool authorized)
 {
-    if (authorized) {
+    if (authorized && uploadLogs) {
         logChecker->run();
     }
 }
@@ -564,6 +568,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     QByteArray output;
     QNetworkReply *reply;
     QString moveId;
+    QByteArray data;
 
     jsonParser.generateLogData(logEntry, output);
 
@@ -574,16 +579,25 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
 
     reply = syncPOST("/moves/", "", output, true);
 
-    if (reply->error() == QNetworkReply::NoError || reply->error() == QNetworkReply::ContentConflictError) {
-        QByteArray data = reply->readAll();
+    if (reply->error() == QNetworkReply::NoError){
+        data = reply->readAll();
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         } else {
             qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
+            emit uploadError(data);
         }
     } 
+    else if(reply->error() == QNetworkReply::ContentConflictError){
+        // this is not useful currently as it seems that we re-visit some logs every time
+        //emit uploadError("Move already uploaded");
+        qDebug() << "Movescount replied with ContentConflictError for move '" << logEntry->logEntry->header.activity_name <<
+            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
+    }
     else {
+        data = reply->readAll();
         qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << reply->readAll() << "\"";
+        emit uploadError(data);
     }
 }
 
@@ -604,6 +618,9 @@ MovesCount::~MovesCount()
 {
     workerThread.exit();
     workerThread.wait();
+
+    delete this->logChecker;
+    delete this->manager;
 }
 
 bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
