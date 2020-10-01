@@ -1,18 +1,24 @@
 #!/bin/sh
 
-SOURCE_LOCATION="`dirname \"$0\"`"
-SOURCE_LOCATION="`( cd \"$SOURCE_LOCATION\" && pwd )`"
+set -eu
 
-cd $SOURCE_LOCATION
+SOURCE_LOCATION="`dirname \"$0\"`"
+SOURCE_LOCATION="`( cd \"${SOURCE_LOCATION}\" && pwd )`"
+
+cd ${SOURCE_LOCATION}
 
 application=openambit
-if test -n "$1"; then
-     application=$1
-     shift
+
+if [ $# -gt 0 ];then
+    echo running $1
+    application=$1
+    shift
 fi
+
 case "$application" in
-    openambit)          builddir=$application-build;;
+    openambit)          builddir=${application}-build;;
     ambitconsole)       builddir=example-build;;
+    openambit-cli)      builddir=${application}-build;;
     *)
 	echo "$application: not supported" >&2
 	exit 1
@@ -20,4 +26,4 @@ case "$application" in
 esac
 
 echo "------running $application------"
-LD_LIBRARY_PATH=./libambit-build ./$builddir/$application
+LD_LIBRARY_PATH=./libambit-build ./${builddir}/${application} "$@"

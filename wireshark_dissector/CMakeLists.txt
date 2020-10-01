@@ -29,6 +29,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_INSTALL_WIRESHARKPLUGINSDIR ~/.wireshark
     CACHE PATH "Where to install wireshark plugins")
 
+find_package (Python COMPONENTS Interpreter)
 INCLUDE(UseMakeDissectorReg)
   
 set(GLIB2_MIN_VERSION 2.4.0)

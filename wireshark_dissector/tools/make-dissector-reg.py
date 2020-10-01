@@ -60,7 +60,7 @@ elif registertype == "dissectors":
  */
 """
 else:
-	print("Unknown output type '%s'".format(registertype))
+	print("Unknown output type '{}'".format(registertype))
 	sys.exit(1)
 
 

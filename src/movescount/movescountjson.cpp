@@ -24,16 +24,13 @@
 
 #include <QRegExp>
 #include <QVariantMap>
-#include <QVariantList>
 #include <QStringList>
-#include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <zlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <algorithm>
+#include <cmath>
+#include <cstdio>
 
 MovesCountJSON::MovesCountJSON(QObject *parent) :
     QObject(parent)
@@ -148,7 +145,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
             waypoints_to_append[x].type = (uint8_t)(jsonWp["Type"].toInt());
             this->copyDataString(jsonWp["Name"],waypoints_to_append[x].name, 49);
             strncpy(waypoints_to_append[x].route_name, "", 49);
-            dt = dt.fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
+            dt = QDateTime::fromString(jsonWp["CreationLocalTime"].toString(), Qt::ISODate);
             waypoints_to_append[x].ctime_second = (uint8_t)dt.toString("s").toInt();
             waypoints_to_append[x].ctime_minute = (uint8_t)dt.toString("m").toInt();
             waypoints_to_append[x].ctime_hour = (uint8_t)dt.toString("h").toInt();
@@ -190,7 +187,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     return 0;
 }
 
-bool MovesCountJSON::copyDataString(QVariant entry, char *data, size_t maxlength)
+bool MovesCountJSON::copyDataString(const QVariant& entry, char *data, size_t maxlength)
 {
     QByteArray ba=entry.toString().toLatin1();
     strncpy(data, ba.data(), maxlength);
@@ -468,7 +465,10 @@ int MovesCountJSON::parseAppRulesReply(QByteArray &input, ambit_app_rules_t* amb
             appRulesId.append(entry["RuleID"].toUInt());
             QByteArray binary;
             foreach (QVariant binaryVar, entry["Binary"].toList()) {
-                binary.append(binaryVar.toChar());
+                binary.append(binaryVar.toInt(&ok));
+                if(!ok) {
+                    return -1;
+                }
             }
             appRulesData.append(binary);
         }
@@ -660,7 +660,7 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
                 marksContent.append(tmpMap);
                 break;
             }
-            };
+            }
             break;
         case ambit_log_sample_type_swimming_turn:
         {
@@ -839,18 +839,22 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
 
         switch(value->type) {
         case ambit_log_sample_periodic_type_latitude:
-            output.insert("Latitude", (double)value->u.latitude/10000000);
+            if (value->u.latitude <= 90 && value->u.latitude >= -90){
+                output.insert("Latitude", (double)value->u.latitude/10000000);
+            }
             break;
         case ambit_log_sample_periodic_type_longitude:
-            output.insert("Longitude", (double)value->u.longitude/10000000);
+            if (value->u.longitude <= 180 && value->u.longitude >= -180){
+                output.insert("Longitude", (double)value->u.longitude/10000000);
+            }
             break;
         case ambit_log_sample_periodic_type_distance:
-            if (value->u.distance != 0xffffffff) {
+            if (value->u.distance != 0xffffffff && value->u.distance != 0xb400000) {
                 output.insert("Distance", value->u.distance);
             }
             break;
         case ambit_log_sample_periodic_type_speed:
-            if (value->u.speed != 0xffff) {
+            if (value->u.speed != 0xffff && (value->u.speed/100) <= 556) {
                 output.insert("Speed", (double)value->u.speed/100.0);
             }
             break;
@@ -884,7 +888,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("EVPE", value->u.evpe);
             break;
         case ambit_log_sample_periodic_type_altitude:
-            if (value->u.altitude >= -1000 && value->u.altitude <= 10000) {
+            if (value->u.altitude >= -1000 && value->u.altitude <= 15000) {
                 output.insert("Altitude", (double)value->u.altitude);
             }
             break;
@@ -892,7 +896,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             output.insert("AbsPressure", (int)round((double)value->u.abspressure/10.0));
             break;
         case ambit_log_sample_periodic_type_energy:
-            if (value->u.energy) {
+            if (value->u.energy && value->u.energy <= 1000) {
                 output.insert("EnergyConsumption", (double)value->u.energy/10.0);
             }
             break;
@@ -907,12 +911,12 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_gpsaltitude:
-            if (value->u.gpsaltitude >= -1000 && value->u.gpsaltitude <= 10000) {
+            if (value->u.gpsaltitude >= -1000 && value->u.gpsaltitude <= 15000) {
                 output.insert("GPSAltitude", value->u.gpsaltitude);
             }
             break;
         case ambit_log_sample_periodic_type_gpsheading:
-            if (value->u.gpsheading != 0xffff) {
+            if (value->u.gpsheading != 0xffff && value->u.gpsheading >= 0 && value->u.gpsheading <= 360) {
                 output.insert("GPSHeading", (double)value->u.gpsheading/10000000);
             }
             break;
@@ -964,7 +968,9 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_verticalspeed:
-            output.insert("VerticalSpeed", (double)value->u.verticalspeed/100.0);
+            if ((value->u.verticalspeed/100.0) >= -59 && (value->u.verticalspeed/100.0) <= 59){
+                output.insert("VerticalSpeed", (double)value->u.verticalspeed/100.0);
+            }
             break;
         case ambit_log_sample_periodic_type_cadence:
             if (value->u.cadence != 0xff) {
@@ -972,7 +978,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
             }
             break;
         case ambit_log_sample_periodic_type_bikepower:
-            if (value->u.bikepower != 0xffff) {
+            if (value->u.bikepower <= 2000) {
                 output.insert("BikePower", value->u.bikepower);
             }
             break;
@@ -1013,15 +1019,16 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
 int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
 {
     int ret = -1, res, deflate_res;
-    z_stream strm;
-    gz_header header;
     size_t destLen = compressBound(content.length());
-
-    memset(&strm, 0, sizeof(z_stream));
-    memset(&header, 0, sizeof(gz_header));
 
     if (destLen > 0) {
         u_int8_t *buf = (u_int8_t*)malloc(destLen);
+
+        z_stream strm;
+        gz_header header;
+        memset(&strm, 0, sizeof(z_stream));
+        memset(&header, 0, sizeof(gz_header));
+
         strm.zalloc = Z_NULL;
         strm.zfree = Z_NULL;
         strm.opaque = Z_NULL;
@@ -1044,11 +1051,14 @@ int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
             }
 
             if (deflate_res == Z_STREAM_END) {
-                output.setRawData((char*)buf, destLen - strm.avail_out);
+                // make sure to copy the data and free buf to not cause a memory leak
+                output.clear();
+                output.append((char*)buf, destLen - strm.avail_out);
                 ret = 0;
             }
         }
 
+        free(buf);
         deflateEnd(&strm);
     }
 
@@ -1113,7 +1123,7 @@ QList<int> MovesCountJSON::rearrangeSamples(LogEntry *logEntry)
     return sampleList;
 }
 
-QString MovesCountJSON::dateTimeString(QDateTime dateTime)
+QString MovesCountJSON::dateTimeString(const QDateTime& dateTime)
 {
     if (dateTime.time().msec() != 0) {
         return dateTime.toString("yyyy-MM-ddThh:mm:ss.zzz");
@@ -1133,7 +1143,7 @@ QDateTime MovesCountJSON::dateTimeRound(QDateTime dateTime, int msecRoundFactor)
     }
 }
 
-QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, QDateTime prevDateTime, int minOffset)
+QDateTime MovesCountJSON::dateTimeCompensate(QDateTime dateTime, const QDateTime& prevDateTime, int minOffset)
 {
     if (dateTime <= prevDateTime) {
         return prevDateTime.addMSecs(minOffset);

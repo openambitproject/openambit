@@ -27,3 +27,9 @@ moc_*.cpp
 /src/openambit/*.qrc.depends
 /wireshark_dissector/ambit.so
 /wireshark_dissector/plugin.c
+
+# Files created by IntelliJ Idea
+/.idea
+*.iml
+
+/core

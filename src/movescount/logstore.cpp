@@ -223,9 +223,6 @@ LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, const Devi
     logfile.open(QIODevice::ReadOnly);
     XMLReader reader(retEntry);
     if (!reader.read(&logfile)) {
-        if (retEntry->logEntry && retEntry->logEntry->header.activity_name) {
-            free(retEntry->logEntry->header.activity_name);
-        }
         delete retEntry;
         retEntry = NULL;
     }
@@ -1399,11 +1396,12 @@ bool LogStore::XMLWriter::writeDeviceInfo()
 bool LogStore::XMLWriter::writePersonalSettings()
 {
     xml.writeStartElement("PersonalSettings");
-    xml.writeTextElement("SportModeButtonLock", QString("%1").arg(personalSettings->sportmode_button_lock));
-    xml.writeTextElement("TimeModeButtonLock", QString("%1").arg(personalSettings->timemode_button_lock));
-    xml.writeTextElement("CompassDeclination", QString("%1").arg(personalSettings->compass_declination));
-    xml.writeTextElement("UnitsMode", QString("%1").arg(personalSettings->units_mode));
-    xml.writeStartElement("Units");
+    if(personalSettings != NULL) {
+        xml.writeTextElement("SportModeButtonLock", QString("%1").arg(personalSettings->sportmode_button_lock));
+        xml.writeTextElement("TimeModeButtonLock", QString("%1").arg(personalSettings->timemode_button_lock));
+        xml.writeTextElement("CompassDeclination", QString("%1").arg(personalSettings->compass_declination));
+        xml.writeTextElement("UnitsMode", QString("%1").arg(personalSettings->units_mode));
+        xml.writeStartElement("Units");
         xml.writeTextElement("AirPressureUnit", QString("%1").arg(personalSettings->units.pressure));
         xml.writeTextElement("AltitudeUnit", QString("%1").arg(personalSettings->units.altitude));
         xml.writeTextElement("DistanceUnit", QString("%1").arg(personalSettings->units.distance));
@@ -1414,40 +1412,45 @@ bool LogStore::XMLWriter::writePersonalSettings()
         xml.writeTextElement("CompassUnit", QString("%1").arg(personalSettings->units.compass));
         xml.writeTextElement("HRUnit", QString("%1").arg(personalSettings->units.heartrate));
         xml.writeTextElement("SpeedUnit", QString("%1").arg(personalSettings->units.speed));
-    xml.writeEndElement();
-    xml.writeTextElement("GPSPositionFormat", QString("%1").arg(personalSettings->gps_position_format));
-    xml.writeTextElement("Language", QString("%1").arg(personalSettings->language));
-    xml.writeTextElement("NavigationStyle", QString("%1").arg(personalSettings->navigation_style));
-    xml.writeTextElement("GPSTimeKeeping", QString("%1").arg(personalSettings->sync_time_w_gps));
-    xml.writeTextElement("Use24hClock", QString("%1").arg(personalSettings->time_format));
-    QString timeFormat;
-    timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour, personalSettings->alarm.minute);
-    xml.writeTextElement("Alarm", timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour, personalSettings->alarm.minute));
-    xml.writeTextElement("AlarmEnable", QString("%1").arg(personalSettings->alarm_enable));
-    xml.writeTextElement("DualTime", timeFormat.sprintf("%02u:%02u", personalSettings->dual_time.hour, personalSettings->dual_time.minute));
-    xml.writeTextElement("DisplayDateMode", QString("%1").arg(personalSettings->date_format));
-    xml.writeTextElement("TonesMode", QString("%1").arg(personalSettings->tones_mode));
-    xml.writeTextElement("BacklightMode", QString("%1").arg(personalSettings->backlight_mode));
-    xml.writeTextElement("BacklightBrightness", QString("%1").arg(personalSettings->backlight_brightness));
-    xml.writeTextElement("DisplayBrightness", QString("%1").arg(personalSettings->display_brightness));
-    xml.writeTextElement("DisplayIsNegative", QString("%1").arg(personalSettings->display_is_negative));
-    xml.writeTextElement("Weight", QString("%1").arg(personalSettings->weight));
-    xml.writeTextElement("BirthYear", QString("%1").arg(personalSettings->birthyear));
-    xml.writeTextElement("MaxHR", QString("%1").arg(personalSettings->max_hr));
-    xml.writeTextElement("RestHR", QString("%1").arg(personalSettings->rest_hr));
-    xml.writeTextElement("FitnessLevel", QString("%1").arg(personalSettings->fitness_level));
-    xml.writeTextElement("IsMale", QString("%1").arg(personalSettings->is_male));
-    xml.writeTextElement("Length", QString("%1").arg(personalSettings->length));
-    xml.writeTextElement("AltiBaroMode", QString("%1").arg(personalSettings->alti_baro_mode));
-    xml.writeTextElement("StormAlarm", QString("%1").arg(personalSettings->storm_alarm));
-    xml.writeTextElement("FusedAltiDisabled", QString("%1").arg(personalSettings->fused_alti_disabled));
-    xml.writeTextElement("BikePODCalibration", QString("%1").arg(personalSettings->bikepod_calibration));
-    xml.writeTextElement("BikePODCalibration2", QString("%1").arg(personalSettings->bikepod_calibration2));
-    xml.writeTextElement("BikePODCalibration3", QString("%1").arg(personalSettings->bikepod_calibration3));
-    xml.writeTextElement("FootPODCalibration", QString("%1").arg(personalSettings->footpod_calibration));
-    xml.writeTextElement("AutomaticBikePowerCalibration", QString("%1").arg(personalSettings->automatic_bikepower_calib));
-    xml.writeTextElement("AutomaticFootPODCalibration", QString("%1").arg(personalSettings->automatic_footpod_calib));
-    xml.writeTextElement("TrainingProgram", QString("%1").arg(personalSettings->training_program));
+        xml.writeEndElement();
+        xml.writeTextElement("GPSPositionFormat", QString("%1").arg(personalSettings->gps_position_format));
+        xml.writeTextElement("Language", QString("%1").arg(personalSettings->language));
+        xml.writeTextElement("NavigationStyle", QString("%1").arg(personalSettings->navigation_style));
+        xml.writeTextElement("GPSTimeKeeping", QString("%1").arg(personalSettings->sync_time_w_gps));
+        xml.writeTextElement("Use24hClock", QString("%1").arg(personalSettings->time_format));
+        QString timeFormat;
+        timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour, personalSettings->alarm.minute);
+        xml.writeTextElement("Alarm", timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour,
+                                                         personalSettings->alarm.minute));
+        xml.writeTextElement("AlarmEnable", QString("%1").arg(personalSettings->alarm_enable));
+        xml.writeTextElement("DualTime", timeFormat.sprintf("%02u:%02u", personalSettings->dual_time.hour,
+                                                            personalSettings->dual_time.minute));
+        xml.writeTextElement("DisplayDateMode", QString("%1").arg(personalSettings->date_format));
+        xml.writeTextElement("TonesMode", QString("%1").arg(personalSettings->tones_mode));
+        xml.writeTextElement("BacklightMode", QString("%1").arg(personalSettings->backlight_mode));
+        xml.writeTextElement("BacklightBrightness", QString("%1").arg(personalSettings->backlight_brightness));
+        xml.writeTextElement("DisplayBrightness", QString("%1").arg(personalSettings->display_brightness));
+        xml.writeTextElement("DisplayIsNegative", QString("%1").arg(personalSettings->display_is_negative));
+        xml.writeTextElement("Weight", QString("%1").arg(personalSettings->weight));
+        xml.writeTextElement("BirthYear", QString("%1").arg(personalSettings->birthyear));
+        xml.writeTextElement("MaxHR", QString("%1").arg(personalSettings->max_hr));
+        xml.writeTextElement("RestHR", QString("%1").arg(personalSettings->rest_hr));
+        xml.writeTextElement("FitnessLevel", QString("%1").arg(personalSettings->fitness_level));
+        xml.writeTextElement("IsMale", QString("%1").arg(personalSettings->is_male));
+        xml.writeTextElement("Length", QString("%1").arg(personalSettings->length));
+        xml.writeTextElement("AltiBaroMode", QString("%1").arg(personalSettings->alti_baro_mode));
+        xml.writeTextElement("StormAlarm", QString("%1").arg(personalSettings->storm_alarm));
+        xml.writeTextElement("FusedAltiDisabled", QString("%1").arg(personalSettings->fused_alti_disabled));
+        xml.writeTextElement("BikePODCalibration", QString("%1").arg(personalSettings->bikepod_calibration));
+        xml.writeTextElement("BikePODCalibration2", QString("%1").arg(personalSettings->bikepod_calibration2));
+        xml.writeTextElement("BikePODCalibration3", QString("%1").arg(personalSettings->bikepod_calibration3));
+        xml.writeTextElement("FootPODCalibration", QString("%1").arg(personalSettings->footpod_calibration));
+        xml.writeTextElement("AutomaticBikePowerCalibration",
+                             QString("%1").arg(personalSettings->automatic_bikepower_calib));
+        xml.writeTextElement("AutomaticFootPODCalibration",
+                             QString("%1").arg(personalSettings->automatic_footpod_calib));
+        xml.writeTextElement("TrainingProgram", QString("%1").arg(personalSettings->training_program));
+    }
 
     xml.writeEndElement();
 
@@ -1460,107 +1463,114 @@ bool LogStore::XMLWriter::writeLogEntry()
 
     xml.writeStartElement("Log");
     xml.writeStartElement("Header");
-    QDateTime dateTime(QDate(logEntry->header.date_time.year, logEntry->header.date_time.month, logEntry->header.date_time.day), QTime(logEntry->header.date_time.hour, logEntry->header.date_time.minute, 0).addMSecs(logEntry->header.date_time.msec));
-    xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
-    xml.writeTextElement("Duration", QString("%1").arg(logEntry->header.duration));
-    xml.writeTextElement("Ascent", QString("%1").arg(logEntry->header.ascent));
-    xml.writeTextElement("Descent", QString("%1").arg(logEntry->header.descent));
-    xml.writeTextElement("AscentTime", QString("%1").arg(logEntry->header.ascent_time));
-    xml.writeTextElement("DescentTime", QString("%1").arg(logEntry->header.descent_time));
-    xml.writeTextElement("RecoveryTime", QString("%1").arg(logEntry->header.recovery_time));
-    xml.writeStartElement("Speed");
-    xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.speed_avg));
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.speed_max));
-    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.speed_max_time));
-    xml.writeEndElement();
-    xml.writeStartElement("Cadence");
-    xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.cadence_avg));
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.cadence_max));
-    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.cadence_max_time));
-    xml.writeEndElement();
-    xml.writeStartElement("Altitude");
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.altitude_max));
-    xml.writeTextElement("Min", QString("%1").arg(logEntry->header.altitude_min));
-    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.altitude_max_time));
-    xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.altitude_min_time));
-    xml.writeEndElement();
-    xml.writeStartElement("HR");
-    xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.heartrate_avg));
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.heartrate_max));
-    xml.writeTextElement("Min", QString("%1").arg(logEntry->header.heartrate_min));
-    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.heartrate_max_time));
-    xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.heartrate_min_time));
-    xml.writeEndElement();
-    xml.writeTextElement("PeakTrainingEffect", QString("%1").arg(logEntry->header.peak_training_effect));
-    xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString::fromUtf8(logEntry->header.activity_name));
-    xml.writeStartElement("Temperature");
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->header.temperature_max));
-    xml.writeTextElement("Min", QString("%1").arg(logEntry->header.temperature_min));
-    xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.temperature_max_time));
-    xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.temperature_min_time));
-    xml.writeEndElement();
-    xml.writeTextElement("Distance", QString("%1").arg(logEntry->header.distance));
-    xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->header.samples_count));
-    xml.writeTextElement("Energy", QString("%1").arg(logEntry->header.energy_consumption));
-    xml.writeTextElement("TimeToFirstFix", QString("%1").arg(logEntry->header.first_fix_time));
-    xml.writeTextElement("BatteryChargeAtStart", QString("%1").arg(logEntry->header.battery_start));
-    xml.writeTextElement("BatteryCharge", QString("%1").arg(logEntry->header.battery_end));
-    xml.writeTextElement("DistanceBeforeCalibrationChange", QString("%1").arg(logEntry->header.distance_before_calib));
-    xml.writeStartElement("Swimming");
-    xml.writeTextElement("PoolLengths", QString("%1").arg(logEntry->header.swimming_pool_lengths));
-    xml.writeTextElement("PoolLength", QString("%1").arg(logEntry->header.swimming_pool_length));
-    xml.writeEndElement();
+    if(logEntry != NULL) {
+        QDateTime dateTime(QDate(logEntry->header.date_time.year, logEntry->header.date_time.month,
+                                 logEntry->header.date_time.day),
+                           QTime(logEntry->header.date_time.hour, logEntry->header.date_time.minute, 0).addMSecs(
+                                   logEntry->header.date_time.msec));
+        xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
+        xml.writeTextElement("Duration", QString("%1").arg(logEntry->header.duration));
+        xml.writeTextElement("Ascent", QString("%1").arg(logEntry->header.ascent));
+        xml.writeTextElement("Descent", QString("%1").arg(logEntry->header.descent));
+        xml.writeTextElement("AscentTime", QString("%1").arg(logEntry->header.ascent_time));
+        xml.writeTextElement("DescentTime", QString("%1").arg(logEntry->header.descent_time));
+        xml.writeTextElement("RecoveryTime", QString("%1").arg(logEntry->header.recovery_time));
+        xml.writeStartElement("Speed");
+        xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.speed_avg));
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->header.speed_max));
+        xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.speed_max_time));
+        xml.writeEndElement();
+        xml.writeStartElement("Cadence");
+        xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.cadence_avg));
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->header.cadence_max));
+        xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.cadence_max_time));
+        xml.writeEndElement();
+        xml.writeStartElement("Altitude");
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->header.altitude_max));
+        xml.writeTextElement("Min", QString("%1").arg(logEntry->header.altitude_min));
+        xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.altitude_max_time));
+        xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.altitude_min_time));
+        xml.writeEndElement();
+        xml.writeStartElement("HR");
+        xml.writeTextElement("Avg", QString("%1").arg(logEntry->header.heartrate_avg));
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->header.heartrate_max));
+        xml.writeTextElement("Min", QString("%1").arg(logEntry->header.heartrate_min));
+        xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.heartrate_max_time));
+        xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.heartrate_min_time));
+        xml.writeEndElement();
+        xml.writeTextElement("PeakTrainingEffect", QString("%1").arg(logEntry->header.peak_training_effect));
+        xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->header.activity_type));
+        xml.writeTextElement("Activity", QString::fromUtf8(logEntry->header.activity_name));
+        xml.writeStartElement("Temperature");
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->header.temperature_max));
+        xml.writeTextElement("Min", QString("%1").arg(logEntry->header.temperature_min));
+        xml.writeTextElement("MaxTime", QString("%1").arg(logEntry->header.temperature_max_time));
+        xml.writeTextElement("MinTime", QString("%1").arg(logEntry->header.temperature_min_time));
+        xml.writeEndElement();
+        xml.writeTextElement("Distance", QString("%1").arg(logEntry->header.distance));
+        xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->header.samples_count));
+        xml.writeTextElement("Energy", QString("%1").arg(logEntry->header.energy_consumption));
+        xml.writeTextElement("TimeToFirstFix", QString("%1").arg(logEntry->header.first_fix_time));
+        xml.writeTextElement("BatteryChargeAtStart", QString("%1").arg(logEntry->header.battery_start));
+        xml.writeTextElement("BatteryCharge", QString("%1").arg(logEntry->header.battery_end));
+        xml.writeTextElement("DistanceBeforeCalibrationChange",
+                             QString("%1").arg(logEntry->header.distance_before_calib));
+        xml.writeStartElement("Swimming");
+        xml.writeTextElement("PoolLengths", QString("%1").arg(logEntry->header.swimming_pool_lengths));
+        xml.writeTextElement("PoolLength", QString("%1").arg(logEntry->header.swimming_pool_length));
+        xml.writeEndElement();
 
-    QString hexstring;
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x", logEntry->header.unknown1[0],
-                                                          logEntry->header.unknown1[1],
-                                                          logEntry->header.unknown1[2],
-                                                          logEntry->header.unknown1[3],
-                                                          logEntry->header.unknown1[4]);
-    xml.writeTextElement("Unknown1", hexstring);
-    hexstring = hexstring.sprintf("%02x", logEntry->header.unknown2);
-    xml.writeTextElement("Unknown2", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x", logEntry->header.unknown3[0],
-                                              logEntry->header.unknown3[1]);
-    xml.writeTextElement("Unknown3", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown5[0],
-                                                      logEntry->header.unknown5[1],
-                                                      logEntry->header.unknown5[2],
-                                                      logEntry->header.unknown5[3]);
-    xml.writeTextElement("Unknown5", hexstring);
-    hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                                  logEntry->header.unknown6[0],
-                                  logEntry->header.unknown6[1],
-                                  logEntry->header.unknown6[2],
-                                  logEntry->header.unknown6[3],
-                                  logEntry->header.unknown6[4],
-                                  logEntry->header.unknown6[5],
-                                  logEntry->header.unknown6[6],
-                                  logEntry->header.unknown6[7],
-                                  logEntry->header.unknown6[8],
-                                  logEntry->header.unknown6[9],
-                                  logEntry->header.unknown6[10],
-                                  logEntry->header.unknown6[11],
-                                  logEntry->header.unknown6[12],
-                                  logEntry->header.unknown6[13],
-                                  logEntry->header.unknown6[14],
-                                  logEntry->header.unknown6[15],
-                                  logEntry->header.unknown6[16],
-                                  logEntry->header.unknown6[17],
-                                  logEntry->header.unknown6[18],
-                                  logEntry->header.unknown6[19],
-                                  logEntry->header.unknown6[20],
-                                  logEntry->header.unknown6[21],
-                                  logEntry->header.unknown6[22],
-                                  logEntry->header.unknown6[23]);
-    xml.writeTextElement("Unknown6", hexstring);
+        QString hexstring;
+        hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x", logEntry->header.unknown1[0],
+                                                              logEntry->header.unknown1[1],
+                                                              logEntry->header.unknown1[2],
+                                                              logEntry->header.unknown1[3],
+                                                              logEntry->header.unknown1[4]);
+        xml.writeTextElement("Unknown1", hexstring);
+        hexstring = hexstring.sprintf("%02x", logEntry->header.unknown2);
+        xml.writeTextElement("Unknown2", hexstring);
+        hexstring = hexstring.sprintf("%02x%02x", logEntry->header.unknown3[0],
+                                                  logEntry->header.unknown3[1]);
+        xml.writeTextElement("Unknown3", hexstring);
+        hexstring = hexstring.sprintf("%02x%02x%02x%02x", logEntry->header.unknown5[0],
+                                                          logEntry->header.unknown5[1],
+                                                          logEntry->header.unknown5[2],
+                                                          logEntry->header.unknown5[3]);
+        xml.writeTextElement("Unknown5", hexstring);
+        hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                                      logEntry->header.unknown6[0],
+                                      logEntry->header.unknown6[1],
+                                      logEntry->header.unknown6[2],
+                                      logEntry->header.unknown6[3],
+                                      logEntry->header.unknown6[4],
+                                      logEntry->header.unknown6[5],
+                                      logEntry->header.unknown6[6],
+                                      logEntry->header.unknown6[7],
+                                      logEntry->header.unknown6[8],
+                                      logEntry->header.unknown6[9],
+                                      logEntry->header.unknown6[10],
+                                      logEntry->header.unknown6[11],
+                                      logEntry->header.unknown6[12],
+                                      logEntry->header.unknown6[13],
+                                      logEntry->header.unknown6[14],
+                                      logEntry->header.unknown6[15],
+                                      logEntry->header.unknown6[16],
+                                      logEntry->header.unknown6[17],
+                                      logEntry->header.unknown6[18],
+                                      logEntry->header.unknown6[19],
+                                      logEntry->header.unknown6[20],
+                                      logEntry->header.unknown6[21],
+                                      logEntry->header.unknown6[22],
+                                      logEntry->header.unknown6[23]);
+        xml.writeTextElement("Unknown6", hexstring);
 
-    xml.writeEndElement();
-    xml.writeStartElement("Samples");
-    for (i=0; i<logEntry->samples_count; i++) {
-        writeLogSample(&logEntry->samples[i]);
+        xml.writeEndElement();
+        xml.writeStartElement("Samples");
+        for (i=0; i<logEntry->samples_count; i++) {
+            writeLogSample(&logEntry->samples[i]);
+        }
     }
+
     xml.writeEndElement();
     xml.writeEndElement();
 

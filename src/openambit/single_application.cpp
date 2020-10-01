@@ -5,6 +5,12 @@
 SingleApplication::SingleApplication(int &argc, char *argv[], const QString uniqueKey) : QApplication(argc, argv), _uniqueKey(uniqueKey)
 {
     sharedMemory.setKey(_uniqueKey);
+
+    // try to attach/detach to not run into the "shared mem alive but broken"
+    // which happens when Openambit is not properly closed, e.g. after a crash
+    sharedMemory.attach();
+    sharedMemory.detach();
+
     if (sharedMemory.attach())
         _isRunning = true;
     else
