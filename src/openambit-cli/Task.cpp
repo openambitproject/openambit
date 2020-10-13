@@ -221,8 +221,10 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
 
             if(settingsInputFile != NULL) {
+                qDebug() << "Reading sport-modes from '" << settingsInputFile << "'";
                 res = readSportModesFromFile(settingsInputFile, ambitDeviceSettings);
             } else {
+                qDebug() << "Reading sport-modes from Movescount";
                 res = movesCount->getCustomModeData(ambitDeviceSettings);
             }
 

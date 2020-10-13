@@ -76,6 +76,13 @@ int main(int argc, char *argv[]) {
 
     const QString customConfig = parser.value(customConfigFileOption);
 
+    // we have to store the parameters as std::string here
+    // to not have them deleted before we use them
+    std::string customConfigStr;
+    if(customConfig.length() > 0) {
+        customConfigStr = customConfig.toStdString();
+    }
+
     std::string username;
     if(args.length() >= 1) {
         username = args.at(0).toStdString();
@@ -95,7 +102,7 @@ int main(int argc, char *argv[]) {
             !parser.isSet(noSyncOrbitOption),
             !parser.isSet(noSyncSportModeOption),
             !parser.isSet(noSyncNavigationOption),
-            customConfig.length() == 0 ? NULL : customConfig.toStdString().c_str());
+            customConfig.length() == 0 ? NULL : customConfigStr.c_str());
 
     // make application stop when the task is done
     QObject::connect(task, SIGNAL(finished()), &a, SLOT(quit()));
