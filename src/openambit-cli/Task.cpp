@@ -117,6 +117,8 @@ void Task::run() {
     }
     else {
         printf("No clock found, exiting\n");
+        QCoreApplication::exit(1);
+        return;
     }
 
     libambit_free_enumeration(info);

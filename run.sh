@@ -27,3 +27,4 @@ esac
 
 echo "------running $application------"
 LD_LIBRARY_PATH=./libambit-build ./${builddir}/${application} "$@"
+exit $?
