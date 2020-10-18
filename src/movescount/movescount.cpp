@@ -27,6 +27,8 @@
 #include <QEventLoop>
 #include <QMutex>
 #include <QDebug>
+#include <QDir>
+#include <QJsonDocument>
 
 #include "logstore.h"
 
@@ -471,6 +473,20 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
+void writeJson(QByteArray _data, const char* name) {
+    QFile logfile(name);
+    logfile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+
+    // pretty print JSON
+    QJsonDocument doc = QJsonDocument::fromJson(_data);
+    QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
+
+    //formattedJsonString.replace("", "");
+
+    logfile.write(formattedJsonString.toUtf8());
+    logfile.close();
+}
+
 int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
@@ -481,6 +497,8 @@ int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *am
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
         MovescountSettings settings = MovescountSettings();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/settings.json");
 
         if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
             settings.toAmbitData(ambitSettings);
@@ -500,6 +518,8 @@ int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/apprules.json");
 
         if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
             ret = 0;
