@@ -14,14 +14,14 @@ for target in libambit movescount openambit openambit-cli
 do
     cd ${SOURCE_LOCATION}
     echo "------building $target------"
-    mkdir -p $target-build
-    cd $target-build
-    cmake "$@" ../src/$target
-    make -j$CORES
-    if [ "$DO_INSTALL" == "1" ]; then
-    echo "------installing $target------"
-    sudo make install
-    sudo ldconfig
+    mkdir -p ${target}-build
+    cd ${target}-build
+    cmake "$@" ../src/${target}
+    make -j${CORES}
+    if [ "${DO_INSTALL-0}" == "1" ]; then
+      echo "------installing $target------"
+      sudo make install
+      sudo ldconfig
     fi
 done
 

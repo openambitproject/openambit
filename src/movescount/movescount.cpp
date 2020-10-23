@@ -514,8 +514,6 @@ void writeJson(QByteArray _data, const char* name) {
     QJsonDocument doc = QJsonDocument::fromJson(_data);
     QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
 
-    //formattedJsonString.replace("", "");
-
     logfile.write(formattedJsonString.toUtf8());
     logfile.close();
 }
