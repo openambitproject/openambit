@@ -104,6 +104,7 @@ void DeviceManager::startSync(bool readAllLogs = false)
     bool syncOrbit = settings.value("syncSettings/syncOrbit", true).toBool();
     bool syncSportMode = settings.value("syncSettings/syncSportMode", false).toBool();
     bool syncNavigation = settings.value("syncSettings/syncNavigation", false).toBool();
+    bool syncWatchJsonConfig= settings.value("syncSettings/syncWatchJsonConfig", false).toBool();
     bool syncMovescount = settings.value("movescountSettings/movescountEnable", false).toBool();
 
     mutex.lock();
@@ -114,6 +115,7 @@ void DeviceManager::startSync(bool readAllLogs = false)
     if (syncOrbit) syncParts+=2;
     if (syncSportMode) syncParts++;
     if (syncMovescount) syncParts++;
+    if (syncWatchJsonConfig) syncParts++;
 
     if (this->deviceObject != NULL) {
         emit this->syncProgressInform(QString(tr("Reading personal settings")), false, true, 0);
@@ -139,6 +141,18 @@ void DeviceManager::startSync(bool readAllLogs = false)
             res = libambit_log_read(this->deviceObject, readAllLogs ? NULL : &log_skip_cb, &log_push_cb, &log_progress_cb, this);
             currentSyncPart++;
             qDebug() << "End reading log...";
+        }
+
+        if (syncWatchJsonConfig) {
+            qDebug() << "Start sync watch apps to JSON";
+            emit this->syncProgressInform(QString(tr("Synchronizing Watch apps and modes config")), false, true, 100*currentSyncPart/syncParts);
+
+            ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
+            movesCount->getWatchAppConfig(ambitApps);
+
+            ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
+            movesCount->getWatchModeConfig(ambitDeviceSettings);
+            qDebug() << "End sync watch apps to JSON";
         }
 
         if (waypoint_sync_res != -1 && syncNavigation) {

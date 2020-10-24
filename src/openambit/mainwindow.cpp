@@ -500,17 +500,19 @@ void MainWindow::movesCountSetup()
     bool syncOrbit = false;
     bool syncSportMode = false;
     bool syncNavigation = false;
+    bool syncWatchJsonConfig = false;
     bool movescountEnable = false;
 
     settings.beginGroup("syncSettings");
     syncOrbit = settings.value("syncOrbit", true).toBool();
     syncSportMode = settings.value("syncSportMode", false).toBool();
     syncNavigation = settings.value("syncNavigation", false).toBool();
+    syncWatchJsonConfig = settings.value("syncWatchJsonConfig", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
     movescountEnable = settings.value("movescountEnable", false).toBool();
-    if (syncOrbit || syncSportMode || syncNavigation || movescountEnable) {
+    if (syncOrbit || syncSportMode || syncNavigation || movescountEnable || syncWatchJsonConfig) {
         if (movesCount == NULL) {
             movesCount = MovesCount::instance();
             movesCount->setAppkey(APPKEY);

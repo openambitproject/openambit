@@ -27,6 +27,8 @@
 #include <QEventLoop>
 #include <QMutex>
 #include <QDebug>
+#include <QDir>
+#include <QJsonDocument>
 
 #include "logstore.h"
 
@@ -204,6 +206,23 @@ int MovesCount::getCustomModeData(ambit_sport_mode_device_settings_t* ambitCusto
     return ret;
 }
 
+int MovesCount::getWatchModeConfig(ambit_sport_mode_device_settings_t* ambitCustomModes)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getWatchModeDataThread(ambitCustomModes);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getWatchModeDataThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_sport_mode_device_settings_t*, ambitCustomModes));
+    }
+
+    return ret;
+}
+
+
 int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
@@ -213,6 +232,22 @@ int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
     }
     else {
         QMetaObject::invokeMethod(this, "getAppsDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_app_rules_t*, ambitApps));
+    }
+
+    return ret;
+}
+
+int MovesCount::getWatchAppConfig(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getWatchAppConfigThread(ambitApps);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getWatchAppConfigThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
                                   Q_ARG(ambit_app_rules_t*, ambitApps));
     }
@@ -471,6 +506,18 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
+void writeJson(QByteArray _data, const char* name) {
+    QFile logfile(name);
+    logfile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+
+    // pretty print JSON
+    QJsonDocument doc = QJsonDocument::fromJson(_data);
+    QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
+
+    logfile.write(formattedJsonString.toUtf8());
+    logfile.close();
+}
+
 int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
@@ -491,6 +538,28 @@ int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *am
     return ret;
 }
 
+int MovesCount::getWatchModeDataThread(ambit_sport_mode_device_settings_t *ambitSettings)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+        MovescountSettings settings = MovescountSettings();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/settings.json");
+
+        if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
+            settings.toAmbitData(ambitSettings);
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
 int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
@@ -500,6 +569,26 @@ int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
+int MovesCount::getWatchAppConfigThread(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/rules/private", "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/apprules.json");
 
         if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
             ret = 0;

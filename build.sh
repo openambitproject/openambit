@@ -21,6 +21,7 @@ do
     if [ "${DO_INSTALL-0}" == "1" ]; then
       echo "------installing $target------"
       sudo make install
+      sudo ldconfig
     fi
 done
 

@@ -80,6 +80,7 @@ void SettingsDialog::readSettings()
     ui->checkBoxSyncOrbit->setChecked(settings.value("syncOrbit", true).toBool());
     ui->checkBoxSyncSportsMode->setChecked(settings.value("syncSportMode", false).toBool());
     ui->checkBoxSyncNavigation->setChecked(settings.value("syncNavigation", false).toBool());
+    ui->checkBoxSyncWatchJsonConfig->setChecked(settings.value("syncWatchJsonConfig", false).toBool());
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
@@ -103,6 +104,7 @@ void SettingsDialog::writeSettings()
     settings.setValue("syncOrbit", ui->checkBoxSyncOrbit->isChecked());
     settings.setValue("syncSportMode", ui->checkBoxSyncSportsMode->isChecked());
     settings.setValue("syncNavigation", ui->checkBoxSyncNavigation->isChecked());
+    settings.setValue("syncWatchJsonConfig", ui->checkBoxSyncWatchJsonConfig->isChecked());
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
