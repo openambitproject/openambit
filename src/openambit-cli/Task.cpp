@@ -14,7 +14,7 @@
 MovesCount *movesCountSetup(const char *username, const char *userkey);
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               const char *settingsInputFile);
+               bool writeSettingsJSON, const char *settingsInputFile);
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
@@ -102,7 +102,7 @@ void Task::run() {
                            deviceInfo.is_supported);
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
-                              syncNavigation, settingsInputFile);
+                              syncNavigation, writeSettingsJSON, settingsInputFile);
 
                     if(settings.waypoints.data != NULL) {
                         free(settings.waypoints.data);
@@ -151,7 +151,7 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
 
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               const char *settingsInputFile)
+               bool writeSettingsJSON, const char *settingsInputFile)
 {
     time_t current_time;
     struct tm *local_time;
@@ -268,6 +268,20 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             }
 
             qDebug() << "End orbit data sync";
+        }
+
+        if (writeSettingsJSON) {
+            qDebug() << "Start sync watch apps to JSON";
+
+            ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
+            movesCount->getWatchAppConfig(ambitApps);
+
+            ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
+            movesCount->getWatchModeConfig(ambitDeviceSettings);
+            qDebug() << "End sync watch apps to JSON";
+
+            libambit_sport_mode_device_settings_free(ambitDeviceSettings);
+            libambit_app_rules_free(ambitApps);
         }
 
         libambit_sync_display_clear(deviceObject);

@@ -63,8 +63,12 @@ int main(int argc, char *argv[]) {
                                              QCoreApplication::translate("main", "Do not sync navigation to the watch."));
     parser.addOption(noSyncNavigationOption);
 
+    QCommandLineOption writeJSONSettingsFileOption(QStringList() << "w" << "write-config-json",
+                                                   QCoreApplication::translate("main", "Write watch-settings to files 'apprules.json' and 'settings.json' in the settings directory at ~/.openambit."));
+    parser.addOption(writeJSONSettingsFileOption);
+
     QCommandLineOption customConfigFileOption(QStringList() << "c" << "custom-config",
-                                              QCoreApplication::translate("main", "A custom JSON config file to load configuration for the watch."),
+                                              QCoreApplication::translate("main", "A custom JSON config file to load settings for the watch."),
                                               QCoreApplication::translate("main", "json-file"));
     parser.addOption(customConfigFileOption);
 
@@ -102,6 +106,7 @@ int main(int argc, char *argv[]) {
             !parser.isSet(noSyncOrbitOption),
             !parser.isSet(noSyncSportModeOption),
             !parser.isSet(noSyncNavigationOption),
+            parser.isSet(writeJSONSettingsFileOption),
             customConfig.length() == 0 ? NULL : customConfigStr.c_str());
 
     // make application stop when the task is done
