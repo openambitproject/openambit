@@ -153,6 +153,9 @@ void DeviceManager::startSync(bool readAllLogs = false)
             ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
             movesCount->getWatchModeConfig(ambitDeviceSettings);
             qDebug() << "End sync watch apps to JSON";
+
+            libambit_sport_mode_device_settings_free(ambitDeviceSettings);
+            libambit_app_rules_free(ambitApps);
         }
 
         if (waypoint_sync_res != -1 && syncNavigation) {
