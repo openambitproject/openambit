@@ -10,7 +10,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 find_package(libambit REQUIRED)
 find_package(Movescount REQUIRED)
+IF (!WIN32)
 find_package(UDev REQUIRED)
+ELSE (!WIN32)
+set(UDEV_LIBS "")
+ENDIF (!WIN32)
 find_package(Qt5Core REQUIRED)
 
 include(GNUInstallDirs)
