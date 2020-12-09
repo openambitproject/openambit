@@ -17,9 +17,9 @@
 	</description>
 	<screenshots>
 		<screenshot type="default">
-			<image>http://openambit.org/wp-content/uploads/2014/03/openambit-screenshot.png</image>
+			<image>https://user-images.githubusercontent.com/31370985/40253825-d84cada4-5ae9-11e8-91f1-c7cba8d2074b.png</image>
 		</screenshot>
 	</screenshots>
-	<url type="homepage">http://openambit.org/</url>
+	<url type="homepage">https://github.com/openambitproject/openambit/</url>
 	<updatecontact>manisandro@gmail.com</updatecontact>
 </application>
