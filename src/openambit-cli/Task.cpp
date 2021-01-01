@@ -63,9 +63,13 @@ void Task::run() {
 
             if (libambit_personal_settings_get(ambit_object, &settings) == 0) {
                 printf("Personal settings: \n");
-                printf("sportmode_button_lock: %d\n", settings.sportmode_button_lock);
                 printf("weight: %d\n", settings.weight);
                 printf("birthyear: %d\n", settings.birthyear);
+                printf("max_hr: %d\n", settings.max_hr);
+                printf("rest_hr: %d\n", settings.rest_hr);
+                printf("fitness_level: %d\n", settings.fitness_level);
+                printf("is_male: %d\n", settings.is_male);
+                printf("length: %d\n", settings.length);
             }
             else {
                 printf("Failed to read personal settings\n");
@@ -317,12 +321,14 @@ static int log_skip_cb(void *object, ambit_log_header_t *log_header)
 {
     syncData_t *syncData = static_cast<syncData_t *>(object);
 
-    printf("Got log header \"%s\" %d-%02d-%02d %02d:%02d:%02d\n",
+    bool exists = logStore.logExists(syncData->deviceObject->device_info.serial, log_header);
+
+    printf("Got log header \"%20s\" %d-%02d-%02d %02d:%02d:%02d - exists: %d\n",
             log_header->activity_name, log_header->date_time.year, log_header->date_time.month,
             log_header->date_time.day, log_header->date_time.hour, log_header->date_time.minute,
-            log_header->date_time.msec/1000);
+            log_header->date_time.msec/1000, exists);
 
-    if (logStore.logExists(syncData->deviceObject->device_info.serial, log_header)) {
+    if (exists) {
         return 0;
     }
 
