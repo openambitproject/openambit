@@ -779,6 +779,13 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
                 log_entry->samples[*sample_count].u.periodic.values[i].type = ambit_log_sample_periodic_type_ruleoutput5;
                 log_entry->samples[*sample_count].u.periodic.values[i].u.ruleoutput5 = read32(buf, int_offset + spec_offset);
                 break;
+              default:
+                LOG_WARNING("Found unknown periodic sample spec type (0x%02x): len: %d", spec_type, sample_len);
+                log_entry->samples[*sample_count].type = ambit_log_sample_type_unknown;
+                log_entry->samples[*sample_count].u.unknown.datalen = sample_len;
+                log_entry->samples[*sample_count].u.unknown.data = malloc(sample_len);
+                memcpy(log_entry->samples[*sample_count].u.unknown.data, buf + offset + 2, sample_len);
+                break;
             }
         }
         ret = 1;
