@@ -87,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trayIconMenu->addAction(ui->actionE_xit);
     trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"), this);
     trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setToolTip(tr("No device detected"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
     trayIcon->setVisible(true);
 
@@ -360,6 +361,7 @@ void MainWindow::syncFinished(bool success)
     trayIconSyncAction->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
 
+    trayIcon->setToolTip(tr("Device connected"));
     trayIcon->setIcon(QIcon(":/icon_connected"));
 
     updateLogList();
@@ -489,6 +491,7 @@ void MainWindow::startSync()
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
 
+    trayIcon->setToolTip(tr("Syncing..."));
     trayIcon->setIcon(QIcon(":/icon_syncing"));
     if (isHidden()) {
         trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization started"));
