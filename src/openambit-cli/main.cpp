@@ -63,6 +63,10 @@ int main(int argc, char *argv[]) {
                                              QCoreApplication::translate("main", "Do not sync navigation to the watch."));
     parser.addOption(noSyncNavigationOption);
 
+    QCommandLineOption noWriteLogs(QStringList() << "l" << "no-write-logs",
+                                             QCoreApplication::translate("main", "Do not send move-logs to movescount.com."));
+    parser.addOption(noWriteLogs);
+
     QCommandLineOption writeJSONSettingsFileOption(QStringList() << "w" << "write-config-json",
                                                    QCoreApplication::translate("main", "Write watch-settings to files 'apprules.json' and 'settings.json' in the settings directory at ~/.openambit."));
     parser.addOption(writeJSONSettingsFileOption);
@@ -106,6 +110,7 @@ int main(int argc, char *argv[]) {
             !parser.isSet(noSyncOrbitOption),
             !parser.isSet(noSyncSportModeOption),
             !parser.isSet(noSyncNavigationOption),
+            !parser.isSet(noWriteLogs),
             parser.isSet(writeJSONSettingsFileOption),
             customConfig.length() == 0 ? NULL : customConfigStr.c_str());
 

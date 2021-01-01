@@ -13,7 +13,7 @@
 
 MovesCount *movesCountSetup(const char *username, const char *userkey);
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
-               bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
+               bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation, bool writeLogs,
                bool writeSettingsJSON, const char *settingsInputFile);
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
@@ -106,7 +106,7 @@ void Task::run() {
                            deviceInfo.is_supported);
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
-                              syncNavigation, writeSettingsJSON, settingsInputFile);
+                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile);
 
                     if(settings.waypoints.data != NULL) {
                         free(settings.waypoints.data);
@@ -155,7 +155,7 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
 
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               bool writeSettingsJSON, const char *settingsInputFile)
+               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile)
 {
     time_t current_time;
     struct tm *local_time;
@@ -190,7 +190,7 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 syncData_t syncData;
                 syncData.deviceObject = deviceObject;
                 syncData.currentPersonalSettings = currentPersonalSettings;
-                syncData.syncMovescount = true;
+                syncData.syncMovescount = writeLogs;
                 syncData.movesCount = movesCount;
 
                 res = libambit_log_read(deviceObject, &log_skip_cb, &log_data_cb, NULL, &syncData);
@@ -339,7 +339,7 @@ static void log_data_cb(void *object, ambit_log_entry_t *log_entry)
 {
     syncData_t *syncData = static_cast<syncData_t *>(object);
 
-    printf("Got log entry \"%s\" %d-%02d-%02d %02d:%02d:%02d\n", log_entry->header.activity_name, log_entry->header.date_time.year, log_entry->header.date_time.month, log_entry->header.date_time.day, log_entry->header.date_time.hour, log_entry->header.date_time.minute, log_entry->header.date_time.msec/1000);
+    printf("Storing log entry \"%17s\" %d-%02d-%02d %02d:%02d:%02d\n", log_entry->header.activity_name, log_entry->header.date_time.year, log_entry->header.date_time.month, log_entry->header.date_time.day, log_entry->header.date_time.hour, log_entry->header.date_time.minute, log_entry->header.date_time.msec/1000);
 
     DeviceInfo deviceInfo;
     deviceInfo = syncData->deviceObject->device_info;
