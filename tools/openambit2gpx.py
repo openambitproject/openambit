@@ -88,6 +88,13 @@ def timeDiff(utcTime1,utcTime2):
 ###########################
 
 for element in rootIn.iterfind("Log/Samples/Sample"):
+
+    # Position samples just repeat positional/time information in the previous gps-base sample
+    # Thus simply skip these to avoid creating duplicate gpx trkpts
+    sampType=element.findtext("Type")
+    if sampType=="position":
+        continue
+
     trk=etree.Element("trkpt")
 
     lat=element.findtext("Latitude")
@@ -102,7 +109,6 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
     temp=str(float(element.findtext("Temperature"))/10) if element.findtext("Temperature")!=None else tempLast
     airpressure=element.findtext("SeaLevelPressure") if element.findtext("SeaLevelPressure")!=None else airpressureLast
 
-    sampType=element.findtext("Type")
     if sampType=="lap-info":
         lapType=element.findtext("Lap/Type")
         lapDate=element.findtext("Lap/DateTime")
