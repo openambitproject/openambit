@@ -70,6 +70,15 @@ TEST_CASE ("testing utf8memconv invalid encoding") {
     CHECK(ret == charNull);
 }
 
+TEST_CASE ("testing utf8memconv UTF-8 to UTF-8") {
+    char* charNull = NULL;
+    char* ret = utf8memconv("äöasd9", 8, "UTF-8");
+    REQUIRE(ret != charNull);
+    CHECK_MESSAGE(strcmp(ret, "äöasd9") == 0, ret);
+
+    free(ret);
+}
+
 TEST_CASE ("testing utf8wcsconv") {
     char* charNull = NULL;
     wchar_t *input = (wchar_t*)malloc(sizeof(wchar_t)*8);
