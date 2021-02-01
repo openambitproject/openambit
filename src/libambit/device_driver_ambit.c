@@ -180,7 +180,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
             libambit_protocol_free(reply_data);
 
             // Assume every header is composited by 2 parts, where only the
-            // second is of interrest right now
+            // second is of interest right now
             if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) != 0) {
                 LOG_WARNING("Failed to read first part of header");
                 return -1;
