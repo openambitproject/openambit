@@ -789,7 +789,7 @@ static size_t parse_log_entry(ambit_object_t *object, const uint8_t *data, ambit
     if (log_header->header.activity_name) {
         free(log_header->header.activity_name);
     }
-    log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "ISO-8859-15");
+    log_header->header.activity_name = utf8memconv((const char*)(data + offset), 16, "UTF-8");
 
     offset += (strnlen((const char*)(data + offset), 20)+1);
 
