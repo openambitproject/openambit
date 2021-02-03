@@ -1,0 +1,3 @@
+[submodule "tools/stravauploader"]
+	path = tools/stravauploader
+	url = https://github.com/soutade/StravaUploader.git
