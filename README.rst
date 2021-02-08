@@ -30,6 +30,8 @@ tools
   contains a few utilities that people thought useful.  One compares
   Openambit's XML log files with those from `Moveslink2`_ and another
   converts the XML to `GPX`_.
+  Finally `strava_upload.sh` allows to send data from Moves directly to
+  Strava via the GPX file.
 
 wireshark_dissector
   a `Wireshark`_ packet dissector to help reverse engineer the Ambit
