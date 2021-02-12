@@ -35,6 +35,8 @@
 #define AUTH_CHECK_TIMEOUT 5000 /* ms */
 #define GPS_ORBIT_DATA_MIN_SIZE 30000 /* byte */
 
+void logReply(QNetworkReply *reply);
+
 static MovesCount *m_Instance;
 static void writeJson(QByteArray _data, const char* name);
 
@@ -350,9 +352,7 @@ void MovesCount::handleAuthorizationSignal(bool authorized)
 int MovesCount::getOrbitalDataInThread(u_int8_t **data)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/devices/gpsorbit/binary", "", false);
+    QNetworkReply *reply = syncGET("/devices/gpsorbit/binary", "", false);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -374,9 +374,7 @@ int MovesCount::getOrbitalDataInThread(u_int8_t **data)
 int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings, bool onlychangedsettings)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallsportmodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
+    QNetworkReply *reply = syncGET("/userdevices/" + QString("%1").arg(device_info.serial), QString("onlychangedsettings=%1&includeallsportmodes=false&model=%2&eswverrsion=%3.%4.%5").arg((onlychangedsettings?"true":"fasle")).arg(device_info.model).arg(device_info.fw_version[0]).arg(device_info.fw_version[1]).arg(device_info.fw_version[2]), true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -398,9 +396,7 @@ int MovesCount::getRouteInThread(ambit_route_t *route, ambit_personal_settings_t
 {
 
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/" + url, "", true);
+    QNetworkReply *reply = syncGET("/" + url, "", true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -424,9 +420,7 @@ int MovesCount::getRoutePointsInThread(ambit_route_t *route, ambit_personal_sett
 {
 
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/" + url, "type=routepoints&maxpoints=1000", true);
+    QNetworkReply *reply = syncGET("/" + url, "type=routepoints&maxpoints=1000", true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
@@ -507,9 +501,7 @@ int MovesCount::applyPersonalSettingsFromDevice(ambit_personal_settings_t *moves
 
 void MovesCount::getDeviceSettingsInThread()
 {
-    QNetworkReply *reply;
-
-    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+    QNetworkReply *reply = syncGET("/userdevices/" + device_info.serial, "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -531,9 +523,7 @@ void writeJson(QByteArray _data, const char* name) {
 int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+    QNetworkReply *reply = syncGET("/userdevices/" + device_info.serial, "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -551,9 +541,7 @@ int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *am
 int MovesCount::getWatchModeDataThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+    QNetworkReply *reply = syncGET("/userdevices/" + device_info.serial, "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -573,9 +561,7 @@ int MovesCount::getWatchModeDataThread(ambit_sport_mode_device_settings_t *ambit
 int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/rules/private", "", true);
+    QNetworkReply *reply = syncGET("/rules/private", "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -591,9 +577,7 @@ int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 int MovesCount::getWatchAppConfigThread(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
-    QNetworkReply *reply;
-
-    reply = syncGET("/rules/private", "", true);
+    QNetworkReply *reply = syncGET("/rules/private", "", true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -610,10 +594,9 @@ int MovesCount::getWatchAppConfigThread(ambit_app_rules_t* ambitApps)
 
 QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate startTime, QDate endTime)
 {
-    QNetworkReply *reply;
     QList<MovesCountLogDirEntry> retList;
 
-    reply = syncGET("/moves/private", "startdate=" + startTime.toString("yyyy-MM-dd") + "&enddate=" + endTime.toString("yyyy-MM-dd"), true);
+    QNetworkReply *reply = syncGET("/moves/private", "startdate=" + startTime.toString("yyyy-MM-dd") + "&enddate=" + endTime.toString("yyyy-MM-dd"), true);
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
@@ -661,15 +644,12 @@ void MovesCount::checkLatestFirmwareVersionInThread()
 void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settings)
 {
     QByteArray json_settings;
-    QNetworkReply *reply;
 
     jsonParser.generateNewPersonalSettings(settings, device_info, json_settings);
-    reply = syncPUT("/userdevices/" + QString("%1").arg(device_info.serial), "resetchangedsettings=true", json_settings, true);
+    QNetworkReply *reply = syncPUT("/userdevices/" + QString("%1").arg(device_info.serial), "resetchangedsettings=true", json_settings, true);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
-    } else {
-        qDebug() << QString("writePersonalSettingsInThread error: ") << reply->error();
     }
 }
 
@@ -751,7 +731,7 @@ bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)
     return authorized;
 }
 
-QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, bool auth)
+QNetworkReply *MovesCount::asyncGET(const QString &path, const QString &additionalHeaders, bool auth)
 {
     QNetworkRequest req;
     QString url = this->baseAddress + path + "?appkey=" + this->appkey;
@@ -772,22 +752,26 @@ QNetworkReply *MovesCount::asyncGET(QString path, QString additionalHeaders, boo
     req.setRawHeader("User-Agent", "ArREST v1.0");
     req.setUrl(QUrl(url));
 
-    return this->manager->get(req);
-}
+    QNetworkReply *reply = this->manager->get(req);
 
-QNetworkReply *MovesCount::syncGET(QString path, QString additionalHeaders, bool auth)
-{
-    QNetworkReply *reply;
-
-    reply = asyncGET(path, additionalHeaders, auth);
-    QEventLoop loop;
-    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
+    logReply(reply);
 
     return reply;
 }
 
-QNetworkReply *MovesCount::asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
+QNetworkReply *MovesCount::syncGET(const QString &path, const QString &additionalHeaders, bool auth)
+{
+    QNetworkReply *reply = asyncGET(path, additionalHeaders, auth);
+    QEventLoop loop;
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+
+    logReply(reply);
+
+    return reply;
+}
+
+QNetworkReply *MovesCount::asyncPOST(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth)
 {
     QNetworkRequest req;
     QString url = this->baseAddress + path + "?appkey=" + this->appkey;
@@ -809,14 +793,16 @@ QNetworkReply *MovesCount::asyncPOST(QString path, QString additionalHeaders, QB
     req.setRawHeader("Content-Type", "application/json");
     req.setUrl(QUrl(url));
 
-    return this->manager->post(req, postData);
+    QNetworkReply *reply = this->manager->post(req, postData);
+
+    logReply(reply);
+
+    return reply;
 }
 
-QNetworkReply *MovesCount::syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
+QNetworkReply *MovesCount::syncPOST(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth)
 {
-    QNetworkReply *reply;
-
-    reply = asyncPOST(path, additionalHeaders, postData, auth);
+    QNetworkReply *reply = asyncPOST(path, additionalHeaders, postData, auth);
     QEventLoop loop;
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
@@ -824,7 +810,7 @@ QNetworkReply *MovesCount::syncPOST(QString path, QString additionalHeaders, QBy
     return reply;
 }
 
-QNetworkReply *MovesCount::asyncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
+QNetworkReply *MovesCount::asyncPUT(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth)
 {
     QNetworkRequest req;
     QString url = this->baseAddress + path + "?appkey=" + this->appkey;
@@ -846,23 +832,32 @@ QNetworkReply *MovesCount::asyncPUT(QString path, QString additionalHeaders, QBy
     req.setRawHeader("Content-Type", "application/json");
     req.setUrl(QUrl(url));
 
-    return this->manager->put(req, postData);
-}
+    QNetworkReply *reply = this->manager->put(req, postData);
 
-QNetworkReply *MovesCount::syncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth)
-{
-    QNetworkReply *reply;
-
-    reply = asyncPUT(path, additionalHeaders, postData, auth);
-    QEventLoop loop;
-    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
+    logReply(reply);
 
     return reply;
 }
 
+QNetworkReply *MovesCount::syncPUT(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth)
+{
+    QNetworkReply *reply = asyncPUT(path, additionalHeaders, postData, auth);
+    QEventLoop loop;
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+
+    logReply(reply);
+
+    return reply;
+}
+
+void logReply(QNetworkReply *reply) {
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Error: " << reply->error() << ": " << reply->errorString() << ", movescount.com replied with \"" << reply->readAll() << "\"";
+    }
+}
+
 #ifdef QT_DEBUG
-#include <QDir>
 void MovesCount::writeJsonToStorage(QString filename, QByteArray &data)
 {
     QString storagePath = QString(getenv("HOME")) + "/.openambit/movescount";

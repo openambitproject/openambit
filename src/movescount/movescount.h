@@ -105,14 +105,14 @@ private:
 
     bool checkReplyAuthorization(QNetworkReply *reply);
 
-    QNetworkReply *asyncGET(QString path, QString additionalHeaders, bool auth);
-    QNetworkReply *syncGET(QString path, QString additionalHeaders, bool auth);
+    QNetworkReply *asyncGET(const QString &path, const QString &additionalHeaders, bool auth);
+    QNetworkReply *syncGET(const QString &path, const QString &additionalHeaders, bool auth);
 
-    QNetworkReply *asyncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
-    QNetworkReply *syncPOST(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *asyncPOST(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *syncPOST(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth);
 
-    QNetworkReply *asyncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
-    QNetworkReply *syncPUT(QString path, QString additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *asyncPUT(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth);
+    QNetworkReply *syncPUT(const QString &path, const QString &additionalHeaders, QByteArray &postData, bool auth);
 
 #ifdef QT_DEBUG
     void writeJsonToStorage(QString filename, QByteArray &data);
