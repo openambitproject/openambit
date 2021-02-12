@@ -22,8 +22,11 @@ public:
         this->settingsInputFile = settingsInputFile;
     }
 
+    void hasError();
+
 public slots:
     void run();
+    void error();
 
 signals:
     void finished();
@@ -39,6 +42,8 @@ private:
     bool writeLogs;
     bool writeSettingsJSON;
     const char* settingsInputFile;
+
+    bool isError = false;
 };
 
 #endif //OPENAMBIT_TASK_H

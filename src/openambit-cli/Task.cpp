@@ -14,7 +14,7 @@
 MovesCount *movesCountSetup(const char *username, const char *userkey);
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation, bool writeLogs,
-               bool writeSettingsJSON, const char *settingsInputFile);
+               bool writeSettingsJSON, const char *settingsInputFile, Task *task);
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
@@ -34,7 +34,6 @@ void Task::run() {
     printf("Running openambit-cli\n");
 
     ambit_device_info_t *info = libambit_enumerate();
-    ambit_object_t *ambit_object;
     ambit_device_status_t status;
     ambit_personal_settings_t settings;
     memset(&settings, 0, sizeof(ambit_personal_settings_t));
@@ -44,21 +43,23 @@ void Task::run() {
         if (0 == info->access_status) {
             printf("F/W version: %d.%d.%d\n", info->fw_version[0], info->fw_version[1], (info->fw_version[2] << 0) | (info->fw_version[3] << 8));
             if (!info->is_supported) {
-                printf("Device is not supported yet!\n");
+                printf("ERROR: Device is not supported yet!\n");
+
+                hasError();
             }
         }
         else {
             printf("%s: %s\n", info->path, strerror(info->access_status));
         }
 
-        ambit_object = libambit_new(info);
+        ambit_object_t *ambit_object = libambit_new(info);
         if (ambit_object) {
-
             if (libambit_device_status_get(ambit_object, &status) == 0) {
                 printf("Current charge: %d%%\n", status.charge);
-            }
-            else {
-                printf("Failed to read status\n");
+            } else {
+                printf("ERROR: Failed to read status\n");
+
+                hasError();
             }
 
             if (libambit_personal_settings_get(ambit_object, &settings) == 0) {
@@ -70,13 +71,16 @@ void Task::run() {
                 printf("fitness_level: %d\n", settings.fitness_level);
                 printf("is_male: %d\n", settings.is_male);
                 printf("length: %d\n", settings.length);
-            }
-            else {
-                printf("Failed to read personal settings\n");
+            } else {
+                printf("ERROR: Failed to read personal settings\n");
+
+                hasError();
             }
 
             if (0 != info->access_status || !info->is_supported) {
-                printf("Device not supported\n");
+                printf("ERROR: Device not supported\n");
+
+                hasError();
             } else {
                 printf("Connecting to movescount\n");
                 MovesCount *movesCount = movesCountSetup(username, userkey);
@@ -106,7 +110,7 @@ void Task::run() {
                            deviceInfo.is_supported);
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
-                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile);
+                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, this);
 
                     if(settings.waypoints.data != NULL) {
                         free(settings.waypoints.data);
@@ -120,14 +124,28 @@ void Task::run() {
         }
     }
     else {
-        printf("No clock found, exiting\n");
-        QCoreApplication::exit(1);
+        printf("ERROR: No clock found, exiting\n");
+
+        hasError();
+
         return;
     }
 
     libambit_free_enumeration(info);
 
-    emit finished();
+    if (isError) {
+        emit error();
+    } else {
+        emit finished();
+    }
+}
+
+void Task::hasError() {
+    isError = true;
+}
+
+void Task::error() {
+    ((QCoreApplication*)parent())->exit(1);
 }
 
 MovesCount *movesCountSetup(const char *username, const char *userkey)
@@ -155,10 +173,8 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
 
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile)
+               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, Task *task)
 {
-    time_t current_time;
-    struct tm *local_time;
     ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
     if (deviceObject != NULL) {
@@ -171,11 +187,13 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
         if (syncTime && res != -1) {
             qDebug() << "Start time sync...";
 
-            current_time = time(NULL);
-            local_time = localtime(&current_time);
+            time_t current_time = time(NULL);
+            struct tm *local_time = localtime(&current_time);
             res = libambit_date_time_set(deviceObject, local_time);
             if (res == -1) {
-                qDebug() << "Failed to sync time";
+                qDebug() << "ERROR: Failed to sync time";
+
+                task->hasError();
             }
 
             qDebug() << "End time sync";
@@ -187,6 +205,9 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             } else {
                 qDebug() << "Start reading log...";
 
+                // Exit with an exit-code if uploading fails
+                QObject::connect(movesCount, SIGNAL(uploadError(QByteArray)), task, SLOT(error()));
+
                 syncData_t syncData;
                 syncData.deviceObject = deviceObject;
                 syncData.currentPersonalSettings = currentPersonalSettings;
@@ -195,7 +216,9 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
 
                 res = libambit_log_read(deviceObject, &log_skip_cb, &log_data_cb, NULL, &syncData);
                 if (res == -1) {
-                    qDebug() << "Failed to read logs";
+                    qDebug() << "ERROR: Failed to read logs";
+
+                    task->hasError();
                 }
 
                 qDebug() << "End reading log...";
@@ -211,7 +234,9 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 movesCount->writePersonalSettings(movecountPersonalSettings);
                 libambit_navigation_write(deviceObject, movecountPersonalSettings);
             } else {
-                qDebug() << "Failed to read navigation";
+                qDebug() << "ERROR: Failed to read navigation";
+
+                task->hasError();
             }
             qDebug() << "End reading navigation...";
         }
@@ -238,16 +263,22 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
 
                 res = libambit_sport_mode_write(deviceObject, ambitDeviceSettings);
                 if (res == -1) {
-                    qDebug() << "Failed to write sport mode";
+                    qDebug() << "ERROR: Failed to write sport mode";
+
+                    task->hasError();
                 }
 
                 qDebug() << "Writing " << ambitApps->app_rules_count << " applications";
                 res = libambit_app_data_write(deviceObject, ambitDeviceSettings, ambitApps);
                 if (res == -1) {
-                    qDebug() << "Failed to write app data";
+                    qDebug() << "ERROR: Failed to write app data";
+
+                    task->hasError();
                 }
             } else {
-                qDebug() << "Could not read custom mode data";
+                qDebug() << "ERROR: Could not read custom mode data";
+
+                task->hasError();
             }
 
             libambit_sport_mode_device_settings_free(ambitDeviceSettings);
@@ -263,12 +294,16 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             if ((orbitDataLen = movesCount->getOrbitalData(&orbitData)) != -1) {
                 res = libambit_gps_orbit_write(deviceObject, orbitData, orbitDataLen);
                 if (res == -1) {
-                    qDebug() << "Failed to write orbit data";
+                    qDebug() << "ERROR: Failed to write orbit data";
+
+                    task->hasError();
                 }
                 free(orbitData);
             }
             else {
-                qDebug() << "Failed to sync orbit data";
+                qDebug() << "ERROR: Failed to sync orbit data";
+
+                task->hasError();
             }
 
             qDebug() << "End orbit data sync";
@@ -277,15 +312,20 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
         if (writeSettingsJSON) {
             qDebug() << "Start sync watch apps to JSON";
 
-            ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
-            movesCount->getWatchAppConfig(ambitApps);
+            ambit_app_rules_t *ambitApps = liblibambit_malloc_app_rules();
+            int ret = movesCount->getWatchAppConfig(ambitApps);
+            if (ret != -1) {
+                ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
+                movesCount->getWatchModeConfig(ambitDeviceSettings);
+                qDebug() << "End sync watch apps to JSON";
 
-            ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
-            movesCount->getWatchModeConfig(ambitDeviceSettings);
-            qDebug() << "End sync watch apps to JSON";
+                libambit_sport_mode_device_settings_free(ambitDeviceSettings);
+                libambit_app_rules_free(ambitApps);
+            } else {
+                qDebug() << "ERROR: Failed to sync watch apps to JSON";
 
-            libambit_sport_mode_device_settings_free(ambitDeviceSettings);
-            libambit_app_rules_free(ambitApps);
+                task->hasError();
+            }
         }
 
         libambit_sync_display_clear(deviceObject);
@@ -350,6 +390,8 @@ static void log_data_cb(void *object, ambit_log_entry_t *log_entry)
 
         if (syncData->syncMovescount) {
             syncData->movesCount->writeLog(entry);
+        } else {
+            printf("Not sending log to movescount");
         }
 
         delete entry;
