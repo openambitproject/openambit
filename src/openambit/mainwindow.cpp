@@ -28,7 +28,7 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 
-#define APPKEY                 "HpF9f1qV5qrDJ1hY1QK1diThyPsX10Mh4JvCw9xVQSglJNLdcwr3540zFyLzIC3e"
+#define APPKEY                 "DbCBVqja20NKdrimBHQxtYIdczUJ56WHIWlC6A7vp6NPC0D0a8wA5d0ODyywFKe6"
 #define MOVESCOUNT_DEFAULT_URL "https://uiservices.movescount.com/"
 
 MainWindow::MainWindow(QWidget *parent) :
