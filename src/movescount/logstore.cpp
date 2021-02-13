@@ -20,6 +20,7 @@
  *
  */
 #include "logstore.h"
+#include "movescountxml.h"
 
 #include <QFile>
 #include <QStringList>
@@ -1501,6 +1502,7 @@ bool LogStore::XMLWriter::writeLogEntry()
         xml.writeTextElement("PeakTrainingEffect", QString("%1").arg(logEntry->header.peak_training_effect));
         xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->header.activity_type));
         xml.writeTextElement("Activity", QString::fromUtf8(logEntry->header.activity_name));
+        xml.writeTextElement("ActivityTypeName", MovesCountXML::lookupActivityName(logEntry->header.activity_type));
         xml.writeStartElement("Temperature");
         xml.writeTextElement("Max", QString("%1").arg(logEntry->header.temperature_max));
         xml.writeTextElement("Min", QString("%1").arg(logEntry->header.temperature_min));

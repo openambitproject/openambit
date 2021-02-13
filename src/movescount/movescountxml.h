@@ -33,7 +33,9 @@ class MovesCountXML : public QObject
     Q_OBJECT
 public:
     explicit MovesCountXML(QObject *parent = 0);
-    
+
+    static QString lookupActivityName(u_int8_t activityType);
+
 signals:
     
 public slots:

@@ -160,6 +160,17 @@ static typename_lookup_entry_t sampleActivityNames[] = {
     { 0, "" }
 };
 
+QString MovesCountXML::lookupActivityName(u_int8_t activityType) {
+    typename_lookup_entry_t *name_lookup;
+    for (name_lookup = &sampleActivityNames[0]; name_lookup->XMLName != ""; name_lookup++) {
+        if (name_lookup->id == activityType) {
+            return QString(name_lookup->XMLName);
+        }
+    }
+
+    return QString("Unknown - ").append(QString::number(activityType));
+}
+
 MovesCountXML::MovesCountXML(QObject *parent) :
     QObject(parent)
 {
@@ -609,13 +620,7 @@ bool MovesCountXML::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<
         xml.writeStartElement("Activity");
         xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.sportmode));
         xml.writeStartElement("Type");
-        typename_lookup_entry_t *name_lookup;
-        for (name_lookup = &sampleActivityNames[0]; name_lookup->XMLName != ""; name_lookup++) {
-            if (name_lookup->id == sample->u.activity.activitytype) {
-                xml.writeCharacters(QString(name_lookup->XMLName));
-                break;
-            }
-        }
+        xml.writeCharacters(lookupActivityName(sample->u.activity.activitytype));
         xml.writeEndElement();
         xml.writeEndElement();
         xml.writeEndElement();
