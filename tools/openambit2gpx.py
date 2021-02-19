@@ -80,10 +80,11 @@ def timeDiff(utcTime1,utcTime2):
     return secs2-secs1
 
 class ibiToHr(object):
-    def __init__(self):
+    def __init__(self, average_hr=False):
         self.ibitimeLast = None
         self.hrLast = 0
         self.hrlist = []
+        self.average_hr = average_hr
 
     def ibiToHr(self, element):
         '''Parse a list of IBI times to heart rates, always return some hr rate'''
@@ -92,16 +93,12 @@ class ibiToHr(object):
         if sampType == 'ibi':
             ibitime = element.findtext("Time")
             if self.ibitimeLast != ibitime:
-                # del hrlist  # deleted anyway one row below
                 self.hrlist = [int(element.text) for element in element.findall('IBI')]
+                if self.average_hr:
+                    # filter 1: average hr data, flatten data
+                    ibi_avg = sum(self.hrlist) / len(self.hrlist)
+                    self.hrlist = [ibi_avg]
 
-                # filter 1: average hr data, flatten data
-                tmpav = sum(self.hrlist) / len(self.hrlist)
-
-                ## why is this here? What does it?
-                #for i in self.hrlist:
-                #    if abs(i-tmpav)>20:
-                #        self.hrlist = [tmpav if x==i else x for x in self.hrlist]
             self.ibitimeLast = ibitime
 
         if len(self.hrlist) > 0:
@@ -134,8 +131,10 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
     time=element.findtext("UTC")
 
     altitude=element.findtext("Altitude") if element.findtext("Altitude")!=None else altitudeLast
-    #hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
-    hr = ibiconvertor.ibiToHr(element)
+    hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
+    if hr == None:
+        hr = ibiconvertor.ibiToHr(element)
+
     cadence=element.findtext("Cadence") if element.findtext("Cadence")!=None else cadenceLast
     power=element.findtext("BikePower") if element.findtext("BikePower")!=None else powerLast
     speed=element.findtext("Speed") if element.findtext("Speed")!=None else speedLast
