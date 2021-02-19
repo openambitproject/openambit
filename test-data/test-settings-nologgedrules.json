@@ -1,0 +1,1039 @@
+{
+    "DeviceDisplayName": "Suunto Ambit2",
+    "DeviceName": "Duck",
+    "DeviceURI": "devices/Duck",
+    "FirmwareURI": "devices/Duck/74.1.19201/2.0.16",
+    "FirmwareVersion": "2.0.16",
+    "HardwareURI": "devices/Duck/74.1.19201",
+    "HardwareVersion": "74.1.19201",
+    "LastSynchedMoveStartTime": "2019-10-13T00:01:36.000",
+    "Maps": null,
+    "POIs": [
+        {
+            "Altitude": 0,
+            "CreationLocalTime": "2014-02-27T14:04:30.0",
+            "Latitude": 38.43647,
+            "Longitude": 13.982241,
+            "Name": "Da",
+            "POIID": 451216,
+            "Type": 1
+        },
+        {
+            "Altitude": 0,
+            "CreationLocalTime": "2014-02-28T09:45:30.0",
+            "Latitude": 46.328770,
+            "Longitude": 12.358781,
+            "Name": "Workplace",
+            "POIID": 451786,
+            "Type": 23
+        }
+    ],
+    "RouteURIs": "routes/310212,routes/536613,routes/279790,routes/940553,routes/987374,routes/309474,routes/1681109,routes/1703522,routes/3604756,routes/4914162",
+    "SelfURI": "userdevices/87B209510B001D00",
+    "SerialNumber": "87B209510B001D00",
+    "Settings": {
+        "AirPressureUnit": 0,
+        "AlarmMode": null,
+        "AltiBaroMode": 2,
+        "AltitudeUnit": 0,
+        "AskBeforeSavingMove": null,
+        "AutomaticBikePowerCalibration": 1,
+        "AutomaticDaylightSaving": null,
+        "BacklightBrightness": 50,
+        "BacklightColor": null,
+        "BacklightMode": 0,
+        "BikePODCalibration": 1.117,
+        "BikePODCalibration2": 1,
+        "BikePODCalibration3": 1,
+        "BirthYear": 1975,
+        "CompassDeclination": 0,
+        "CompassUnit": 0,
+        "CustomModeGroups": [
+            {
+                "ActivityID": 3,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044114
+                ],
+                "IsVisible": true,
+                "Name": "Laufen"
+            },
+            {
+                "ActivityID": 83,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044115
+                ],
+                "IsVisible": true,
+                "Name": "Outdoorschw."
+            },
+            {
+                "ActivityID": 4,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044116
+                ],
+                "IsVisible": true,
+                "Name": "Radfahren"
+            },
+            {
+                "ActivityID": 6,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044117
+                ],
+                "IsVisible": true,
+                "Name": "Beckenschwimmen"
+            },
+            {
+                "ActivityID": 1,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044118
+                ],
+                "IsVisible": true,
+                "Name": "Sonst. sport"
+            },
+            {
+                "ActivityID": 74,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044120
+                ],
+                "IsVisible": true,
+                "Name": "Bergsteigen"
+            },
+            {
+                "ActivityID": 18,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2044912
+                ],
+                "IsVisible": true,
+                "Name": "Kondition"
+            },
+            {
+                "ActivityID": 8,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2098791
+                ],
+                "IsVisible": true,
+                "Name": "Roller skating"
+            },
+            {
+                "ActivityID": 5,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    2337104
+                ],
+                "IsVisible": true,
+                "Name": "Mountain biking"
+            },
+            {
+                "ActivityID": 89,
+                "CustomModeGroupID": null,
+                "CustomModeIDs": [
+                    98570886
+                ],
+                "IsVisible": true,
+                "Name": "Standup paddling"
+            }
+        ],
+        "CustomModes": [
+            {
+                "ActivityID": 1,
+                "AltiBaroMode": 2,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044118,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            20,
+                            0,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 21,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            6,
+                            33
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 0,
+                        "Row2": null,
+                        "Type": 1,
+                        "Views": null
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 8,
+                        "Row2": null,
+                        "Type": 6,
+                        "Views": [
+                            7
+                        ]
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "Name": "Sonst. sport",
+                "RecordingInterval": 10,
+                "ShowNavigationSelection": null,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 3,
+                "AltiBaroMode": 0,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0.56,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044114,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                    36
+                ],
+                "DisplayedRuleURIs": "rules/36",
+                "DisplayedRulesURI": "userdevices/87B209510B001D00/displayedrules",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 16,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            11,
+                            20,
+                            36,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 21,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            6,
+                            20,
+                            34,
+                            33
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 12,
+                        "Row2": 33,
+                        "Type": 5,
+                        "Views": [
+                            34,
+                            36,
+                            13
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 8,
+                        "Row2": null,
+                        "Type": 6,
+                        "Views": [
+                            7
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 100,
+                        "Row2": null,
+                        "Type": 6,
+                        "Views": [
+                            7
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 0,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            7,
+                            8,
+                            11,
+                            16
+                        ]
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "LoggedRulesURI": "",
+                "Name": "Laufen",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": true,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 4,
+                "AltiBaroMode": 0,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0.56,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044116,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            11,
+                            20,
+                            35,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": 0,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            9,
+                            22,
+                            33
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 21,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            6,
+                            33,
+                            20
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 61,
+                        "Row2": 60,
+                        "Type": 5,
+                        "Views": [
+                            62,
+                            63,
+                            64
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 8,
+                        "Row2": null,
+                        "Type": 6,
+                        "Views": [
+                            7
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 0,
+                        "Row2": null,
+                        "Type": 1,
+                        "Views": null
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "Name": "Radfahren",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 5,
+                "AltiBaroMode": 0,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0.56,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2337104,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                    3227
+                ],
+                "DisplayedRuleURIs": "rules/3227",
+                "DisplayedRulesURI": "userdevices/87B209510B001D00/displayedrules",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            2,
+                            20,
+                            35,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            11,
+                            20,
+                            35,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            11,
+                            35,
+                            34,
+                            100
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 0,
+                        "Row2": 100,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            11,
+                            35,
+                            34,
+                            100
+                        ]
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 170,
+                "HRLimitLow": 120,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "LoggedRulesURI": "",
+                "Name": "Mountain biking",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 6,
+                "AltiBaroMode": 1,
+                "AutoPause": null,
+                "AutoPauseSpeed": null,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044117,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 37,
+                        "Row2": 49,
+                        "Type": 5,
+                        "Views": [
+                            50,
+                            53,
+                            52,
+                            68,
+                            42
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 37,
+                        "Row2": 33,
+                        "Type": 5,
+                        "Views": [
+                            38,
+                            41,
+                            40
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": null,
+                        "Type": 4,
+                        "Views": null
+                    }
+                ],
+                "GPSInterval": 0,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": null,
+                "LoggedRuleIDs": null,
+                "LoggedRuleURIs": null,
+                "Name": "Beckenschwimmen",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": null,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": false,
+                "UseHRLimits": false,
+                "UseIntervals": null,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 8,
+                "AltiBaroMode": 0,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0.56,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2098791,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                    36
+                ],
+                "DisplayedRuleURIs": "rules/36",
+                "DisplayedRulesURI": "userdevices/87B209510B001D00/displayedrules",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            3,
+                            11,
+                            20,
+                            34
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 100,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            11,
+                            20,
+                            34,
+                            33
+                        ]
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 170,
+                "HRLimitLow": 120,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "LoggedRulesURI": "",
+                "Name": "Roller skating",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 18,
+                "AltiBaroMode": 1,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044912,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            6,
+                            7,
+                            21,
+                            33
+                        ]
+                    }
+                ],
+                "GPSInterval": 0,
+                "HRLimitHigh": 170,
+                "HRLimitLow": 120,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "Name": "Kondition",
+                "RecordingInterval": 10,
+                "ShowNavigationSelection": null,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 74,
+                "AltiBaroMode": 2,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044120,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": 0,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            7,
+                            9,
+                            11,
+                            22
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": 8,
+                        "Type": 5,
+                        "Views": [
+                            0,
+                            3,
+                            8,
+                            11,
+                            19
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 0,
+                        "Row2": null,
+                        "Type": 1,
+                        "Views": null
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": 11,
+                        "Type": 5,
+                        "Views": [
+                            1,
+                            7,
+                            8,
+                            17,
+                            22
+                        ]
+                    }
+                ],
+                "GPSInterval": 60,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "Name": "Bergsteigen",
+                "RecordingInterval": 10,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 83,
+                "AltiBaroMode": 1,
+                "AutoPause": null,
+                "AutoPauseSpeed": null,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 2044115,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 34,
+                        "Row2": 33,
+                        "Type": 5,
+                        "Views": [
+                            38,
+                            40
+                        ]
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 20,
+                        "Row2": null,
+                        "Type": 4,
+                        "Views": null
+                    },
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 8,
+                        "Row2": null,
+                        "Type": 6,
+                        "Views": [
+                            7
+                        ]
+                    }
+                ],
+                "GPSInterval": 1,
+                "HRLimitHigh": 165,
+                "HRLimitLow": 125,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": null,
+                "LoggedRuleIDs": null,
+                "LoggedRuleURIs": null,
+                "Name": "Outdoorschw.",
+                "RecordingInterval": 1,
+                "ShowNavigationSelection": null,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": false,
+                "UseHRLimits": false,
+                "UseIntervals": null,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            },
+            {
+                "ActivityID": 89,
+                "AltiBaroMode": 1,
+                "AutoPause": null,
+                "AutoPauseSpeed": 0,
+                "AutoScrolling": null,
+                "AutolapDistance": 1000,
+                "BacklightMode": null,
+                "CustomModeID": 98570886,
+                "DisplayIsNegative": null,
+                "DisplayedRuleIDs": [
+                ],
+                "DisplayedRuleURIs": "",
+                "Displays": [
+                    {
+                        "RequiresHRBelt": null,
+                        "Row1": 33,
+                        "Row2": 17,
+                        "Type": 5,
+                        "Views": [
+                            2,
+                            3,
+                            8,
+                            11,
+                            20
+                        ]
+                    }
+                ],
+                "GPSInterval": 60,
+                "HRLimitHigh": 170,
+                "HRLimitLow": 120,
+                "Interval1Distance": null,
+                "Interval1Time": null,
+                "Interval2Distance": null,
+                "Interval2Time": null,
+                "IntervalRepetitions": 99,
+                "LoggedRuleIDs": [
+                ],
+                "LoggedRuleURIs": "",
+                "Name": "Standup paddling",
+                "RecordingInterval": 10,
+                "ShowNavigationSelection": 0,
+                "TonesMode": null,
+                "UseAccelerometer": false,
+                "UseAutolap": false,
+                "UseAutomaticLogRecording": null,
+                "UseBikePOD": false,
+                "UseCadencePOD": false,
+                "UseFootPOD": false,
+                "UseHRBelt": true,
+                "UseHRLimits": false,
+                "UseIntervals": false,
+                "UsePODs": false,
+                "UsePowerPOD": false,
+                "__type": "BluebirdCustomModeContract:http://restservices.movescount.com/2011/11/DeviceService"
+            }
+        ],
+        "DisplayBrightness": 50,
+        "DisplayDateMode": 0,
+        "DisplayIsNegative": false,
+        "DistanceUnit": 0,
+        "DualTimeZone": null,
+        "FitnessLevel": 70,
+        "FootPODAutoCalibration": false,
+        "FootPODCalibration": 1,
+        "FusedAltiDisabled": 0,
+        "GPSPositionFormat": 2,
+        "GPSTimeKeeping": 0,
+        "HRUnit": 0,
+        "Height": 1.78,
+        "HeightUnit": 0,
+        "IsMale": true,
+        "Language": 1,
+        "LocalTimeDifferenceToUTC": null,
+        "LocalTimeZone": null,
+        "MaxHR": 195,
+        "NavigationStyle": 0,
+        "RestHR": 60,
+        "RuleIDs": null,
+        "RulesURI": "userdevices/87B209510B001D00/rules",
+        "SpeedUnit": 0,
+        "SportModeButtonLock": 1,
+        "StormAlarming": 0,
+        "SunriseAlarming": null,
+        "SunriseAlarmingTime": null,
+        "SunsetAlarming": null,
+        "SunsetAlarmingTime": null,
+        "SwimmingStyleCalibration": null,
+        "SyncTimeFromGPS": null,
+        "TemperatureUnit": 0,
+        "TimeModeButtonLock": 0,
+        "TonesMode": 0,
+        "UnitsMode": 0,
+        "Use24hClock": true,
+        "UseCompassDeclination": null,
+        "UseTrainingProgram": 0,
+        "VerticalSpeedUnit": 0,
+        "VibrationMode": null,
+        "Weight": 73,
+        "WeightUnit": 0
+    },
+    "SubscribedFwReleaseType": null,
+    "UserDeviceID": 451482,
+    "Waypoints": [
+        {
+            "Altitude": 0,
+            "CreationLocalTime": "2014-02-27T14:04:30.0",
+            "Latitude": 48.45647,
+            "Longitude": 13.992341,
+            "Name": "Dahoam",
+            "Type": 1
+        },
+        {
+            "Altitude": 0,
+            "CreationLocalTime": "2014-02-28T09:45:30.0",
+            "Latitude": 48.329779,
+            "Longitude": 14.318981,
+            "Name": "Workplace",
+            "Type": 23
+        },
+        {
+            "Altitude": 10,
+            "CreationLocalTime": "2018-07-03T10:53:16.0",
+            "Latitude": 54.571774,
+            "Longitude": 13.474187,
+            "Name": "Wohnung",
+            "Type": 9
+        },
+        {
+            "Altitude": 0,
+            "CreationLocalTime": "2018-10-23T21:27:00.0",
+            "Latitude": 41.402931,
+            "Longitude": 2.187829,
+            "Name": "Unterkunft01",
+            "Type": 9
+        }
+    ]
+}

@@ -115,8 +115,8 @@ typedef struct ambit_pack_routes_s {
 #define NUM_WAYPOINTS_MOVESCOUNT 34
 #define NUM_WAYPOINTS_AMBIT 18
 
-const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT];
-const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT];
+extern const uint8_t ambit_waypoint_types_from_movescount[NUM_WAYPOINTS_MOVESCOUNT];
+extern const uint8_t ambit_waypoint_types_to_movescount[NUM_WAYPOINTS_AMBIT];
 
 int ambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *settings);
 int ambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *settings);

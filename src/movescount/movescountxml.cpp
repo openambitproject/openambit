@@ -54,105 +54,104 @@ static typename_lookup_entry_t sampleLapEventTypeNames[] = {
 };
 
 static typename_lookup_entry_t sampleActivityNames[] = {
-    { 0x01, "Not Specified Sport" },
+    { 0x01, "Unspecified sport" },
     { 0x02, "Multisport" },
-    { 0x03, "Run" },
+    { 0x03, "Running" },
     { 0x04, "Cycling" },
-    { 0x05, "Mountain Biking" },
-    { 0x06, "UNDEFINED7" },
-    { 0x07, "Skating" },
-    { 0x08, "Aerobics" },
-    { 0x09, "Yoga Pilates" },
-    { 0x0a, "Trekking" },
-    { 0x0b, "Walking" },
-    { 0x0c, "Sailing" },
-    { 0x0d, "Kayaking" },
-    { 0x0e, "Rowing" },
-    { 0x0f, "Climbing" },
-    { 0x10, "Indoor Cycling" },
-    { 0x11, "Circuit Training" },
-    { 0x12, "Triathlon" },
-    { 0x13, "Alpine Skiing" },
-    { 0x14, "Snowboarding" },
-    { 0x15, "Crosscountry Skiing" },
-    { 0x16, "Weight Training" },
-    { 0x17, "Basketball" },
-    { 0x18, "Soccer" },
-    { 0x19, "Ice Hockey" },
-    { 0x1a, "Volleyball" },
-    { 0x1b, "Football" },
-    { 0x1c, "Softball" },
-    { 0x1d, "Cheerleading" },
-    { 0x1e, "Baseball" },
-    { 0x1f, "UNDEFINED32" },
-    { 0x20, "Tennis" },
-    { 0x21, "Badminton" },
-    { 0x22, "Table Tenni" },
-    { 0x23, "Racquet Ball" },
-    { 0x24, "Squash" },
-    { 0x25, "Combat Sport" },
-    { 0x26, "Boxing" },
-    { 0x27, "Floorball" },
-    { 0x28, "UNDEFINED41" },
-    { 0x29, "UNDEFINED42" },
-    { 0x2a, "UNDEFINED43" },
-    { 0x2b, "UNDEFINED44" },
-    { 0x2c, "UNDEFINED45" },
-    { 0x2d, "UNDEFINED46" },
-    { 0x2e, "UNDEFINED47" },
-    { 0x2f, "UNDEFINED48" },
-    { 0x30, "UNDEFINED49" },
-    { 0x31, "UNDEFINED50" },
-    { 0x32, "Scuba Diving" },
-    { 0x33, "Free Diving" },
-    { 0x34, "UNDEFINED53" },
-    { 0x35, "UNDEFINED54" },
-    { 0x36, "UNDEFINED55" },
-    { 0x37, "UNDEFINED56" },
-    { 0x38, "UNDEFINED57" },
-    { 0x39, "UNDEFINED58" },
-    { 0x3a, "UNDEFINED59" },
-    { 0x3b, "UNDEFINED60" },
-    { 0x3c, "Adventure Racing" },
-    { 0x3d, "Bowling" },
-    { 0x3e, "Cricket" },
-    { 0x3f, "Crosstrainer" },
-    { 0x40, "Dancing" },
-    { 0x41, "Golf" },
-    { 0x42, "Gymnastics" },
-    { 0x43, "Handball" },
-    { 0x44, "Horseback Riding" },
-    { 0x45, "Ice Skating" },
-    { 0x46, "Indoor Rowing" },
-    { 0x47, "Canoeing" },
-    { 0x48, "Motorsports" },
-    { 0x49, "Mountaineering" },
-    { 0x4a, "Orienteering" },
-    { 0x4b, "Rugby" },
-    { 0x4c, "UNDEFINED77" },
-    { 0x4d, "Ski Touring" },
-    { 0x4e, "Stretching" },
-    { 0x4f, "Telemark Skiing" },
-    { 0x50, "Track And Field" },
-    { 0x51, "Trail Running" },
-    { 0x52, "Openwater Swimming" },
-    { 0x53, "UNDEFINED84" },
-    { 0x54, "UNDEFINED85" },
-    { 0x55, "UNDEFINED86" },
-    { 0x56, "UNDEFINED87" },
-    { 0x57, "UNDEFINED88" },
-    { 0x58, "UNDEFINED89" },
-    { 0x59, "UNDEFINED90" },
-    { 0x5a, "UNDEFINED91" },
-    { 0x5b, "UNDEFINED92" },
-    { 0x5c, "UNDEFINED93" },
-    { 0x5d, "UNDEFINED94" },
-    { 0x5e, "UNDEFINED95" },
-    { 0x5f, "UNDEFINED96" },
-    { 0x60, "UNDEFINED97" },
-    { 0x61, "UNDEFINED98" },
-    { 0x62, "UNDEFINED99" },
-    { 0x63, "Other" },
+    { 0x05, "Mountain biking" },
+    { 0x06, "Pool swimming" },
+    { 0x08, "Roller skating" },
+    { 0x09, "Aerobics" },
+    { 0x0a, "Yoga / pilates" },
+    { 0x0b, "Trekking" },
+    { 0x0c, "Walking" },
+    { 0x0d, "Sailing" },
+    { 0x0e, "Kayaking" },
+    { 0x0f, "Rowing" },
+    { 0x10, "Climbing" },
+    { 0x11, "Indoor cycling" },
+    { 0x12, "Circuit training" },
+    { 0x13, "Triathlon" },
+    { 0x14, "Alpine skiing" },
+    { 0x15, "Snowboarding" },
+    { 0x16, "Cross-country skiing" },
+    { 0x17, "Weight training" },
+    { 0x18, "Basketball" },
+    { 0x19, "Soccer / football" },
+    { 0x1a, "Ice Hockey" },
+    { 0x1b, "Volleyball" },
+    { 0x1c, "American football" },
+    { 0x1d, "Softball" },
+    { 0x1e, "Cheerleading" },
+    { 0x1f, "Baseball" },
+    { 0x20, "UNDEFINED32" },
+    { 0x21, "Tennis" },
+    { 0x22, "Badminton" },
+    { 0x23, "Table tennis" },
+    { 0x24, "Racquet ball" },
+    { 0x25, "Squash" },
+    { 0x26, "Martial arts" },
+    { 0x27, "Boxing" },
+    { 0x28, "Floorball" },
+    { 0x29, "UNDEFINED41" },
+    { 0x2a, "UNDEFINED42" },
+    { 0x2b, "UNDEFINED43" },
+    { 0x2c, "UNDEFINED44" },
+    { 0x2d, "UNDEFINED45" },
+    { 0x2e, "UNDEFINED46" },
+    { 0x2f, "UNDEFINED47" },
+    { 0x30, "UNDEFINED48" },
+    { 0x31, "UNDEFINED49" },
+    { 0x32, "UNDEFINED50" },
+    { 0x33, "Scuba Diving" },
+    { 0x34, "Free Diving" },
+    { 0x35, "Snorkeling" },
+    { 0x36, "Surfing" },
+    { 0x37, "SwimRun" },
+    { 0x38, "Duathlon" },
+    { 0x39, "Aquathlon" },
+    { 0x3a, "Obstacle racing" },
+    { 0x3b, "UNDEFINED59" },
+    { 0x3c, "UNDEFINED60" },
+    { 0x3d, "Adventure racing" },
+    { 0x3e, "Bowling" },
+    { 0x3f, "Cricket" },
+    { 0x40, "Crosstrainer" },
+    { 0x41, "Dancing" },
+    { 0x42, "Golf" },
+    { 0x43, "Gymnastics" },
+    { 0x44, "Handball" },
+    { 0x45, "Horseback riding" },
+    { 0x46, "Ice skating" },
+    { 0x47, "Indoor rowing" },
+    { 0x48, "Canoeing" },
+    { 0x49, "Motorsports" },
+    { 0x4a, "Mountaineering" },
+    { 0x4b, "Orienteering" },
+    { 0x4c, "Rugby" },
+    { 0x4d, "UNDEFINED77" },
+    { 0x4e, "Ski touring" },
+    { 0x4f, "Stretching" },
+    { 0x50, "Telemark skiing" },
+    { 0x51, "Track and field" },
+    { 0x52, "Trail running" },
+    { 0x53, "Openwater swimming" },
+    { 0x54, "Nordic walking" },
+    { 0x55, "Snow shoeing" },
+    { 0x56, "Windsurfing/Surfing" },
+    { 0x57, "Kettlebell" },
+    { 0x58, "Roller skiing" },
+    { 0x59, "Standup paddling (SUP)" },
+    { 0x5a, "Crosffit" },
+    { 0x5b, "Kitesurfing/Kiting" },
+    { 0x5c, "Paragliding" },
+    { 0x5d, "Treadmill" },
+    { 0x5e, "Frisbee" },
+    { 0x5f, "Indoor training" },
+    { 0x60, "Hiking" },
+    { 0x61, "Fishing" },
+    { 0x62, "Hunting" },
+    { 0x63, "Transition" },
     { 0x64, "Butterfly" },
     { 0x65, "Backstroke" },
     { 0x66, "Breaststroke" },
@@ -160,6 +159,17 @@ static typename_lookup_entry_t sampleActivityNames[] = {
     { 0x68, "Drill" },
     { 0, "" }
 };
+
+QString MovesCountXML::lookupActivityName(u_int8_t activityType) {
+    typename_lookup_entry_t *name_lookup;
+    for (name_lookup = &sampleActivityNames[0]; name_lookup->XMLName != ""; name_lookup++) {
+        if (name_lookup->id == activityType) {
+            return QString(name_lookup->XMLName);
+        }
+    }
+
+    return QString("Unknown - ").append(QString::number(activityType));
+}
 
 MovesCountXML::MovesCountXML(QObject *parent) :
     QObject(parent)
@@ -208,82 +218,116 @@ bool MovesCountXML::XMLWriter::writeLogEntry()
 {
     u_int32_t i;
 
-    xml.writeStartElement("header");
-    xml.writeTextElement("Duration", QString::number((double)logEntry->logEntry->header.duration/1000.0, 'g', 16));
-    xml.writeTextElement("Ascent", QString("%1").arg(logEntry->logEntry->header.ascent));
-    xml.writeTextElement("Descent", QString("%1").arg(logEntry->logEntry->header.descent));
-    xml.writeTextElement("AscentTime", QString::number((double)logEntry->logEntry->header.ascent_time/1000.0, 'g', 16));
-    xml.writeTextElement("DescentTime", QString::number((double)logEntry->logEntry->header.descent_time/1000.0, 'g', 16));
-    xml.writeTextElement("RecoveryTime", QString::number((double)logEntry->logEntry->header.recovery_time/1000.0, 'g', 16));
-    xml.writeStartElement("Speed");
-    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.speed_avg/3600.0, 'g', 16));
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.speed_max/3600.0, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.speed_max_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeStartElement("Cadence");
-    xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.cadence_avg/60.0, 'g', 16));
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.cadence_max/60.0, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.cadence_max_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeStartElement("Altitude");
-    xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
-    xml.writeTextElement("Min", QString("%1").arg(logEntry->logEntry->header.altitude_min));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.altitude_max_time/1000.0, 'g', 16));
-    xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.altitude_min_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    // Only include HR if heartrate seems to be present
-    if (logEntry->logEntry->header.heartrate_avg != 0) {
-        xml.writeStartElement("HR");
-        xml.writeTextElement("Avg", QString::number((double)logEntry->logEntry->header.heartrate_avg/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.heartrate_max/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.heartrate_min/logEntry->personalSettings->rest_hr, 'g', 16));
-        xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.heartrate_max_time/1000.0, 'g', 16));
-        xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.heartrate_min_time/1000.0, 'g', 16));
+    if(logEntry != NULL && logEntry->logEntry != NULL) {
+        xml.writeStartElement("header");
+        xml.writeTextElement("Duration",
+                             QString::number((double) logEntry->logEntry->header.duration / 1000.0, 'g', 16));
+        xml.writeTextElement("Ascent", QString("%1").arg(logEntry->logEntry->header.ascent));
+        xml.writeTextElement("Descent", QString("%1").arg(logEntry->logEntry->header.descent));
+        xml.writeTextElement("AscentTime",
+                             QString::number((double) logEntry->logEntry->header.ascent_time / 1000.0, 'g', 16));
+        xml.writeTextElement("DescentTime",
+                             QString::number((double) logEntry->logEntry->header.descent_time / 1000.0, 'g', 16));
+        xml.writeTextElement("RecoveryTime",
+                             QString::number((double) logEntry->logEntry->header.recovery_time / 1000.0, 'g', 16));
+        xml.writeStartElement("Speed");
+        xml.writeTextElement("Avg", QString::number((double) logEntry->logEntry->header.speed_avg / 3600.0, 'g', 16));
+        xml.writeTextElement("Max", QString::number((double) logEntry->logEntry->header.speed_max / 3600.0, 'g', 16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.speed_max_time / 1000.0, 'g', 16));
         xml.writeEndElement();
-        xml.writeTextElement("PeakTrainingEffect", QString::number((double)logEntry->logEntry->header.peak_training_effect/10.0, 'g', 16));
-    }
-    xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
-    xml.writeTextElement("Activity", QString::fromUtf8(logEntry->logEntry->header.activity_name));
-    xml.writeStartElement("Temperature");
-    xml.writeTextElement("Max", QString::number((double)logEntry->logEntry->header.temperature_max/10.0 + 273.15, 'g', 16));
-    xml.writeTextElement("Min", QString::number((double)logEntry->logEntry->header.temperature_min/10.0 + 273.15, 'g', 16));
-    xml.writeTextElement("MaxTime", QString::number((double)logEntry->logEntry->header.temperature_max_time/1000.0, 'g', 16));
-    xml.writeTextElement("MinTime", QString::number((double)logEntry->logEntry->header.temperature_min_time/1000.0, 'g', 16));
-    xml.writeEndElement();
-    xml.writeTextElement("Distance", QString("%1").arg(logEntry->logEntry->header.distance));
-    xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->logEntry->header.samples_count));
-    // Only include energy if heartrate seems to be present
-    if (logEntry->logEntry->header.heartrate_avg != 0) {
-        xml.writeTextElement("Energy", QString::number((double)logEntry->logEntry->header.energy_consumption*4186.8, 'g', 16)); // kcal to Joule
-    }
-    xml.writeTextElement("TimeToFirstFix", QString::number((double)logEntry->logEntry->header.first_fix_time/1000.0, 'g', 16));
-    xml.writeTextElement("BatteryChargeAtStart", QString::number((double)logEntry->logEntry->header.battery_start/100.0, 'g', 16));
-    xml.writeTextElement("BatteryCharge", QString::number((double)logEntry->logEntry->header.battery_end/100.0, 'g', 16));
-    xml.writeTextElement("DistanceBeforeCalibrationChange", QString("%1").arg(logEntry->logEntry->header.distance_before_calib));
-    QDateTime dateTime(QDate(logEntry->logEntry->header.date_time.year,
-                             logEntry->logEntry->header.date_time.month,
-                             logEntry->logEntry->header.date_time.day),
-                       QTime(logEntry->logEntry->header.date_time.hour,
-                             logEntry->logEntry->header.date_time.minute, 0).addMSecs(logEntry->logEntry->header.date_time.msec));
-    xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
-    xml.writeEndElement();
-    QList<quint16> ibis;
-    xml.writeStartElement("Samples");
-    QList<int> order = rearrangeSamples();
-    foreach(int index, order) {
-        writeLogSample(&logEntry->logEntry->samples[index], &ibis);
-    }
-
-    xml.writeEndElement();
-    if (ibis.count() > 0) {
-        xml.writeStartElement("IBI");
-        for (i=0; i<(u_int32_t)ibis.count(); i++) {
-            if (i > 0) {
-                xml.writeCharacters(" ");
-            }
-            xml.writeCharacters(QString("%1").arg(ibis.at(i)));
+        xml.writeStartElement("Cadence");
+        xml.writeTextElement("Avg", QString::number((double) logEntry->logEntry->header.cadence_avg / 60.0, 'g', 16));
+        xml.writeTextElement("Max", QString::number((double) logEntry->logEntry->header.cadence_max / 60.0, 'g', 16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.cadence_max_time / 1000.0, 'g', 16));
+        xml.writeEndElement();
+        xml.writeStartElement("Altitude");
+        xml.writeTextElement("Max", QString("%1").arg(logEntry->logEntry->header.altitude_max));
+        xml.writeTextElement("Min", QString("%1").arg(logEntry->logEntry->header.altitude_min));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.altitude_max_time / 1000.0, 'g', 16));
+        xml.writeTextElement("MinTime",
+                             QString::number((double) logEntry->logEntry->header.altitude_min_time / 1000.0, 'g', 16));
+        xml.writeEndElement();
+        // Only include HR if heartrate seems to be present
+        if (logEntry->logEntry->header.heartrate_avg != 0) {
+            xml.writeStartElement("HR");
+            xml.writeTextElement("Avg", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_avg / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("Max", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_max / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("Min", QString::number(
+                    (double) logEntry->logEntry->header.heartrate_min / logEntry->personalSettings->rest_hr, 'g', 16));
+            xml.writeTextElement("MaxTime",
+                                 QString::number((double) logEntry->logEntry->header.heartrate_max_time / 1000.0, 'g',
+                                                 16));
+            xml.writeTextElement("MinTime",
+                                 QString::number((double) logEntry->logEntry->header.heartrate_min_time / 1000.0, 'g',
+                                                 16));
+            xml.writeEndElement();
+            xml.writeTextElement("PeakTrainingEffect",
+                                 QString::number((double) logEntry->logEntry->header.peak_training_effect / 10.0, 'g',
+                                                 16));
         }
+        xml.writeTextElement("ActivityType", QString("%1").arg(logEntry->logEntry->header.activity_type));
+        xml.writeTextElement("Activity", QString::fromUtf8(logEntry->logEntry->header.activity_name));
+        xml.writeStartElement("Temperature");
+        xml.writeTextElement("Max",
+                             QString::number((double) logEntry->logEntry->header.temperature_max / 10.0 + 273.15, 'g',
+                                             16));
+        xml.writeTextElement("Min",
+                             QString::number((double) logEntry->logEntry->header.temperature_min / 10.0 + 273.15, 'g',
+                                             16));
+        xml.writeTextElement("MaxTime",
+                             QString::number((double) logEntry->logEntry->header.temperature_max_time / 1000.0, 'g',
+                                             16));
+        xml.writeTextElement("MinTime",
+                             QString::number((double) logEntry->logEntry->header.temperature_min_time / 1000.0, 'g',
+                                             16));
         xml.writeEndElement();
+        xml.writeTextElement("Distance", QString("%1").arg(logEntry->logEntry->header.distance));
+        xml.writeTextElement("LogItemCount", QString("%1").arg(logEntry->logEntry->header.samples_count));
+        // Only include energy if heartrate seems to be present
+        if (logEntry->logEntry->header.heartrate_avg != 0) {
+            xml.writeTextElement("Energy",
+                                 QString::number((double) logEntry->logEntry->header.energy_consumption * 4186.8, 'g',
+                                                 16)); // kcal to Joule
+        }
+        xml.writeTextElement("TimeToFirstFix",
+                             QString::number((double) logEntry->logEntry->header.first_fix_time / 1000.0, 'g', 16));
+        xml.writeTextElement("BatteryChargeAtStart",
+                             QString::number((double) logEntry->logEntry->header.battery_start / 100.0, 'g', 16));
+        xml.writeTextElement("BatteryCharge",
+                             QString::number((double) logEntry->logEntry->header.battery_end / 100.0, 'g', 16));
+        xml.writeTextElement("DistanceBeforeCalibrationChange",
+                             QString("%1").arg(logEntry->logEntry->header.distance_before_calib));
+        QDateTime dateTime(QDate(logEntry->logEntry->header.date_time.year,
+                                 logEntry->logEntry->header.date_time.month,
+                                 logEntry->logEntry->header.date_time.day),
+                           QTime(logEntry->logEntry->header.date_time.hour,
+                                 logEntry->logEntry->header.date_time.minute, 0).addMSecs(
+                                   logEntry->logEntry->header.date_time.msec));
+        xml.writeTextElement("DateTime", dateTime.toString(Qt::ISODate));
+        xml.writeEndElement();
+        QList<quint16> ibis;
+        xml.writeStartElement("Samples");
+        QList<int> order = rearrangeSamples();
+                foreach(int index, order) {
+                writeLogSample(&logEntry->logEntry->samples[index], &ibis);
+            }
+
+        xml.writeEndElement();
+        if (ibis.count() > 0) {
+            xml.writeStartElement("IBI");
+            for (i = 0; i < (u_int32_t) ibis.count(); i++) {
+                if (i > 0) {
+                    xml.writeCharacters(" ");
+                }
+                xml.writeCharacters(QString("%1").arg(ibis.at(i)));
+            }
+            xml.writeEndElement();
+        }
     }
 
     return true;
@@ -576,13 +620,7 @@ bool MovesCountXML::XMLWriter::writeLogSample(ambit_log_sample_t *sample, QList<
         xml.writeStartElement("Activity");
         xml.writeTextElement("CustomModeId", QString("%1").arg(sample->u.activity.sportmode));
         xml.writeStartElement("Type");
-        typename_lookup_entry_t *name_lookup;
-        for (name_lookup = &sampleActivityNames[0]; name_lookup->XMLName != ""; name_lookup++) {
-            if (name_lookup->id == sample->u.activity.activitytype) {
-                xml.writeCharacters(QString(name_lookup->XMLName));
-                break;
-            }
-        }
+        xml.writeCharacters(lookupActivityName(sample->u.activity.activitytype));
         xml.writeEndElement();
         xml.writeEndElement();
         xml.writeEndElement();

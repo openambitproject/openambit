@@ -87,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trayIconMenu->addAction(ui->actionE_xit);
     trayIcon = new QSystemTrayIcon(QIcon(":/icon_disconnected"), this);
     trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setToolTip(tr("No device detected"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
     trayIcon->setVisible(true);
 
@@ -228,7 +229,7 @@ void MainWindow::showAbout()
 {
     QMessageBox::about(this, tr("About %1").arg(QCoreApplication::applicationName()),
                        tr("<h2>%1</h2><b>Version %2</b><br />Using Qt %3").arg(QCoreApplication::applicationName()).arg(QCoreApplication::applicationVersion()).arg(QString(qVersion())) +
-                       "<br /><br /><a href=\"http://openambit.org/\">http://openambit.org</a>");
+                       "<br /><br /><a href=\"https://github.com/openambitproject/openambit\">https://github.com/openambitproject/openambit</a>");
 }
 
 void MainWindow::settingsSaved()
@@ -253,6 +254,7 @@ void MainWindow::deviceDetected(const DeviceInfo& deviceInfo)
     }
     ui->labelDeviceDetected->setText(deviceInfo.name);
     ui->labelSerial->setText(deviceInfo.serial);
+    trayIcon->setToolTip(tr("Device connected"));
     trayIcon->setIcon(QIcon(":/icon_connected"));
     if (0 != deviceInfo.access_status || !deviceInfo.is_supported) {
         ui->labelNotSupportedIcon->setHidden(false);
@@ -320,7 +322,7 @@ void MainWindow::deviceRemoved(void)
     trayIconSyncAction->setDisabled(true);
     ui->syncProgressBar->setHidden(true);
 
-    trayIcon->toolTip();
+    trayIcon->setToolTip(tr("No device detected"));
     trayIcon->setIcon(QIcon(":/icon_disconnected"));
 }
 
@@ -359,6 +361,7 @@ void MainWindow::syncFinished(bool success)
     trayIconSyncAction->setEnabled(true);
     ui->syncProgressBar->setHidden(true);
 
+    trayIcon->setToolTip(tr("Device connected"));
     trayIcon->setIcon(QIcon(":/icon_connected"));
 
     updateLogList();
@@ -398,6 +401,11 @@ void MainWindow::movesCountAuth(bool authorized)
 {
     ui->labelMovescountAuth->setHidden(authorized);
     ui->labelMovescountAuthIcon->setHidden(authorized);
+}
+
+void MainWindow::showUploadError(QByteArray data)
+{
+    QMessageBox::warning(nullptr, QObject::tr("Upload error"), data, QMessageBox::Ok);
 }
 
 void MainWindow::logItemSelected(QListWidgetItem *current,QListWidgetItem *previous)
@@ -483,6 +491,7 @@ void MainWindow::startSync()
     ui->syncProgressBar->setHidden(false);
     ui->syncProgressBar->setValue(0);
 
+    trayIcon->setToolTip(tr("Syncing..."));
     trayIcon->setIcon(QIcon(":/icon_syncing"));
     if (isHidden()) {
         trayIcon->showMessage(QCoreApplication::applicationName(), tr("Synchronization started"));
@@ -495,17 +504,19 @@ void MainWindow::movesCountSetup()
     bool syncOrbit = false;
     bool syncSportMode = false;
     bool syncNavigation = false;
+    bool syncWatchJsonConfig = false;
     bool movescountEnable = false;
 
     settings.beginGroup("syncSettings");
     syncOrbit = settings.value("syncOrbit", true).toBool();
     syncSportMode = settings.value("syncSportMode", false).toBool();
     syncNavigation = settings.value("syncNavigation", false).toBool();
+    syncWatchJsonConfig = settings.value("syncWatchJsonConfig", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("movescountSettings");
     movescountEnable = settings.value("movescountEnable", false).toBool();
-    if (syncOrbit || syncSportMode || syncNavigation || movescountEnable) {
+    if (syncOrbit || syncSportMode || syncNavigation || movescountEnable || syncWatchJsonConfig) {
         if (movesCount == NULL) {
             movesCount = MovesCount::instance();
             movesCount->setAppkey(APPKEY);
@@ -517,6 +528,7 @@ void MainWindow::movesCountSetup()
 
             connect(movesCount, SIGNAL(newerFirmwareExists(QByteArray)), this, SLOT(newerFirmwareExists(QByteArray)), Qt::QueuedConnection);
             connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
+            connect(movesCount, SIGNAL(uploadError(QByteArray)), this, SLOT(showUploadError(QByteArray)));
         }
         if (movescountEnable) {
             movesCount->setUsername(settings.value("email").toString());

@@ -1,9 +1,10 @@
-cmake_minimum_required (VERSION 2.8.5)
+cmake_minimum_required (VERSION 3.1.3)
 project (LIBAMBIT C)
 
 # Where to lookup modules
 set(CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
 
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 # Debug defines
@@ -46,7 +47,7 @@ target_link_libraries(
   m
 )
 
-set_target_properties(ambit PROPERTIES VERSION 0.4.0 SOVERSION 0)
+set_target_properties(ambit PROPERTIES VERSION 0.5.0 SOVERSION 0)
 
 include_directories(
   ${HIDAPI_INCLUDE_DIR}

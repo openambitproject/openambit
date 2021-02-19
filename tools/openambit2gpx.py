@@ -10,6 +10,8 @@ import argparse
 import xml.etree.ElementTree as etree
 import math
 
+# Look at http://www.topografix.com/GPX/1/1/gpx.xsd and https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd for XML Schemata for GPX files
+
 def utcSplitConvSeconds(utcTime):
     """ Splits the UTC time code YYYY-MM-DDTHH:MM:SS.SSSZ, keeps only the time part and converts it into seconds.
     """
@@ -34,7 +36,7 @@ def timeDiff(utcTime1,utcTime2):
     return secs2-secs1
 
 class ibiToHr(object):
-    def __init__(self, average_hr):
+    def __init__(self, average_hr=False):
         self.ibitimeLast = None
         self.hrLast = 0
         self.hrlist = []
@@ -47,7 +49,6 @@ class ibiToHr(object):
         if sampType == 'ibi':
             ibitime = element.findtext("Time")
             if self.ibitimeLast != ibitime:
-                # del hrlist  # deleted anyway one row below
                 self.hrlist = [int(element.text) for element in element.findall('IBI')]
 
                 if self.average_hr:
@@ -63,7 +64,7 @@ class ibiToHr(object):
             del self.hrlist[0]
         else:
             # no data is available anymore
-            return self.hrLast
+            hr = self.hrLast
 
         #filter 2: sensor errors
         hrmin = 40  # Mimimum heart rate for humans
@@ -71,8 +72,10 @@ class ibiToHr(object):
         if hr > hrmax or  hr < hrmin: 
             hr = self.hrLast
         
-        self.hrLast = str(int(hr))
-        return self.hrLast
+        self.hrLast = hr
+        ret = None if self.hrLast == None else str(int(self.hrLast))
+        return ret
+
 
 def main(fileIn, fileOut, average_hr=True):
     ###########################################
@@ -106,13 +109,19 @@ def main(fileIn, fileOut, average_hr=True):
     lapArray=[0]
     maxLap=0
 
-
     ###########################
     ## getting activity data ##
     ###########################
     ibiconvertor = ibiToHr(average_hr=average_hr)
 
     for element in rootIn.iterfind("Log/Samples/Sample"):
+
+        # Position samples just repeat positional/time information in the previous gps-base sample
+        # Thus simply skip these to avoid creating duplicate gpx trkpts
+        sampType=element.findtext("Type")
+        if sampType=="position":
+            continue
+
         trk=etree.Element("trkpt")
 
         lat=element.findtext("Latitude")
@@ -120,15 +129,16 @@ def main(fileIn, fileOut, average_hr=True):
         time=element.findtext("UTC")
 
         altitude=element.findtext("Altitude") if element.findtext("Altitude")!=None else altitudeLast
-        #hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
-        hr = ibiconvertor.ibiToHr(element)
+        hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
+        if hr == None:
+            hr = ibiconvertor.ibiToHr(element)
+
         cadence=element.findtext("Cadence") if element.findtext("Cadence")!=None else cadenceLast
         power=element.findtext("BikePower") if element.findtext("BikePower")!=None else powerLast
-        speed=element.findtext("Speed") if element.findtext("Speed")!=None else speedLast
+        speed=str(float(element.findtext("Speed"))/100) if element.findtext("Speed")!=None else speedLast
         temp=str(float(element.findtext("Temperature"))/10) if element.findtext("Temperature")!=None else tempLast
         airpressure=element.findtext("SeaLevelPressure") if element.findtext("SeaLevelPressure")!=None else airpressureLast
 
-        sampType=element.findtext("Type")
         if sampType=="lap-info":
             lapType=element.findtext("Lap/Type")
             lapDate=element.findtext("Lap/DateTime")
@@ -169,10 +179,10 @@ def main(fileIn, fileOut, average_hr=True):
                 etree.SubElement(trk,"ele").text=altitude 
             elif altitudeLast!=None:
                 etree.SubElement(trk,"ele").text=altitudeLast
-    
-            if time!=None:
+     
+            if time!=None and len(time) > 0:
                 etree.SubElement(trk,"time").text=time 
-            elif timeLast!=None:
+            elif timeLast!=None and len(timeLast) > 0:
                 etree.SubElement(trk,"time").text=timeLast 
 
             if hr!=None or cadence!=None or power!=None or speed!=None or temp!=None or airpressure!=None:
@@ -221,6 +231,8 @@ def main(fileIn, fileOut, average_hr=True):
 
     fOut.write(" <extensions>\n")
 
+    previousLatEP=0
+    previousLonEP=0
     for i in range(0,len(lapArray)):
         if lapArray[i][0]=='Manual':
             lap=etree.Element("gpxdata:lap")
@@ -243,18 +255,30 @@ def main(fileIn, fileOut, average_hr=True):
                 t=lapArray[i][4]
                 t1=lapArray[i][7]
                 t2=lapArray[i][10]
-                lat1=float(lapArray[i][5])
-                lat2=float(lapArray[i][8])
-                latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+                lat1=float(lapArray[i][5]) if lapArray[i][5]!=None else 0.0
+                lat2=float(lapArray[i][8]) if lapArray[i][8]!=None else 0.0
+                # only try to parse time difference if both times look like valid timestamps
+                if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
+                    latInterPolEP=str( ((lat2-lat1)/timeDiff(t1,t2))*timeDiff(t1,t) + lat1 )
+                else:
+                    print("Failed to interpolate with t1: ", t1, ", t2: ", t2)
+                    latInterPolEP=0
+
             if i==maxLap:
                 lonInterPolEP=lapArray[i][6]
             else:
                 t=lapArray[i][4]
                 t1=lapArray[i][7]
                 t2=lapArray[i][10]
-                lon1=float(lapArray[i][6])
-                lon2=float(lapArray[i][9])
-                lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+                lon1=float(lapArray[i][6]) if lapArray[i][6]!=None else 0.0
+                lon2=float(lapArray[i][9]) if lapArray[i][9]!=None else 0.0
+                # only try to parse time difference if both times look like valid timestamps
+                if t1 != None and t2 != None and t1 != 0 and t2 != 0 and "T" in t1 and "Z" in t2 and "T" in t1 and "Z" in t2:
+                    lonInterPolEP=str( ((lon2-lon1)/timeDiff(t1,t2))*timeDiff(t1,t) + lon1 )
+                else:
+                    print("Failed to interpolate with t1: ", t1, ", t2: ", t2)
+                    lonInterPolEP=0
+
             previousLatEP=latInterPolEP
             previousLonEP=lonInterPolEP
             SP=etree.SubElement(lap,'startPoint')

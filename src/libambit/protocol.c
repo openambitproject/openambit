@@ -90,6 +90,7 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
 {
     int ret = 0;
     uint8_t buf[64];
+    memset(buf, 0, 64);
     int packet_count = 1;
     ambit_msg_header_t *msg = (ambit_msg_header_t *)buf;
     uint8_t packet_payload_len;
@@ -157,6 +158,8 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
                 reply_data_len -= packet_payload_len;
             }
             else {
+                libambit_protocol_free(*reply_data);
+
                 ret = -1;
             }
         }

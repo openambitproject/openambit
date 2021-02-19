@@ -19,6 +19,7 @@
  * Contributors:
  *
  */
+#include <libambit.h>
 #include "logentry.h"
 
 LogEntry::LogEntry() :
@@ -29,8 +30,6 @@ LogEntry::LogEntry() :
 
 LogEntry::LogEntry(const LogEntry &other)
 {
-    u_int32_t i;
-
     device = other.device;
     time = other.time;
     movescountId = other.movescountId;
@@ -39,6 +38,26 @@ LogEntry::LogEntry(const LogEntry &other)
     if (other.personalSettings != NULL) {
         personalSettings = (ambit_personal_settings_t*)malloc(sizeof(ambit_personal_settings_t));
         memcpy(personalSettings, other.personalSettings, sizeof(ambit_personal_settings_t));
+
+        // need to copy waypoints and routes to avoid re-using the same memory
+        if(other.personalSettings->waypoints.data != NULL) {
+            personalSettings->waypoints.count = 0;
+            libambit_waypoint_append(personalSettings, other.personalSettings->waypoints.data,
+                                     other.personalSettings->waypoints.count);
+        }
+        if(other.personalSettings->routes.data != NULL) {
+            ambit_route_t *routes = libambit_route_alloc(other.personalSettings->routes.count);
+            personalSettings->routes.data = routes;
+            personalSettings->routes.count = other.personalSettings->routes.count;
+            for(int r = 0; r < personalSettings->routes.count; r++) {
+                ambit_route_t *route = &personalSettings->routes.data[r];
+                ambit_route_t *otherRoute = &other.personalSettings->routes.data[r];
+                memcpy(route, otherRoute, sizeof(ambit_route_t));
+
+                route->points = (ambit_routepoint_t *) malloc(sizeof(ambit_routepoint_t) * otherRoute->points_count);
+                memcpy(route->points, otherRoute->points, sizeof(ambit_routepoint_t) * otherRoute->points_count);
+            }
+        }
     }
     else {
         personalSettings = NULL;
@@ -53,7 +72,7 @@ LogEntry::LogEntry(const LogEntry &other)
         if (other.logEntry->samples != NULL) {
             logEntry->samples = (ambit_log_sample_t*)malloc(sizeof(ambit_log_sample_t)*other.logEntry->samples_count);
             memcpy(logEntry->samples, other.logEntry->samples, sizeof(ambit_log_sample_t)*other.logEntry->samples_count);
-            for (i=0; i<other.logEntry->samples_count; i++) {
+            for (unsigned int i=0; i<other.logEntry->samples_count; i++) {
                 if (other.logEntry->samples[i].type == ambit_log_sample_type_periodic) {
                     if (other.logEntry->samples[i].u.periodic.values != NULL) {
                         logEntry->samples[i].u.periodic.values = (ambit_log_sample_periodic_value_t*)malloc(sizeof(ambit_log_sample_periodic_value_t)*other.logEntry->samples[i].u.periodic.value_count);
@@ -93,43 +112,17 @@ LogEntry& LogEntry::operator=(const LogEntry &rhs)
 
 LogEntry::~LogEntry()
 {
-    u_int32_t i;
-
     if (personalSettings != NULL) {
-        free(personalSettings);
+        libambit_personal_settings_free(personalSettings);
         personalSettings = NULL;
     }
 
-    if (logEntry != NULL) {
-        if (logEntry->samples != NULL) {
-            for (i=0; i<logEntry->samples_count; i++) {
-                if (logEntry->samples[i].type == ambit_log_sample_type_periodic) {
-                    if (logEntry->samples[i].u.periodic.values != NULL) {
-                        free(logEntry->samples[i].u.periodic.values);
-                    }
-                }
-                if (logEntry->samples[i].type == ambit_log_sample_type_gps_base) {
-                    if (logEntry->samples[i].u.gps_base.satellites != NULL) {
-                        free(logEntry->samples[i].u.gps_base.satellites);
-                    }
-                }
-                if (logEntry->samples[i].type == ambit_log_sample_type_unknown) {
-                    if (logEntry->samples[i].u.unknown.data != NULL) {
-                        free(logEntry->samples[i].u.unknown.data);
-                    }
-                }
-            }
-            free(logEntry->samples);
-        }
-        free(logEntry);
-    }
+    libambit_log_entry_free(logEntry);
 
     logEntry = NULL;
 }
 
-bool LogEntry::isUploaded(){
-    if (this->movescountId == NULL){
-        return false;
-    }
-    return true;
+bool LogEntry::isUploaded()
+{
+    return this->movescountId != NULL;
 }

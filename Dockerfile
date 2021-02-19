@@ -1,5 +1,5 @@
 #  Dockerfile -- to build the sources on a well-known platform
-#  Copyright (C) 2014, 2015  Olaf Meeuwissen
+#  Copyright (C) 2014, 2015, 2019  Olaf Meeuwissen
 #
 #  This file is part of Openambit.
 #
@@ -19,11 +19,11 @@
 #  Recommended way to build the container this creates (for lack of
 #  an easy way to exclude everything but the Dockerfile):
 #
-#    docker build -t openambit:jessie - < Dockerfile
+#    docker build -t openambit:stretch - < Dockerfile
 #
 #  After that is just a matter of compiling the sources with:
 #
-#    docker run --rm -v $PWD:/code -u $(id -u) openambit:jessie
+#    docker run --rm -v $PWD:/code -u $(id -u) openambit:stretch
 #
 #  Doing so gives you a basic sanity check of code compilability on a
 #  minimalistic, reproducible development platform.
@@ -36,7 +36,7 @@
 #      --env BUILD_DIR=tmp \
 #      --env CMAKE_OPTS="-DBUILD_EXTRAS=1" \
 #      --env MAKE_OPTS=-k \
-#      openambit:jessie
+#      openambit:stretch
 #
 #  Check out the --env-file option to docker if you find that overly
 #  long-winded.  If you use a BUILD_DIR that is not below /code make
@@ -45,12 +45,12 @@
 #  For interactive sessions, you may want to use:
 #
 #    docker run -i -t --rm -v $PWD:/code -u $(id -u) \
-#      openambit:jessie /bin/bash
+#      openambit:stretch /bin/bash
 #
 #  Again, drop the --rm option if you build in a location that is not
 #  below /code.
 
-FROM        debian:jessie
+FROM        debian:stretch
 MAINTAINER  Olaf Meeuwissen <paddy-hack@member.fsf.org>
 
 ENV  APT_OPTS --assume-yes --no-install-recommends
@@ -75,12 +75,12 @@ RUN  apt-get update \
              libpcap-dev
 
 # openambit build dependencies
-# Note that libqjson-dev needs to be >= 0.8
 RUN  apt-get update \
      && apt-get install ${APT_OPTS} \
              g++ \
              qtbase5-dev \
              qttools5-dev \
+             qttools5-dev-tools \
              zlib1g-dev
 
 # wireshark dissector build dependencies
@@ -96,7 +96,3 @@ CMD      test -d ${BUILD_DIR} || mkdir ${BUILD_DIR}; \
 	      cd ${BUILD_DIR} \
 	      && cmake ${CMAKE_OPTS} .. \
 	      && make ${MAKE_OPTS}
-
-# Finally, things that really should be fixed in the Openambit code.
-# FIXME add multiarch support to src/libambit/cmake/FindUdev.cmake
-RUN  cd /usr/lib/ && ln -s x86_64-linux-gnu/libudev.so

@@ -180,7 +180,7 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
             libambit_protocol_free(reply_data);
 
             // Assume every header is composited by 2 parts, where only the
-            // second is of interrest right now
+            // second is of interest right now
             if (libambit_protocol_command(object, ambit_command_log_head, NULL, 0, &reply_data, &replylen, 0) != 0) {
                 LOG_WARNING("Failed to read first part of header");
                 return -1;
@@ -193,11 +193,13 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
                         // Header was NOT skipped, break out!
                         read_pmem = true;
                         LOG_INFO("Found new entry, start reading log data");
+                        libambit_protocol_free(reply_data);
                         break;
                     }
                 }
                 else {
                     LOG_ERROR("Failed to parse log header");
+                    libambit_protocol_free(reply_data);
                     return -1;
                 }
                 libambit_protocol_free(reply_data);
@@ -242,6 +244,8 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
                         push_cb(userref, log_entry);
                     }
                     entries_read++;
+
+                    libambit_log_entry_free(log_entry);
                 }
             }
             else {
@@ -255,7 +259,11 @@ static int log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_log
     }
 
     LOG_INFO("%d entries read", entries_read);
-
+    
+    if(log_header.activity_name != NULL) {
+        free(log_header.activity_name);
+    }
+    
     return entries_read;
 }
 
@@ -328,6 +336,8 @@ static int sport_mode_write(ambit_object_t *object, ambit_sport_mode_device_sett
     if (data != NULL) {
         int dataLen = serialize_sport_mode_device_settings(ambit_device_settings, data);
         ret = libambit_pmem20_sport_mode_write(&object->driver_data->pmem20, data, dataLen, false);
+
+        free(data);
     }
 
     return ret;
@@ -351,6 +361,8 @@ static int app_data_write(ambit_object_t *object, ambit_sport_mode_device_settin
     if (data != NULL) {
         int dataLen = serialize_app_data(ambit_device_settings, ambit_apps, data);
         ret = libambit_pmem20_app_data_write(&object->driver_data->pmem20, data, dataLen, false);
+
+        free(data);
     }
 
     return ret;

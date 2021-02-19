@@ -27,6 +27,8 @@
 #include <QEventLoop>
 #include <QMutex>
 #include <QDebug>
+#include <QDir>
+#include <QJsonDocument>
 
 #include "logstore.h"
 
@@ -41,8 +43,9 @@ MovesCount* MovesCount::instance()
     if (!m_Instance) {
         mutex.lock();
 
-        if (!m_Instance)
+        if (!m_Instance) {
             m_Instance = new MovesCount;
+        }
 
         mutex.unlock();
     }
@@ -61,8 +64,7 @@ void MovesCount::exit()
         workerThread.quit();
         workerThread.wait();
 
-        delete logChecker;
-
+        delete m_Instance;
         m_Instance = NULL;
     }
     mutex.unlock();
@@ -108,6 +110,10 @@ QString MovesCount::generateUserkey()
 void MovesCount::setDevice(const DeviceInfo& device_info)
 {
     this->device_info = device_info;
+}
+
+void MovesCount::setUploadLogs(bool uploadLogs) {
+    this->uploadLogs = uploadLogs;
 }
 
 bool MovesCount::isAuthorized()
@@ -200,6 +206,23 @@ int MovesCount::getCustomModeData(ambit_sport_mode_device_settings_t* ambitCusto
     return ret;
 }
 
+int MovesCount::getWatchModeConfig(ambit_sport_mode_device_settings_t* ambitCustomModes)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getWatchModeDataThread(ambitCustomModes);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getWatchModeDataThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_sport_mode_device_settings_t*, ambitCustomModes));
+    }
+
+    return ret;
+}
+
+
 int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
@@ -209,6 +232,22 @@ int MovesCount::getAppsData(ambit_app_rules_t* ambitApps)
     }
     else {
         QMetaObject::invokeMethod(this, "getAppsDataInThread", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, ret),
+                                  Q_ARG(ambit_app_rules_t*, ambitApps));
+    }
+
+    return ret;
+}
+
+int MovesCount::getWatchAppConfig(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+
+    if (&workerThread == QThread::currentThread()) {
+        ret = getWatchAppConfigThread(ambitApps);
+    }
+    else {
+        QMetaObject::invokeMethod(this, "getWatchAppConfigThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
                                   Q_ARG(ambit_app_rules_t*, ambitApps));
     }
@@ -302,7 +341,7 @@ void MovesCount::recheckAuthorization()
 
 void MovesCount::handleAuthorizationSignal(bool authorized)
 {
-    if (authorized) {
+    if (authorized && uploadLogs) {
         logChecker->run();
     }
 }
@@ -467,6 +506,18 @@ void MovesCount::getDeviceSettingsInThread()
     }
 }
 
+void writeJson(QByteArray _data, const char* name) {
+    QFile logfile(name);
+    logfile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+
+    // pretty print JSON
+    QJsonDocument doc = QJsonDocument::fromJson(_data);
+    QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
+
+    logfile.write(formattedJsonString.toUtf8());
+    logfile.close();
+}
+
 int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *ambitSettings)
 {
     int ret = -1;
@@ -487,6 +538,28 @@ int MovesCount::getCustomModeDataInThread(ambit_sport_mode_device_settings_t *am
     return ret;
 }
 
+int MovesCount::getWatchModeDataThread(ambit_sport_mode_device_settings_t *ambitSettings)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/userdevices/" + device_info.serial, "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+        MovescountSettings settings = MovescountSettings();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/settings.json");
+
+        if (jsonParser.parseDeviceSettingsReply(_data, settings) == 0) {
+            settings.toAmbitData(ambitSettings);
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
 int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 {
     int ret = -1;
@@ -496,6 +569,26 @@ int MovesCount::getAppsDataInThread(ambit_app_rules_t* ambitApps)
 
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
+
+        if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
+int MovesCount::getWatchAppConfigThread(ambit_app_rules_t* ambitApps)
+{
+    int ret = -1;
+    QNetworkReply *reply;
+
+    reply = syncGET("/rules/private", "", true);
+
+    if (checkReplyAuthorization(reply)) {
+        QByteArray _data = reply->readAll();
+
+        writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/apprules.json");
 
         if (jsonParser.parseAppRulesReply(_data, ambitApps) == 0) {
             ret = 0;
@@ -564,6 +657,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     QByteArray output;
     QNetworkReply *reply;
     QString moveId;
+    QByteArray data;
 
     jsonParser.generateLogData(logEntry, output);
 
@@ -574,16 +668,25 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
 
     reply = syncPOST("/moves/", "", output, true);
 
-    if (reply->error() == QNetworkReply::NoError || reply->error() == QNetworkReply::ContentConflictError) {
-        QByteArray data = reply->readAll();
+    if (reply->error() == QNetworkReply::NoError){
+        data = reply->readAll();
         if (jsonParser.parseLogReply(data, moveId) == 0) {
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         } else {
             qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
+            emit uploadError(data);
         }
     } 
+    else if(reply->error() == QNetworkReply::ContentConflictError){
+        // this is not useful currently as it seems that we re-visit some logs every time
+        //emit uploadError("Move already uploaded");
+        qDebug() << "Movescount replied with ContentConflictError for move '" << logEntry->logEntry->header.activity_name <<
+            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
+    }
     else {
+        data = reply->readAll();
         qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << reply->readAll() << "\"";
+        emit uploadError(data);
     }
 }
 
@@ -604,6 +707,9 @@ MovesCount::~MovesCount()
 {
     workerThread.exit();
     workerThread.wait();
+
+    delete this->logChecker;
+    delete this->manager;
 }
 
 bool MovesCount::checkReplyAuthorization(QNetworkReply *reply)

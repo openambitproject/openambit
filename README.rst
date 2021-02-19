@@ -30,6 +30,8 @@ tools
   contains a few utilities that people thought useful.  One compares
   Openambit's XML log files with those from `Moveslink2`_ and another
   converts the XML to `GPX`_.
+  Finally `strava_upload.sh` allows to send data from Moves directly to
+  Strava via the GPX file.
 
 wireshark_dissector
   a `Wireshark`_ packet dissector to help reverse engineer the Ambit
@@ -75,6 +77,14 @@ well as one of ``libudev`` and ``libusb-1.0``.
 For all these libraries you will also need their header files
 (typically provided in ``*-dev`` or ``*-devel`` packages).
 
+On Debian/Ubuntu based distributions the following should install the
+necessary packages:
+
+``sudo apt-get install debhelper gcc g++ make cmake libusb-1.0-0-dev libudev-dev qtbase5-dev qttools5-dev-tools zlib1g-dev libpcap-dev libglib2.0-dev wireshark-dev qttools5-dev``
+
+Openambit also makes use of the hidapi library from https://github.com/libusb/hidapi
+The source is currently included, so no dependency needs to be installed
+for it.
 
 Build Procedure
 ---------------
@@ -135,7 +145,8 @@ Build options
    BUILD_EXTRAS = 0 | 1 (Default 0)
    CMAKE_BUILD_TYPE = Debug | Release
    DEBUG_PRINT_INFO = 0 | 1 (Default 0)
-   
+   HIDAPI_DRIVER = libudev | libusb | pcapsimulate | mac | windows (Default <empty> => libudev)
+
 
 Install Procedure
 -----------------
@@ -163,6 +174,17 @@ your ``~/.wireshark/plugins/`` directory.  You can also put a symbolic
 link there pointing to the build result so your next ``wireshark`` run
 will use the latest and greatest(?) version.
 
+Device setup
+------------
+
+In order to allow access to the device, you may need to do the following.
+
+.. code-block:: sh
+
+    sudo cp ./src/libambit/libambit.rules /etc/udev/rules.d/
+    sudo udevadm control --reload-rules && udevadm trigger
+
+This configures access to the device via udev.
 
 .. _Movescount: http://www.movescount.com/
 .. _Moveslink2: http://www.movescount.com/connect/moveslink/Suunto_Ambit
@@ -173,3 +195,9 @@ will use the latest and greatest(?) version.
 .. _Ubuntu: http://packages.ubuntu.com/search?keywords=openambit
 .. _OSWatershed.org: http://oswatershed.org/pkg/openambit
 .. _release: https://github.com/openambitproject/openambit/releases
+
+More information
+----------------
+
+Look at the wiki at https://github.com/openambitproject/openambit/wiki for
+more information.
