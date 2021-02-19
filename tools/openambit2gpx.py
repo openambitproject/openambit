@@ -110,7 +110,7 @@ class ibiToHr(object):
             del self.hrlist[0]
         else:
             # no data is available anymore
-            return self.hrLast
+            hr = self.hrLast
 
         #filter 2: sensor errors
         hrmin = 40  # Mimimum heart rate for humans
@@ -118,8 +118,10 @@ class ibiToHr(object):
         if hr > hrmax or  hr < hrmin: 
             hr = self.hrLast
         
-        self.hrLast = str(int(hr))
-        return self.hrLast
+        self.hrLast = hr
+        ret = None if self.hrLast == None else str(int(self.hrLast))
+        return ret
+
 
 ###########################
 ## getting activity data ##
