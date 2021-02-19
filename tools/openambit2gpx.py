@@ -73,7 +73,7 @@ class ibiToHr(object):
             hr = self.hrLast
         
         self.hrLast = hr
-        ret = None if self.hrLast == None else str(int(self.hrLast))
+        ret = None if self.hrLast == 0 else str(int(self.hrLast))
         return ret
 
 
