@@ -70,8 +70,7 @@ def uploadMove(activity):
     if not ext in ['fit', 'tcx', 'gpx']:
         ext = activity[-6:]
         if not ext in ['fit.gz', 'tcx.gz', 'gpx.gz']:
-            print('Invalid file {}, must be one with extension fit[.gz], tcx[.gz] or gpx[.gz]'.format(activity))
-            return
+            return (-1, 'Invalid file {}, must be one with extension fit[.gz], tcx[.gz] or gpx[.gz]'.format(activity))
         
     payload = {'data_type': ext}
 
