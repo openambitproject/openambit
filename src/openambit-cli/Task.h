@@ -9,7 +9,7 @@ class Task : public QObject
 public:
     Task(QObject *parent, const char *username, const char *userkey,
          bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-         bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile) : QObject(parent) {
+         bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, const char *appInputFile) : QObject(parent) {
         this->username = username;
         this->userkey = userkey;
         this->readAllLogs = readAllLogs;
@@ -20,6 +20,7 @@ public:
         this->writeLogs = writeLogs;
         this->writeSettingsJSON = writeSettingsJSON;
         this->settingsInputFile = settingsInputFile;
+        this->appInputFile = appInputFile;
     }
 
     void hasError();
@@ -42,6 +43,7 @@ private:
     bool writeLogs;
     bool writeSettingsJSON;
     const char* settingsInputFile;
+    const char* appInputFile;
 
     bool isError = false;
 };

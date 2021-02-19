@@ -72,9 +72,14 @@ int main(int argc, char *argv[]) {
     parser.addOption(writeJSONSettingsFileOption);
 
     QCommandLineOption customConfigFileOption(QStringList() << "c" << "custom-config",
-                                              QCoreApplication::translate("main", "A custom JSON config file to load settings for the watch."),
+                                              QCoreApplication::translate("main", "A custom JSON config file to load settings for the watch. Not applied when --no-syn-sport-mode is specified."),
                                               QCoreApplication::translate("main", "json-file"));
     parser.addOption(customConfigFileOption);
+
+    QCommandLineOption customAppFileOption(QStringList() << "a" << "app-config",
+                                              QCoreApplication::translate("main", "A custom JSON config file to load apps for the watch. Not applied when --no-syn-sport-mode is specified."),
+                                              QCoreApplication::translate("main", "json-file"));
+    parser.addOption(customAppFileOption);
 
     // Process the actual command line arguments given by the user
     parser.process(a);
@@ -89,6 +94,15 @@ int main(int argc, char *argv[]) {
     std::string customConfigStr;
     if(customConfig.length() > 0) {
         customConfigStr = customConfig.toStdString();
+    }
+
+    const QString customAppConfig = parser.value(customAppFileOption);
+
+    // we have to store the parameters as std::string here
+    // to not have them deleted before we use them
+    std::string customAppConfigStr;
+    if(customAppConfig.length() > 0) {
+        customAppConfigStr = customAppConfig.toStdString();
     }
 
     std::string username;
@@ -112,7 +126,8 @@ int main(int argc, char *argv[]) {
             !parser.isSet(noSyncNavigationOption),
             !parser.isSet(noWriteLogs),
             parser.isSet(writeJSONSettingsFileOption),
-            customConfig.length() == 0 ? NULL : customConfigStr.c_str());
+            customConfig.length() == 0 ? NULL : customConfigStr.c_str(),
+            customAppConfig.length() == 0 ? NULL : customAppConfigStr.c_str());
 
     // make application stop when the task is done
     QObject::connect(task, SIGNAL(finished()), &a, SLOT(quit()));

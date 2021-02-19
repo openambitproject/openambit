@@ -14,11 +14,12 @@
 MovesCount *movesCountSetup(const char *username, const char *userkey);
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation, bool writeLogs,
-               bool writeSettingsJSON, const char *settingsInputFile, Task *task);
+               bool writeSettingsJSON, const char *settingsInputFile, const char* appInputFile, Task *task);
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
 int readSportModesFromFile(const char *file, ambit_sport_mode_device_settings_t *ambitDeviceSettings);
+int readAppsFromFile(const char *file, ambit_app_rules_t* ambitApps);
 
 LogStore logStore;
 MovesCountXML movesCountXML;
@@ -110,7 +111,7 @@ void Task::run() {
                            deviceInfo.is_supported);
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
-                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, this);
+                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, appInputFile, this);
 
                     if(settings.waypoints.data != NULL) {
                         free(settings.waypoints.data);
@@ -175,7 +176,7 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
 
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, Task *task)
+               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, const char *appInputFile, Task *task)
 {
     ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
@@ -247,16 +248,24 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             qDebug() << "Start sport mode";
 
             ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
-            movesCount->getAppsData(ambitApps);
+            if(appInputFile != NULL) {
+                qDebug() << "Reading apps from '" << appInputFile << "'";
+                res = readAppsFromFile(appInputFile, ambitApps);
+            } else {
+                qDebug() << "Reading apps from Movescount";
+                res = movesCount->getAppsData(ambitApps);
+            }
 
             ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
 
-            if(settingsInputFile != NULL) {
-                qDebug() << "Reading sport-modes from '" << settingsInputFile << "'";
-                res = readSportModesFromFile(settingsInputFile, ambitDeviceSettings);
-            } else {
-                qDebug() << "Reading sport-modes from Movescount";
-                res = movesCount->getCustomModeData(ambitDeviceSettings);
+            if (res != -1) {
+                if (settingsInputFile != NULL) {
+                    qDebug() << "Reading sport-modes from '" << settingsInputFile << "'";
+                    res = readSportModesFromFile(settingsInputFile, ambitDeviceSettings);
+                } else {
+                    qDebug() << "Reading sport-modes from Movescount";
+                    res = movesCount->getCustomModeData(ambitDeviceSettings);
+                }
             }
 
             if (res != -1) {
@@ -318,7 +327,13 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             int ret = movesCount->getWatchAppConfig(ambitApps);
             if (ret != -1) {
                 ambit_sport_mode_device_settings_t *ambitDeviceSettings = libambit_malloc_sport_mode_device_settings();
-                movesCount->getWatchModeConfig(ambitDeviceSettings);
+                ret = movesCount->getWatchModeConfig(ambitDeviceSettings);
+                if (ret == -1) {
+                    qDebug() << "ERROR: Failed to get WatchModeConfig to JSON";
+
+                    task->hasError();
+                }
+
                 qDebug() << "End sync watch apps to JSON";
 
                 libambit_sport_mode_device_settings_free(ambitDeviceSettings);
@@ -355,6 +370,27 @@ int readSportModesFromFile(const char *settingsInputFile, ambit_sport_mode_devic
     }
 
     settings.toAmbitData(ambitDeviceSettings);
+
+    return 0;
+}
+
+int readAppsFromFile(const char *settingsInputFile, ambit_app_rules_t* ambitApps) {
+    MovescountSettings settings = MovescountSettings();
+
+    MovesCountJSON jsonParser;
+
+    QFile jsonFile(settingsInputFile);
+    jsonFile.open(QFile::ReadOnly);
+    QByteArray data = jsonFile.read(9999999);
+
+    if (data.length() == 0) {
+        qDebug() << "Failed to read settings file from " << settingsInputFile;
+        return -1;
+    } else {
+        if (jsonParser.parseAppRulesReply(data, ambitApps) == -1) {
+            return -1;
+        }
+    }
 
     return 0;
 }
