@@ -128,6 +128,8 @@ void Task::run() {
 
         hasError();
 
+        emit error();
+
         return;
     }
 
