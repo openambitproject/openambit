@@ -82,10 +82,51 @@ def timeDiff(utcTime1,utcTime2):
 
     return secs2-secs1
 
+class ibiToHr(object):
+    def __init__(self, average_hr=False):
+        self.ibitimeLast = None
+        self.hrLast = 0
+        self.hrlist = []
+        self.average_hr = average_hr
+
+    def ibiToHr(self, element):
+        '''Parse a list of IBI times to heart rates, always return some hr rate'''
+        sampType = element.findtext("Type")
+
+        if sampType == 'ibi':
+            ibitime = element.findtext("Time")
+            if self.ibitimeLast != ibitime:
+                self.hrlist = [int(element.text) for element in element.findall('IBI')]
+                if self.average_hr:
+                    # filter 1: average hr data, flatten data
+                    ibi_avg = sum(self.hrlist) / len(self.hrlist)
+                    self.hrlist = [ibi_avg]
+
+            self.ibitimeLast = ibitime
+
+        if len(self.hrlist) > 0:
+            # take first element of list to convert to HR
+            hr = 60./ (self.hrlist[0] / 1000.)  # convert IBI to beats/min
+            del self.hrlist[0]
+        else:
+            # no data is available anymore
+            hr = self.hrLast
+
+        #filter 2: sensor errors
+        hrmin = 40  # Mimimum heart rate for humans
+        hrmax = 220  # Maximum heart rate for hiumans
+        if hr > hrmax or  hr < hrmin: 
+            hr = self.hrLast
+        
+        self.hrLast = hr
+        ret = None if self.hrLast == None else str(int(self.hrLast))
+        return ret
+
 
 ###########################
 ## getting activity data ##
 ###########################
+ibiconvertor = ibiToHr()
 
 for element in rootIn.iterfind("Log/Samples/Sample"):
 
@@ -103,6 +144,9 @@ for element in rootIn.iterfind("Log/Samples/Sample"):
 
     altitude=element.findtext("Altitude") if element.findtext("Altitude")!=None else altitudeLast
     hr=element.findtext("HR") if element.findtext("HR")!=None else hrLast
+    if hr == None:
+        hr = ibiconvertor.ibiToHr(element)
+
     cadence=element.findtext("Cadence") if element.findtext("Cadence")!=None else cadenceLast
     power=element.findtext("BikePower") if element.findtext("BikePower")!=None else powerLast
     speed=str(float(element.findtext("Speed"))/100) if element.findtext("Speed")!=None else speedLast
