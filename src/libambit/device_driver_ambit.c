@@ -335,10 +335,14 @@ static int sport_mode_write(ambit_object_t *object, ambit_sport_mode_device_sett
     uint8_t *data = (uint8_t*)malloc(dataBufferSize);
 
     if (data != NULL) {
+        LOG_INFO("Sending data in sport_mode_write");
+
         int dataLen = serialize_sport_mode_device_settings(ambit_device_settings, data);
         ret = libambit_pmem20_sport_mode_write(&object->driver_data->pmem20, data, dataLen, false);
 
         free(data);
+    } else {
+        LOG_INFO("Could not allocate memory for sport_mode_write");
     }
 
     return ret;

@@ -585,6 +585,8 @@ int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_a
     offset += bufsizes;
     address += bufsizes;
 
+    LOG_INFO("Ret after first write_data_chunk: %d", ret);
+
     // Write rest of the chunks
     while (ret == 0 && offset < datalen) {
         bufptrs[0] = data + offset;
@@ -1116,6 +1118,8 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
 
         if (libambit_protocol_command(object, ambit_command_data_write, send_data, send_data_len, &reply, &replylen, 0) == 0) {
             ret = 0;
+        } else {
+            LOG_INFO("libambit_protocol_command failed for 'ambit_command_data_write'");
         }
 
         free(send_data);
