@@ -100,7 +100,13 @@ int libambit_protocol_command(ambit_object_t *object, uint16_t command, uint8_t 
 
     // Calculate number of packets
     if (datalen > 42) {
-        packet_count = 2 + (datalen - 42)/54;
+        packet_count =
+                // we send at least one packet where we can add 42 bytes of data
+                1 +
+                // then we send one package for every 54 bytes (minus the 42 included in the first package)
+                (int)((datalen - 42)/54) +
+                // finally we may need to send another package for the "remainder"
+                ((datalen - 42) % 54 > 0 ? 1 : 0);
     }
 
     // Create first packet
