@@ -58,7 +58,7 @@ static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_
 static int is_leap(unsigned int y);
 static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval);
 
-static int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_address, const uint8_t *data, size_t datalen);
+static int libambit_pmem20_data_write(libambit_pmem20_t *object, uint32_t start_address, const uint8_t *data, size_t datalen);
 
 /*
  * Static variables
@@ -80,7 +80,6 @@ int libambit_pmem20_init(libambit_pmem20_t *object, ambit_object_t *ambit_object
 int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint32_t mem_size)
 {
     int ret = -1;
-    size_t offset;
 
     // Allocate buffer for complete memory
     if (object->log.buffer != NULL) {
@@ -108,7 +107,7 @@ int libambit_pmem20_log_init(libambit_pmem20_t *object, uint32_t mem_start, uint
 
         if (ret == 0) {
             // Parse PMEM header
-            offset = 0;
+            size_t offset = 0;
             object->log.last_entry = read32inc(object->log.buffer, &offset);
             object->log.first_entry = read32inc(object->log.buffer, &offset);
             object->log.entries = read32inc(object->log.buffer, &offset);
@@ -146,8 +145,6 @@ int libambit_pmem20_deinit(libambit_pmem20_t *object)
 int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_t *log_header, uint32_t flags)
 {
     int ret = -1;
-    size_t buffer_offset;
-    uint16_t tmp_len;
 
     LOG_INFO("Reading header of next log entry");
 
@@ -163,14 +160,14 @@ int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_
     }
 
     if (read_upto(object, object->log.current.next, PMEM20_LOG_HEADER_MIN_LEN) == 0) {
-        buffer_offset = (object->log.current.next - object->log.mem_start);
+        size_t buffer_offset = (object->log.current.next - object->log.mem_start);
         // First check that header seems to be correctly present
         if (strncmp((char*)object->log.buffer + buffer_offset, "PMEM", 4) == 0) {
             object->log.current.current = object->log.current.next;
             buffer_offset += 4;
             object->log.current.next = read32inc(object->log.buffer, &buffer_offset);
             object->log.current.prev = read32inc(object->log.buffer, &buffer_offset);
-            tmp_len = read16inc(object->log.buffer, &buffer_offset);
+            uint16_t tmp_len = read16inc(object->log.buffer, &buffer_offset);
             buffer_offset += tmp_len;
             tmp_len = read16inc(object->log.buffer, &buffer_offset);
             if (libambit_pmem20_log_parse_header(object->log.buffer + buffer_offset, tmp_len, log_header, flags) == 0) {
@@ -200,9 +197,6 @@ int libambit_pmem20_log_next_header(libambit_pmem20_t *object, ambit_log_header_
 ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uint32_t flags)
 {
     // Note! We assume that the caller has called libambit_pmem20_log_next_header just before
-    uint8_t *periodic_sample_spec;
-    uint16_t tmp_len, sample_len;
-    size_t buffer_offset, sample_count = 0;
     ambit_log_entry_t *log_entry;
     int32_t *time_compensators;
 
@@ -220,11 +214,11 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uin
 
     LOG_INFO("Reading log entry from address=%08x", object->log.current.current);
 
-    buffer_offset = (object->log.current.current - object->log.mem_start);
+    size_t buffer_offset = (object->log.current.current - object->log.mem_start);
     buffer_offset += 12;
     // Read samples content definition
-    tmp_len = read16inc(object->log.buffer, &buffer_offset);
-    periodic_sample_spec = object->log.buffer + buffer_offset;
+    uint16_t tmp_len = read16inc(object->log.buffer, &buffer_offset);
+    uint8_t *periodic_sample_spec = object->log.buffer + buffer_offset;
     buffer_offset += tmp_len;
     // Parse header
     tmp_len = read16inc(object->log.buffer, &buffer_offset);
@@ -261,12 +255,14 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry(libambit_pmem20_t *object, uin
     LOG_INFO("Log entry got %d samples, reading", log_entry->samples_count);
 
     // OK, so we are at start of samples, get them all!
+    size_t sample_count = 0;
     while (sample_count < log_entry->samples_count) {
         /* NOTE! The double reads below seems a bit unoptimized,
            but if we need optimization, we should optimize read_upto
            instead...
            To ease the pain on wraparound we simply duplicate the sample
            to the end of the buffer. */
+        uint16_t sample_len = 0;
 
         // First check for log area wrap
         if (buffer_offset >= object->log.mem_size - 1) {
@@ -310,11 +306,10 @@ static void libambit_pmem20_log_read_log_data_part(libambit_pmem20_t *object,
                                                    uint32_t address, uint32_t length,
                                                    uint8_t *buffer)
 {
-    uint32_t next_address;
     uint32_t buffer_read = 0, read_length;
 
     // Handle wrap in "the middle" of the log
-    next_address = address;
+    uint32_t next_address = address;
     while (buffer_read < length) {
         if (next_address >= object->log.mem_start + object->log.mem_size) {
             next_address = object->log.mem_start + PMEM20_LOG_WRAP_START_OFFSET;
@@ -344,9 +339,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
 {
     uint32_t length = length1 + length2;
     uint8_t *buffer;
-    uint8_t *periodic_sample_spec;
-    uint16_t tmp_len, sample_len;
-    size_t buffer_offset, sample_count = 0;
+    size_t sample_count = 0;
     ambit_log_entry_t *log_entry;
     int32_t *time_compensators;
 
@@ -372,10 +365,10 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
         libambit_pmem20_log_read_log_data_part(object, address2, length2, buffer + length1);
     }
 
-    buffer_offset = 12;
+    size_t buffer_offset = 12;
     // Read samples content definition
-    tmp_len = read16inc(buffer, &buffer_offset);
-    periodic_sample_spec = buffer + buffer_offset;
+    uint16_t tmp_len = read16inc(buffer, &buffer_offset);
+    uint8_t *periodic_sample_spec = buffer + buffer_offset;
     buffer_offset += tmp_len;
     // Parse header
     tmp_len = read16inc(buffer, &buffer_offset);
@@ -412,6 +405,7 @@ ambit_log_entry_t *libambit_pmem20_log_read_entry_address(libambit_pmem20_t *obj
     LOG_INFO("Log entry got %d samples, reading", log_entry->samples_count);
 
     // OK, so we are at start of samples, get them all!
+    uint16_t sample_len = 0;
     while (sample_count < log_entry->samples_count) {
         sample_len = read16(buffer, buffer_offset);
 
@@ -516,7 +510,7 @@ int libambit_pmem20_log_parse_header(uint8_t *data, size_t datalen, ambit_log_he
 
 int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *data, size_t datalen, bool include_sha256_hash)
 {
-    int i, ret = -1;
+    int ret = -1;
     const uint8_t *bufptrs[2];
     size_t bufsizes[2];
     uint8_t *tailbuf;
@@ -564,7 +558,7 @@ int libambit_pmem20_gps_orbit_write(libambit_pmem20_t *object, const uint8_t *da
             *((uint32_t*)(&tailbuf[0])) = htole32(PMEM20_GPS_ORBIT_START);
             *((uint32_t*)(&tailbuf[4])) = htole32(bufsizes[0]);
             if (include_sha256_hash) {
-                for (i=0; i<32; i++) {
+                for (int i=0; i<32; i++) {
                     sprintf((char*)tailbuf+8+i*2, "%02X", hash[i]);
                 }
             }
@@ -580,12 +574,11 @@ int libambit_pmem20_data_write(libambit_pmem20_t *object, const uint32_t start_a
 {
     int ret = -1;
     const uint8_t *bufptrs[1];
-    size_t bufsizes;
     uint32_t address = start_address;
     size_t offset = 0;
 
     bufptrs[0] = data;
-    bufsizes = datalen > object->chunk_size ? object->chunk_size : datalen;
+    size_t bufsizes = datalen > object->chunk_size ? object->chunk_size : datalen;
 
     // Write first chunk
     ret = write_data_chunk(object->ambit_object, address, 1, bufptrs, &bufsizes);
@@ -625,8 +618,6 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
     size_t int_offset = offset;
     uint16_t sample_len = read16inc(buf, &int_offset);
     uint8_t  sample_type = read8inc(buf, &int_offset);
-    uint8_t  episodic_type;
-    uint16_t spec_count, spec_type, spec_offset;
     periodic_sample_spec_t *spec_entry;
     int i;
 
@@ -640,12 +631,12 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
         log_entry->samples[*sample_count].time = read32(buf, offset + sample_len - 2);
         
         // Loop through specifier and set corresponding fields
-        spec_count = read16(*spec, 1);
+        uint16_t spec_count = read16(*spec, 1);
         log_entry->samples[*sample_count].u.periodic.value_count = spec_count;
         log_entry->samples[*sample_count].u.periodic.values = calloc(spec_count, sizeof(ambit_log_sample_periodic_value_t));
         for (i=0, spec_entry = (periodic_sample_spec_t*)(*spec + 3); i<spec_count; i++, spec_entry++) {
-            spec_type = le16toh(spec_entry->type);
-            spec_offset = le16toh(spec_entry->offset);
+            uint16_t spec_type = le16toh(spec_entry->type);
+            uint16_t spec_offset = le16toh(spec_entry->offset);
             switch(spec_type) {
               case ambit_log_sample_periodic_type_latitude:
                 log_entry->samples[*sample_count].u.periodic.values[i].type = ambit_log_sample_periodic_type_latitude;
@@ -789,7 +780,7 @@ static int parse_sample(uint8_t *buf, size_t offset, uint8_t **spec, ambit_log_e
       case 3:
         // First parameter is relative time
         log_entry->samples[*sample_count].time = read32inc(buf, &int_offset);
-        episodic_type = read8inc(buf, &int_offset);
+        uint8_t episodic_type = read8inc(buf, &int_offset);
         switch (episodic_type) {
           case 0x04:
             log_entry->samples[*sample_count].type = ambit_log_sample_type_logpause;
@@ -1103,14 +1094,12 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
     uint8_t *reply = NULL;
     size_t replylen = 0;
 
-    uint8_t *send_data;
     size_t send_data_len = 8;
 
-    int i;
-    for (i=0; i<buffer_count; i++) {
+    for (int i=0; i<buffer_count; i++) {
         send_data_len += buffer_sizes[i];
     }
-    send_data = malloc(send_data_len);
+    uint8_t *send_data = malloc(send_data_len);
 
     if (send_data != NULL) {
         uint32_t *_address = (uint32_t*)&send_data[0];
@@ -1120,7 +1109,7 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
         *_address = htole32(address);
         *_length = htole32(send_data_len - 8);
 
-        for (i=0; i<buffer_count; i++) {
+        for (int i=0; i<buffer_count; i++) {
             memcpy(send_data_ptr, buffers[i], buffer_sizes[i]);
             send_data_ptr += buffer_sizes[i];
         }
@@ -1139,7 +1128,6 @@ static int write_data_chunk(ambit_object_t *object, uint32_t address, size_t buf
 static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_t *outtime)
 {
     struct timeval timeval;
-    struct tm *tm;
 
     to_timeval(intime, &timeval);
 
@@ -1160,7 +1148,7 @@ static void add_time(ambit_date_time_t *intime, int32_t offset, ambit_date_time_
         timeval.tv_usec += 1000000;
     }
 
-    tm = gmtime(&timeval.tv_sec);
+    struct tm *tm = gmtime(&timeval.tv_sec);
     outtime->msec = tm->tm_sec * 1000 + (timeval.tv_usec / 1000);
     outtime->minute = tm->tm_min;
     outtime->hour = tm->tm_hour;
@@ -1180,13 +1168,12 @@ static void to_timeval(ambit_date_time_t *ambit_time, struct timeval *timeval) {
     };
     timeval->tv_sec = 0;
     timeval->tv_usec = 0;
-    int i;
 
-    for (i = 1970; i < ambit_time->year; ++i) {
+    for (int i = 1970; i < ambit_time->year; ++i) {
         timeval->tv_sec += is_leap(i) ? 366 : 365;
     }
 
-    for (i = 0; i < ambit_time->month-1; ++i) {
+    for (int i = 0; i < ambit_time->month-1; ++i) {
         timeval->tv_sec += ndays[is_leap(ambit_time->year)][i];
     }
     timeval->tv_sec += ambit_time->day - 1;
