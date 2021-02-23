@@ -244,7 +244,7 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             qDebug() << "End reading navigation...";
         }
 
-        if (syncSportMode && res != -1) {
+        if ((syncSportMode || (settingsInputFile != NULL && appInputFile != NULL)) && res != -1) {
             qDebug() << "Start sport mode";
 
             ambit_app_rules_t* ambitApps = liblibambit_malloc_app_rules();
