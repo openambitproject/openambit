@@ -29,7 +29,7 @@ public:
 
 public slots:
     void run();
-    void error();
+    void error(QByteArray data);
 
 signals:
     void finished();

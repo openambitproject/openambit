@@ -136,7 +136,7 @@ void Task::run() {
 
         hasError();
 
-        emit error();
+        emit error(NULL);
 
         return;
     }
@@ -144,7 +144,7 @@ void Task::run() {
     libambit_free_enumeration(info);
 
     if (isError) {
-        emit error();
+        emit error(NULL);
     } else {
         emit finished();
     }
@@ -154,7 +154,8 @@ void Task::hasError() {
     isError = true;
 }
 
-void Task::error() {
+void Task::error(QByteArray data) {
+    printf("ERROR: Exiting\n");
     ((QCoreApplication*)parent())->exit(1);
 }
 
@@ -220,7 +221,7 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 qDebug() << "Start reading log...";
 
                 // Exit with an exit-code if uploading fails
-                QObject::connect(movesCount, SIGNAL(uploadError(QByteArray)), task, SLOT(error()));
+                QObject::connect(movesCount, SIGNAL(uploadError(QByteArray)), task, SLOT(error(QByteArray)));
 
                 syncData_t syncData;
                 syncData.deviceObject = deviceObject;
