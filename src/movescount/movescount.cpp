@@ -685,7 +685,7 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     }
     else {
         data = reply->readAll();
-        qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << reply->readAll() << "\"";
+        qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << data << "\"";
         emit uploadError(data);
     }
 }
