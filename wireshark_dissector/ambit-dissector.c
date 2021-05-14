@@ -550,10 +550,12 @@ static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     offset += 4;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
     offset += 4;
+    return offset;
 }
 
 static gint dissect_ambit_date_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_time_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -569,14 +571,17 @@ static gint dissect_ambit_time_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     offset += 4;
     proto_tree_add_string_format_value(tree, hf_ambit_time, tvb, offset, 4, "Time", "%02d:%02d:%02d", hour, minute, seconds);
     offset += 4;
+    return offset;
 }
 
 static gint dissect_ambit_time_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_status_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -590,6 +595,7 @@ static gint dissect_ambit_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_
     offset += 1;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 1);
     offset += 1;
+    return offset;
 }
 
 static gint dissect_ambit_device_info_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -602,6 +608,7 @@ static gint dissect_ambit_device_info_get(tvbuff_t *tvb, packet_info *pinfo, pro
     kv3 = tvb_get_letohs(tvb, offset+2);
     proto_tree_add_string_format_value(tree, hf_ambit_komposti_version, tvb, offset, 4, "Komposti version", "%d.%d.%d", kv1, kv2, kv3);
     offset +=4;
+    return offset;
 }
 
 static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -634,6 +641,7 @@ static gint dissect_ambit_device_info_reply(tvbuff_t *tvb, packet_info *pinfo, p
     offset += 4;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 4);
     offset += 4;
+    return offset;
 }
 
 static gint dissect_ambit3_device_compact_serial_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -641,6 +649,7 @@ static gint dissect_ambit3_device_compact_serial_get(tvbuff_t *tvb, packet_info 
     gint offset = 0;
     proto_tree_add_string(tree, hf_ambit_compact_serial, tvb, offset, 17, "Ambit3 get compact serial");
     offset +=17;
+    return offset;
 }
 
 static gint dissect_ambit3_device_compact_serial_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -653,10 +662,12 @@ static gint dissect_ambit3_device_compact_serial_reply(tvbuff_t *tvb, packet_inf
     for(i=0; i<sizeof(compact_serial)-1; i++)
         compact_serial[i] = tvb_get_guint8(tvb, offset+i);
     proto_tree_add_string_format_value(tree, hf_ambit_compact_serial, tvb, offset, 10, "Ambit3 compact serial", "%s", compact_serial);
+    return offset;
 }
 
 static gint dissect_ambit_personal_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -747,10 +758,12 @@ static gint dissect_ambit_personal_settings_reply(tvbuff_t *tvb, packet_info *pi
     offset += 1;
     proto_tree_add_item(tree, hf_ambit_personal_alti_baro_fused_alti, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     offset += 1;
+    return offset;
 }
 
 static gint dissect_ambit_log_header_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -916,10 +929,12 @@ static gint dissect_ambit_log_header_reply(tvbuff_t *tvb, packet_info *pinfo, pr
             offset += (header_1_len - 211);
         }
     }
+    return offset;
 }
 
 static gint dissect_ambit_log_count_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -929,10 +944,12 @@ static gint dissect_ambit_log_count_reply(tvbuff_t *tvb, packet_info *pinfo, pro
     offset += 2;
     proto_tree_add_item(tree, hf_ambit_log_count, tvb, offset, 2, ENC_LITTLE_ENDIAN);
     offset += 2;
+    return offset;
 }
 
 static gint dissect_ambit_log_header_unwind_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -940,10 +957,12 @@ static gint dissect_ambit_log_header_unwind_reply(tvbuff_t *tvb, packet_info *pi
     gint offset = 0;
     proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
+    return offset;
 }
 
 static gint dissect_ambit_log_header_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -951,10 +970,12 @@ static gint dissect_ambit_log_header_peek_reply(tvbuff_t *tvb, packet_info *pinf
     gint offset = 0;
     proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
+    return 0;
 }
 
 static gint dissect_ambit_log_header_step_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -962,6 +983,7 @@ static gint dissect_ambit_log_header_step_reply(tvbuff_t *tvb, packet_info *pinf
     gint offset = 0;
     proto_tree_add_item(tree, hf_ambit_log_header_more, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
+    return 0;
 }
 
 static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -971,6 +993,7 @@ static gint dissect_ambit_log_data_get(tvbuff_t *tvb, packet_info *pinfo, proto_
     offset += 4;
     proto_tree_add_item(tree, hf_ambit_log_data_length, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
+    return 0;
 }
 
 static gint dissect_ambit_log_data_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1023,6 +1046,7 @@ static gint dissect_ambit_log_data_reply(tvbuff_t *tvb, packet_info *pinfo, prot
             }
         }
     }
+    return offset;
 }
 
 static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length)
@@ -1811,32 +1835,38 @@ static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, pro
         break;
     }
 
-    return 0;
+    return offset;
 }
 
 static gint dissect_ambit_lock_status_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_lock_status_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_lock_set(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_lock_set_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_gps_data_peek_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit_gps_data_peek_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     proto_tree_add_item(tree, hf_ambit_gps_data_head, tvb, 0, 9, ENC_LITTLE_ENDIAN);
+    return 9;
 }
 
 static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
@@ -1865,6 +1895,8 @@ static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
         g_printf("\n");
 
     }
+
+    return length+8;
 }
 
 
@@ -1909,6 +1941,8 @@ static gint dissect_ambit_data_write_sport_modes(tvbuff_t *tvb, packet_info *pin
 
     leftToRead = dissect_ambit_data_write_content(tvb, pinfo, tree, &offset, length);
     leftToReadArray[index + 1] = leftToRead;
+
+    return offset;
 }
 
 static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, guint32 address, guint32 length)
@@ -1981,6 +2015,8 @@ static gint dissect_ambit_data_write_apps(tvbuff_t *tvb, packet_info *pinfo, pro
 
         i++;
     }
+
+    return offset;
 }
 
 static gint dissect_ambit_data_write_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length)
@@ -2160,7 +2196,7 @@ static uint dissect_ambit_data_write_read_data_0109(tvbuff_t *tvb, packet_info *
     proto_tree_add_item(tree, hf_ambit_log_activity_custom_mode_display, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
     *offset += 2;
 
-    return 0;
+    return *offset;
 }
 
 static uint dissect_ambit_data_write_read_data_010a(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
@@ -2169,7 +2205,7 @@ static uint dissect_ambit_data_write_read_data_010a(tvbuff_t *tvb, packet_info *
     proto_tree_add_item(tree, hf_ambit_log_activity_custom_mode_view, tvb, *offset, 2, ENC_LITTLE_ENDIAN);
     *offset += 2;
 
-    return 0;
+    return *offset;
 }
 
 static uint dissect_ambit_data_get_length_to_read(guint32 *offset, guint32 length, guint16 packageLength)
@@ -2205,7 +2241,7 @@ static uint dissect_ambit_data_write_read_data_010c(tvbuff_t *tvb, packet_info *
         }
     }
 
-    return 0;
+    return *offset;
 }
 
 static uint dissect_ambit_data_write_read_data_0102(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, /*void *data _U_,*/ guint32 *offset, guint32 length, guint16 packageLength)
@@ -2329,24 +2365,29 @@ static uint dissect_ambit_data_write_read_data_0102(tvbuff_t *tvb, packet_info *
 
 static gint dissect_ambit_data_write_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit3_settings_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit3_settings_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
+    return 0;
 }
 
 static gint dissect_ambit3_log_headers_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 18);
+    return 18;
 }
 
 static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 6);
+    return 6;
 }
 
 static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length)
@@ -2456,6 +2497,7 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
             offset += 26;
         }
     }
+    return offset;
 }
 
 static gint
