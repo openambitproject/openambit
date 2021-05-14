@@ -1890,9 +1890,9 @@ static gint dissect_ambit_data_write(tvbuff_t *tvb, packet_info *pinfo, proto_tr
     if ((address >= 0x2000 && address <= 0x3800) || (address >= 0x927c0 && address <= 0x9a7c0)) { // Custom sport modes address.
         int i;
         for (i=0; i<length+8; i++) {
-            g_printf("%.2x", tvb_get_guint8(tvb,i));
+            printf("%.2x", tvb_get_guint8(tvb,i));
         }
-        g_printf("\n");
+        printf("\n");
 
     }
 
