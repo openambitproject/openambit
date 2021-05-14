@@ -324,7 +324,7 @@ static gint hf_ambit_write_data_app_index = -1;
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
 
-static guint32 address_to_frame_lookup[4096];
+static guint32 address_to_frame_lookup[4096*2];
 
 static const value_string msgpart_index_vals[] = {
     { 0x5d, "First part" },
