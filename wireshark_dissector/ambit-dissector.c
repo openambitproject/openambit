@@ -33,6 +33,8 @@ typedef struct ambit_protocol_type {
     gint (*dissector)(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 } ambit_protocol_type_t;
 
+static dissector_handle_t ambit_handle;
+
 static const ambit_protocol_type_t *find_subdissector(guint32 command);
 static gint dissect_ambit_date_write(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit_date_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
@@ -508,6 +510,9 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x12000a00, "Ambit3 - Log headers reply", dissect_ambit3_log_headers_reply },
     { 0, NULL, NULL }
 };
+
+void proto_reg_ambit(void);
+void proto_reg_handoff_ambit(void);
 
 static const ambit_protocol_type_t *find_subdissector(guint32 command)
 {
@@ -3194,16 +3199,24 @@ proto_register_ambit(void)
 
     proto_register_field_array(proto_ambit, hf, array_length(hf));
     proto_register_subtree_array(ett, array_length(ett));
-    //register_dissector("ambit", dissect_ambit, proto_ambit);
+    ambit_handle = register_dissector("ambit", dissect_ambit, proto_ambit);
+
+    // Function not called by the API, why ???
+    proto_reg_handoff_ambit();
 }
 
 void
 proto_reg_handoff_ambit(void)
 {
-    static dissector_handle_t ambit_handle;
-
-    //ambit_handle = find_dissector("ambit");
-    ambit_handle = new_create_dissector_handle(dissect_ambit, proto_ambit);
+    /* ambit_handle = find_dissector("ambit"); */
+    /* ambit_handle = create_dissector_handle(dissect_ambit, proto_ambit); */
     dissector_add_uint("usb.interrupt", IF_CLASS_UNKNOWN, ambit_handle);
     dissector_add_uint("usb.interrupt", IF_CLASS_HID, ambit_handle);
 }
+
+#define PLUGIN_VERSION "1.0.0"
+
+WS_DLL_PUBLIC_DEF const gchar plugin_version[] = PLUGIN_VERSION;
+WS_DLL_PUBLIC_DEF const int plugin_want_major = 3;
+WS_DLL_PUBLIC_DEF const int plugin_want_minor = 4;
+
