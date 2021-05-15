@@ -1067,7 +1067,6 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
     guint32 link_addr;
     guint32 sample_count = 0;
     proto_item *pi;
-    proto_item *sample_ti = NULL;
     proto_tree *samples_tree = NULL;
     guint32 period_sample_spec;
 
@@ -1327,10 +1326,9 @@ static gint dissect_ambit_log_data_content(tvbuff_t *tvb, packet_info *pinfo, pr
 
 static gint dissect_ambit_log_data_sample(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length, guint32 *sampleno, guint32 *periodic_sample_specifier)
 {
-    gint ret = 0, i;
+    gint i;
     proto_tree *sample_tree = NULL;
     proto_tree *subtree = NULL, *subsubtree = NULL;
-    proto_item *sample_ti = NULL;
     guint16 sample_len;
     guint8 sample_type;
     guint8 inner_type;
@@ -2398,7 +2396,6 @@ static gint dissect_ambit3_sbem0102(tvbuff_t *tvb, packet_info *pinfo, proto_tre
 static gint dissect_ambit3_log_synced(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     gint offset = dissect_ambit3_sbem0102(tvb, pinfo, tree, data);
-    const guint8 * logPtr = tvb_get_ptr(tvb, offset, 20);
     
     proto_tree_add_item(tree, hf_ambit_log_synced, tvb, offset, 20, ENC_NA);
     offset += 20;
@@ -2420,9 +2417,7 @@ static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo
     guint16 log_count = 0;
     guint16 log_cntr = 0;
     gint header_len = 0;
-    proto_item *logs_ti = NULL;
     proto_tree *logs_tree = NULL;
-    proto_item *log_ti = NULL;
     proto_tree *log_tree = NULL;
     dissect_ambit_add_unknown(tvb, pinfo, tree, offset, 10);
     offset += 10;
@@ -2533,7 +2528,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
     guint16 msg_count = tvb_get_letohs(tvb, 4);
     guint32 command = tvb_get_ntohl(tvb, 8);
     guint32 pkt_len = tvb_get_letohl(tvb, 16);
-    tvbuff_t *new_tvb = NULL, *next_tvb = NULL, *log_tvb = NULL, *log_header_tvb = NULL;
+    tvbuff_t *new_tvb = NULL, *log_tvb = NULL, *log_header_tvb = NULL;
     static guint32 fragments_start_frame;
     static guint16 fragments_offset;
     static guint16 fragments_data_len;
@@ -2604,7 +2599,7 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
                 // First check for initial known header
                 if (msg_part == 0x5d) {
                     guint32 address = tvb_get_letohl(tvb, data_offset);
-                    guint32 length = tvb_get_letohl(tvb, data_offset + 4);
+                    //guint32 length = tvb_get_letohl(tvb, data_offset + 4);
 
                     log_last_known_address = address;
                     if (address == 0x000f4240) {
@@ -2711,7 +2706,6 @@ dissect_ambit(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U
         if (tree) { /* we are being asked for details */
             proto_item *ti = NULL;
             proto_tree *ambit_tree = NULL;
-            proto_item *data_ti = NULL;
             proto_tree *data_tree = NULL;
 
             col_set_str(pinfo->cinfo, COL_PROTOCOL, "Ambit");
