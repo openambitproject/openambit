@@ -90,6 +90,8 @@ static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, 
 static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length);
 static gint dissect_ambit3_device_compact_serial_get(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 static gint dissect_ambit3_device_compact_serial_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_log_synced(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
+static gint dissect_ambit3_log_synced_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_);
 
 /* protocols and header fields */
 #define D_AMBIT_USBID 0x3f
@@ -323,6 +325,13 @@ static gint hf_ambit_write_data_app_data = -1;
 static gint hf_ambit_write_data_app_checksum = -1;
 static gint hf_ambit_write_data_app_index = -1;
 
+static gint hf_ambit_sbem0102_header = -1;
+static gint hf_ambit_sbem0102_command_id = -1;
+static gint hf_ambit_sbem0102_command_length = -1;
+
+static gint hf_ambit_log_synced = -1;
+static gint hf_ambit_log_synced_value = -1;
+
 static ambit_reassembly_entry_t *reassembly_entries = NULL;
 static guint32 reassembly_entries_alloc = 0;
 
@@ -508,6 +517,8 @@ static const ambit_protocol_type_t subdissectors[] = {
     { 0x11010a00, "Ambit3 - Settings write reply", dissect_ambit3_settings_get },
     { 0x12000500, "Ambit3 - Get log headers", dissect_ambit3_log_headers_get },
     { 0x12000a00, "Ambit3 - Log headers reply", dissect_ambit3_log_headers_reply },
+    { 0x12010500, "Ambit3 - Log synced", dissect_ambit3_log_synced },
+    { 0x12010a00, "Ambit3 - Log synced reply", dissect_ambit3_log_synced_reply },
     { 0, NULL, NULL }
 };
 
@@ -2366,6 +2377,43 @@ static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, 
     return 6;
 }
 
+static gint dissect_ambit3_sbem0102(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    gint offset = 0;
+    /* 0x00000000 0x0100*/
+    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 6);
+    offset += 6;
+
+    proto_tree_add_item(tree, hf_ambit_sbem0102_header, tvb, offset, 8, ENC_NA);
+    offset += 8;
+    
+    proto_tree_add_item(tree, hf_ambit_sbem0102_command_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+    proto_tree_add_item(tree, hf_ambit_sbem0102_command_length, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+
+    return offset;
+}
+
+static gint dissect_ambit3_log_synced(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    gint offset = dissect_ambit3_sbem0102(tvb, pinfo, tree, data);
+    const guint8 * logPtr = tvb_get_ptr(tvb, offset, 20);
+    
+    proto_tree_add_item(tree, hf_ambit_log_synced, tvb, offset, 20, ENC_NA);
+    offset += 20;
+    
+    proto_tree_add_item(tree, hf_ambit_log_synced_value, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    offset += 1;
+
+    return offset;
+}
+
+static gint dissect_ambit3_log_synced_reply(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+{
+    return 0;
+}
+
 static gint dissect_ambit3_log_headers_content(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_, guint32 offset, guint32 length)
 {
     gint namelen = 0;
@@ -3192,6 +3240,16 @@ proto_register_ambit(void)
           { "App checksum (xor of app data + app data length)", "ambit.write_data.apps.checksum", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_write_data_app_index,
           { "App index", "ambit.write_data.apps.index", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_sbem0102_header,
+          { "SBEM0102 header", "ambit.sbem0102.header", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_sbem0102_command_id,
+          { "SBEM0102 Command ID", "ambit.sbem0102.command_id", FT_UINT8, BASE_HEX, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_sbem0102_command_length,
+          { "SBEM0102 Command Length", "ambit.sbem0102.command_length", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_synced,
+          { "Log synced", "ambit.log_synced.log", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_log_synced_value,
+          { "Synced value", "ambit.log_synced.synced", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
     };
 
     static gint *ett[] = {
