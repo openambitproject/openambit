@@ -3283,5 +3283,9 @@ proto_reg_handoff_ambit(void)
 
 WS_DLL_PUBLIC_DEF const gchar plugin_version[] = PLUGIN_VERSION;
 WS_DLL_PUBLIC_DEF const int plugin_want_major = 3;
+#if VERSION_MINOR >= 2 && VERSION_MINOR <= 4
+WS_DLL_PUBLIC_DEF const int plugin_want_minor = VERSION_MINOR;
+#else
 WS_DLL_PUBLIC_DEF const int plugin_want_minor = 4;
+#endif
 
