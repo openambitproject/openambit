@@ -51,8 +51,8 @@ logs=`ls ~/.openambit/*.log|tail -n $nb_new_logs`
 logs_out=""
 for log in $logs ; do
     log_out="${ROOT}/gpx/$(basename $log .log).gpx"
-    echo ${ROOT}/tools/openambit2gpx.py "$log" "$log_out"
-    ${ROOT}/tools/openambit2gpx.py "$log" "$log_out"
+    echo ${ROOT}/tools/openambit2gpx.py -out "$log_out" "$log"
+    ${ROOT}/tools/openambit2gpx.py -out "$log_out" "$log"
     logs_out="$logs_out $log_out"
 done
 
