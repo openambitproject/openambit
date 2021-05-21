@@ -173,10 +173,9 @@ int libambit_sbem0102_command_request(libambit_sbem0102_t *object, uint16_t comm
                     }
                 }
             }
-
-            ret = 0;
         }
 
+        ret = 0;
         libambit_protocol_free(reply);
     }
 
@@ -205,10 +204,9 @@ int libambit_sbem0102_command_request_raw(libambit_sbem0102_t *object, uint16_t 
                 memcpy(reply_data->data, reply + sizeof(header), replylen - sizeof(header));
                 reply_data->size = replylen - sizeof(header);
             }
-
-            ret = 0;
         }
 
+        ret = 0;
         libambit_protocol_free(reply);
     }
 
