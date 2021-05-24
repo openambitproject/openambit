@@ -432,6 +432,8 @@ static void log_data_cb(void *object, ambit_log_entry_t *log_entry)
             printf("Not sending log to movescount");
         }
 
+	libambit_log_synced(syncData->deviceObject, log_entry);
+	
         delete entry;
     }
 }
