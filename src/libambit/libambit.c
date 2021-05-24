@@ -312,6 +312,20 @@ int libambit_log_read(ambit_object_t *object, ambit_log_skip_cb skip_cb, ambit_l
     return ret;
 }
 
+int libambit_log_synced(ambit_object_t *object, ambit_log_entry_t *log_entry)
+{
+    int ret = -1;
+
+    if (object->driver != NULL && object->driver->log_synced != NULL) {
+        ret = object->driver->log_synced(object, log_entry);
+    }
+    else {
+        LOG_WARNING("Driver does not support log_sync");
+    }
+
+    return ret;
+}
+
 void libambit_log_entry_free(ambit_log_entry_t *log_entry)
 {
     int i;

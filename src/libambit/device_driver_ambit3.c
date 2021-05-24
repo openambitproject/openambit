@@ -65,6 +65,7 @@ typedef struct ambit3_driver_params_s {
     uint8_t log_entries_notsynced_data_id;
     uint8_t log_header_data_id;
     uint8_t log_header_tail_length;
+    uint8_t log_synced_data_id;
 } ambit3_driver_params_t;
 
 struct ambit_device_driver_data_s {
@@ -111,6 +112,7 @@ static int gps_orbit_write(ambit_object_t *object, uint8_t *data, size_t datalen
 static int parse_log_header_block(ambit_object_t *object, libambit_sbem0102_data_t *reply_data_object, ambit_log_skip_cb skip_cb, ambit_log_push_cb push_cb, ambit_log_progress_cb progress_cb, void *userref, uint16_t *log_entries_walked, uint16_t log_entries_total);
 static size_t parse_log_entry(ambit_object_t *object, const uint8_t *log_data, ambit3_log_header_t *log_header);
 static int get_memory_maps(ambit_object_t *object);
+static int log_synced(ambit_object_t *object, ambit_log_entry_t *log_entry);
 
 /*
  * Global variables
@@ -125,10 +127,11 @@ ambit_device_driver_t ambit_device_driver_ambit3 = {
     log_read,
     gps_orbit_header_read,
     gps_orbit_write,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    NULL, // navigation_read
+    NULL, // navigation_write
+    NULL, // sport_mode_write
+    NULL, // app_data_write
+    log_synced
 };
 
 
@@ -210,15 +213,15 @@ static ambit3_driver_params_t get_ambit3_driver_params(enum ambit3_fw_gen fw_gen
     };
 
     struct ambit3_driver_params_lookup dp_lookup[] =  {
-            {AMBIT3_FW_GEN1,        {0x02, 0x3f, 0x81, 0x4e, 0x4f, 0x7e, 0x00}},
-            {AMBIT3_FW_GEN2,        {0x00, 0x4b, 0x8d, 0x5a, 0x5b, 0x8a, 0x1a}},
-            {AMBIT3_FW_GEN3,        {0x00, 0x4a, 0x8c, 0x59, 0x5a, 0x89, 0x1a}},
-            {AMBIT3_FW_GEN4,        {0x00, 0x4a, 0x8d, 0x59, 0x5a, 0x8a, 0x1c}},
-            {AMBIT3_VERT_FW_GEN1,   {0x00, 0x4a, 0x8c, 0x59, 0x5a, 0x8a, 0x1c}},
-            {AMBIT3_VERT_FW_GEN2,   {0x00, 0x4a, 0x8b, 0x58, 0x59, 0x89, 0x1c}},
-            {AMBIT3_VERT_FW_GEN3,   {0x00, 0x4a, 0x8a, 0x57, 0x58, 0x88, 0x1c}},
-            {TRAVERSE_FW_GEN1,      {0x00, 0x4a, 0x8a, 0x56, 0x57, 0x87, 0x1c}},
-            {TRAVERSE_FW_GEN2,      {0x00, 0x4a, 0x88, 0x55, 0x56, 0x86, 0x1c}},
+            {AMBIT3_FW_GEN1,        {0x02, 0x3f, 0x81, 0x4e, 0x4f, 0x7e, 0x00, 0x00}},
+            {AMBIT3_FW_GEN2,        {0x00, 0x4b, 0x8d, 0x5a, 0x5b, 0x8a, 0x1a, 0x00}},
+            {AMBIT3_FW_GEN3,        {0x00, 0x4a, 0x8c, 0x59, 0x5a, 0x89, 0x1a, 0x00}},
+            {AMBIT3_FW_GEN4,        {0x00, 0x4a, 0x8d, 0x59, 0x5a, 0x8a, 0x1c, 0x8b}},
+            {AMBIT3_VERT_FW_GEN1,   {0x00, 0x4a, 0x8c, 0x59, 0x5a, 0x8a, 0x1c, 0x00}},
+            {AMBIT3_VERT_FW_GEN2,   {0x00, 0x4a, 0x8b, 0x58, 0x59, 0x89, 0x1c, 0x00}},
+            {AMBIT3_VERT_FW_GEN3,   {0x00, 0x4a, 0x8a, 0x57, 0x58, 0x88, 0x1c, 0x00}},
+            {TRAVERSE_FW_GEN1,      {0x00, 0x4a, 0x8a, 0x56, 0x57, 0x87, 0x1c, 0x00}},
+            {TRAVERSE_FW_GEN2,      {0x00, 0x4a, 0x88, 0x55, 0x56, 0x86, 0x1c, 0x00}},
     };
 
     ambit3_driver_params_t params;
@@ -662,12 +665,12 @@ static int parse_log_header_block(ambit_object_t *object, libambit_sbem0102_data
     size_t offset = 0;
     size_t log_read_len = 0;
     int current_parse_num_log_read = 0;
-
+    int skip;
+    
     length = libambit_sbem0102_data_len(reply_data_object);
     data = libambit_sbem0102_data_ptr(reply_data_object);
 
     while(offset<length) {
-
         log_header.header.activity_name = NULL;
         log_read_len = parse_log_entry(object, &data[offset], &log_header);
 
@@ -679,8 +682,20 @@ static int parse_log_header_block(ambit_object_t *object, libambit_sbem0102_data
         offset += log_read_len;
 
         LOG_INFO ("Next offset: %d of %d\n", offset, length);
+
+        if (skip_cb && !skip_cb(userref, &log_header.header)) {
+            skip = 1;
+        }
+        else {
+            skip = 0;
+        }
         
-        if (!skip_cb || skip_cb(userref, &log_header.header) != 0) {
+        if (skip && !log_header.synced) {
+            LOG_INFO("Log not previously synchronized, force update");
+            skip = 0;
+        }
+        
+        if (!skip) {
             LOG_INFO("Reading data of log %d of %d", *log_entries_walked + 1, log_entries_total);
             log_entry = libambit_pmem20_log_read_entry_address(&object->driver_data->pmem20,
                                                                log_header.address,
@@ -895,5 +910,42 @@ static int get_memory_maps(ambit_object_t *object)
 
     LOG_INFO("Memory map successfully parsed");
 
+    return 0;
+}
+
+/**
+ * Set log as synchronized
+ *
+ * \param object
+ * \param log_entry Log to set as synchronized
+ * \return 0 if successful.
+ */
+static int log_synced(ambit_object_t *object, ambit_log_entry_t *log_entry)
+{
+    libambit_sbem0102_data_t send_data_object, reply_data_object;
+
+    LOG_INFO("Sync log");
+
+    struct {
+        uint8_t timestamp[0x14];
+        uint8_t synced;
+    } sbem0102_synced;
+
+    ambit_date_time_t dt;
+    memcpy(&dt, &log_entry->header.date_time, sizeof(dt));
+    snprintf((char*)sbem0102_synced.timestamp, sizeof(sbem0102_synced.timestamp), "%04d-%02d-%02dT%02d:%02d:%02d",
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.msec);
+
+    sbem0102_synced.synced = 1;
+    
+    libambit_sbem0102_data_init(&reply_data_object);
+    libambit_sbem0102_data_init(&send_data_object);
+    libambit_sbem0102_data_add(&send_data_object, object->driver_data->driver_params.log_synced_data_id, (uint8_t*)&sbem0102_synced, sizeof(sbem0102_synced));
+
+    if (libambit_sbem0102_command_request(&object->driver_data->sbem0102, ambit_command_ambit3_log_synced, &send_data_object, &reply_data_object) != 0) {
+        LOG_WARNING("Failed to sync log");
+        return -1;
+    }
+    
     return 0;
 }
