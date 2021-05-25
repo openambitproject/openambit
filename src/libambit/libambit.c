@@ -319,9 +319,6 @@ int libambit_log_synced(ambit_object_t *object, ambit_log_entry_t *log_entry)
     if (object->driver != NULL && object->driver->log_synced != NULL) {
         ret = object->driver->log_synced(object, log_entry);
     }
-    else {
-        LOG_WARNING("Driver does not support log_sync");
-    }
 
     return ret;
 }
