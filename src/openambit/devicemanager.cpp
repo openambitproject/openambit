@@ -281,6 +281,8 @@ void DeviceManager::log_push_cb(void *ref, ambit_log_entry_t *log_entry)
             manager->movesCount->writeLog(entry);
         }
 
+	libambit_log_synced(manager->deviceObject, log_entry);
+	
         delete entry;
     }
 }

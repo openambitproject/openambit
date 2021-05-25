@@ -755,6 +755,11 @@ int libambit_navigation_read(ambit_object_t *object, ambit_personal_settings_t *
 int libambit_navigation_write(ambit_object_t *object, ambit_personal_settings_t *personal_settings);
 
 /**
+ * Mark log as synced
+ */
+int libambit_log_synced(ambit_object_t *object, ambit_log_entry_t *log_entry);
+    
+/**
  * Allocates memmory for device settings structure and
  * initiate pointer in the structure to NULL and sport_modes_count and sport_mode_groups_count to 0.
  * \note Caller is responsible of freeing the struct with libambit_sport_mode_device_settings_free()

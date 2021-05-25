@@ -325,6 +325,8 @@ static gint hf_ambit_write_data_app_data = -1;
 static gint hf_ambit_write_data_app_checksum = -1;
 static gint hf_ambit_write_data_app_index = -1;
 
+static gint hf_ambit_sbem0102_id_write = -1;
+static gint hf_ambit_sbem0102_id_request = -1;
 static gint hf_ambit_sbem0102_header = -1;
 static gint hf_ambit_sbem0102_command_id = -1;
 static gint hf_ambit_sbem0102_command_length = -1;
@@ -2378,10 +2380,17 @@ static gint dissect_ambit3_log_headers_reply(tvbuff_t *tvb, packet_info *pinfo, 
 static gint dissect_ambit3_sbem0102(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     gint offset = 0;
-    /* 0x00000000 0x0100*/
-    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 6);
-    offset += 6;
+    /* 0x00000000*/
+    dissect_ambit_add_unknown(tvb, pinfo, tree, 0, 4);
+    offset += 4;
 
+    guint16 sbem0102_id = tvb_get_guint16(tvb, offset, ENC_LITTLE_ENDIAN);
+    if (sbem0102_id == 0x0001)
+        proto_tree_add_item(tree, hf_ambit_sbem0102_id_request, tvb, offset, 2, ENC_NA);
+    else if (sbem0102_id == 0x0101)
+        proto_tree_add_item(tree, hf_ambit_sbem0102_id_write, tvb, offset, 2, ENC_NA);
+    offset += 2;
+    
     proto_tree_add_item(tree, hf_ambit_sbem0102_header, tvb, offset, 8, ENC_NA);
     offset += 8;
     
@@ -3234,6 +3243,10 @@ proto_register_ambit(void)
           { "App checksum (xor of app data + app data length)", "ambit.write_data.apps.checksum", FT_UINT8, BASE_DEC, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_write_data_app_index,
           { "App index", "ambit.write_data.apps.index", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_sbem0102_id_write,
+          { "SBEM0102 write", "ambit.sbem0102.id.write", FT_UINT16, BASE_HEX, NULL, 0x0,NULL, HFILL } },
+        { &hf_ambit_sbem0102_id_request,
+          { "SBEM0102 request", "ambit.sbem0102.id.request", FT_UINT16, BASE_HEX, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_sbem0102_header,
           { "SBEM0102 header", "ambit.sbem0102.header", FT_STRING, BASE_NONE, NULL, 0x0,NULL, HFILL } },
         { &hf_ambit_sbem0102_command_id,

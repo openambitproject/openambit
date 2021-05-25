@@ -73,7 +73,8 @@ ambit_device_driver_t ambit_device_driver_ambit = {
     ambit_navigation_read,
     ambit_navigation_write,
     sport_mode_write,
-    app_data_write
+    app_data_write,
+    NULL,
 };
 
 /*

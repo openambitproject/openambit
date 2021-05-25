@@ -42,6 +42,7 @@ typedef struct ambit_device_driver_s {
     int (*navigation_write)(ambit_object_t *object, ambit_personal_settings_t *settings);
     int (*sport_mode_write)(ambit_object_t *object, ambit_sport_mode_device_settings_t *ambitCustomModes);
     int (*app_data_write)(ambit_object_t *object, ambit_sport_mode_device_settings_t *ambitCustomModes, ambit_app_rules_t* ambit_apps);
+    int (*log_synced)(ambit_object_t *object, ambit_log_entry_t *log_entry);
 } ambit_device_driver_t;
 
 extern ambit_device_driver_t ambit_device_driver_ambit;  // Ambit & Ambit2
