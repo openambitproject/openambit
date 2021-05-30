@@ -1521,6 +1521,7 @@ bool LogStore::XMLWriter::writeLogEntry()
         xml.writeTextElement("PoolLengths", QString("%1").arg(logEntry->header.swimming_pool_lengths));
         xml.writeTextElement("PoolLength", QString("%1").arg(logEntry->header.swimming_pool_length));
         xml.writeEndElement();
+        xml.writeTextElement("Notes", QString(""));
 
         QString hexstring;
         hexstring = hexstring.sprintf("%02x%02x%02x%02x%02x", logEntry->header.unknown1[0],
