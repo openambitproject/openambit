@@ -26,6 +26,8 @@
 #include <QList>
 #include <QIODevice>
 #include <QXmlStreamWriter>
+#include <sys/types.h>
+
 #include "logentry.h"
 
 class MovesCountXML : public QObject

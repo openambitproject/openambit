@@ -5,6 +5,7 @@
 #include <QVariantMap>
 #include <QMap>
 #include <QList>
+#include <sys/types.h>
 
 #include "libambit.h"
 

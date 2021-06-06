@@ -1,6 +1,7 @@
 #ifndef MOVESCOUNTLOGDIRENTRY_H
 #define MOVESCOUNTLOGDIRENTRY_H
 
+#include <sys/types.h>
 #include <QObject>
 #include <QDateTime>
 

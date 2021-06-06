@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QVariantMap>
 #include <QList>
+#include <sys/types.h>
+
 #include "libambit.h"
 
 class CustomModeGroup : public QObject
