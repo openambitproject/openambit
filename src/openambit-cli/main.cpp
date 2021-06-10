@@ -81,6 +81,10 @@ int main(int argc, char *argv[]) {
                                               QCoreApplication::translate("main", "json-file"));
     parser.addOption(customAppFileOption);
 
+    QCommandLineOption checkForMissingUploads(QStringList() << "m" << "check-missing-uploads",
+                                              QCoreApplication::translate("main", "Run a check for missing uploads to movescount for moves that were downloaded from the watch previously, but not uploaded properly."));
+    parser.addOption(checkForMissingUploads);
+
     // Process the actual command line arguments given by the user
     parser.process(a);
 
@@ -127,7 +131,8 @@ int main(int argc, char *argv[]) {
             !parser.isSet(noWriteLogs),
             parser.isSet(writeJSONSettingsFileOption),
             customConfig.length() == 0 ? NULL : customConfigStr.c_str(),
-            customAppConfig.length() == 0 ? NULL : customAppConfigStr.c_str());
+            customAppConfig.length() == 0 ? NULL : customAppConfigStr.c_str(),
+            parser.isSet(checkForMissingUploads));
 
     // make application stop when the task is done
     QObject::connect(task, SIGNAL(finished()), &a, SLOT(quit()));

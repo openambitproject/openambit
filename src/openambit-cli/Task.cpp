@@ -14,7 +14,8 @@
 MovesCount *movesCountSetup(const char *username, const char *userkey);
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation, bool writeLogs,
-               bool writeSettingsJSON, const char *settingsInputFile, const char* appInputFile, Task *task);
+               bool writeSettingsJSON, const char *settingsInputFile, const char* appInputFile, bool checkForMissingUploads,
+               Task *task);
 static int log_skip_cb(void *ambit_object, ambit_log_header_t *log_header);
 static void log_data_cb(void *object, ambit_log_entry_t *log_entry);
 
@@ -111,7 +112,8 @@ void Task::run() {
                            deviceInfo.is_supported);
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
-                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, appInputFile, this);
+                              syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, appInputFile,
+                              checkForMissingUploads, this);
 
                     if(settings.waypoints.data != NULL) {
                         free(settings.waypoints.data);
@@ -176,7 +178,8 @@ MovesCount *movesCountSetup(const char *username, const char *userkey)
 
 void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentPersonalSettings, MovesCount *movesCount,
                bool readAllLogs, bool syncTime, bool syncOrbit, bool syncSportMode, bool syncNavigation,
-               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, const char *appInputFile, Task *task)
+               bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, const char *appInputFile,
+               bool checkForMissingUploads, Task *task)
 {
     ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
@@ -226,6 +229,25 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
 
                 qDebug() << "End reading log...";
             }
+        }
+
+        if (checkForMissingUploads) {
+            MovesCountLogChecker *checker = new MovesCountLogChecker();
+
+            checker->run();
+
+            // wait for it to start running
+            while (checker->isRunning()) {
+                // make sure events are handled
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
+                // wait some time in between to not log too often
+                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+                qDebug() << "Looking for missed logs, having: " << checker->status();
+            }
+
+            delete checker;
         }
 
         if (waypoint_sync_res != -1 && syncNavigation) {
