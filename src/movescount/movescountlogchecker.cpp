@@ -43,6 +43,10 @@ void MovesCountLogChecker::checkUploadedLogs()
     MovesCount *movescount = MovesCount::instance();
 
     QList<LogStore::LogDirEntry> entries = logStore.dir();
+
+    qDebug() << "Found:" << entries.count() << "logs in directory" <<
+        QString(getenv("HOME"))<<"/.openambit"; // NOLINT(concurrency-mt-unsafe)
+
     foreach(LogStore::LogDirEntry entry, entries) {
         // This is a long operation, exit if application want to quit
         if (cancelRun) {
@@ -65,6 +69,8 @@ void MovesCountLogChecker::checkUploadedLogs()
             }
         }
     }
+
+    qDebug() << "Found: " << missingEntries.count() << " logs that are not uploaded";
 
     if (missingEntries.count() > 0) {
         // This is a long operation, exit if application want to quit
@@ -89,6 +95,8 @@ void MovesCountLogChecker::checkUploadedLogs()
             }
         }
 
+        qDebug() << "Having: " << missingEntries.count() << " remaining entries after pruning found logs";
+
         // Delete remaining entries
         while (missingEntries.count() > 0) {
             // This is a long operation, exit if application want to quit
@@ -97,6 +105,9 @@ void MovesCountLogChecker::checkUploadedLogs()
                 return;
             }
             LogEntry *logEntry = missingEntries.first();
+
+            qDebug() << "Storing missing move from: " << logEntry->time;
+
             movescount->writeLog(logEntry);
             missingEntries.removeOne(logEntry);
             delete logEntry;
