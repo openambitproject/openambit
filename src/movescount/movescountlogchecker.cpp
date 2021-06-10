@@ -18,6 +18,10 @@ MovesCountLogChecker::~MovesCountLogChecker()
 void MovesCountLogChecker::run()
 {
     if (!running) {
+        // set to running right here before actually starting the thread to avoid
+        // race-conditions while the thread is not fully started yet
+        running = true;
+
         QMetaObject::invokeMethod(this, "checkUploadedLogs", Qt::AutoConnection);
     }
 }
@@ -36,10 +40,7 @@ void MovesCountLogChecker::checkUploadedLogs()
 {
     QDateTime firstUnknown = QDateTime::currentDateTime();
     QDateTime lastUnknown = QDateTime::fromTime_t(0);
-    QList<LogEntry*> missingEntries;
     MovesCount *movescount = MovesCount::instance();
-
-    running = true;
 
     QList<LogStore::LogDirEntry> entries = logStore.dir();
     foreach(LogStore::LogDirEntry entry, entries) {
@@ -104,4 +105,10 @@ void MovesCountLogChecker::checkUploadedLogs()
 
     cancelRun = false;
     running = false;
+}
+
+QString MovesCountLogChecker::status() {
+    return QString("Running: ") + (running ? "true" : "false") +
+        ", cancelled: " + (cancelRun ? "true" : "false") +
+        ", entries to process: " + QString::number(missingEntries.count());
 }

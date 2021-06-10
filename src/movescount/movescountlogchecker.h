@@ -18,6 +18,8 @@ public:
     void run();
     bool isRunning();
     void cancel();
+    QString status();
+
 private slots:
     void checkUploadedLogs();
 
@@ -27,6 +29,8 @@ private:
 
     LogStore logStore;
     QThread workerThread;
+
+    QList<LogEntry*> missingEntries;
 };
 
 #endif // MOVESCOUNTLOGCHECKER_H
