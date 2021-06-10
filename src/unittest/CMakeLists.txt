@@ -42,6 +42,7 @@ set(TEST_SRCS
         movescount/logstore_test.cpp
         movescount/movescountxml_test.cpp
         movescount/movescount_test.cpp
+        movescount/movescountlogchecker_test.cpp
         movescount/movescountsettings_test.cpp
         movescount/sportmode_test.cpp
 
