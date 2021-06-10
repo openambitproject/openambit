@@ -372,7 +372,7 @@ int MovesCountJSON::parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEn
     }
 
     bool ok = false;
-    QVariantMap logList = parseJsonMap(input, ok);
+    QVariantList logList = parseJsonList(input, ok);
 
     if (ok) {
         foreach(QVariant entryVar, logList) {
