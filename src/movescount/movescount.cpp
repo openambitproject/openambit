@@ -608,9 +608,20 @@ QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate star
     if (checkReplyAuthorization(reply)) {
         QByteArray _data = reply->readAll();
 
-        if (jsonParser.parseLogDirReply(_data, retList) != 0) {
-            // empty list if parse failed
-            retList.clear();
+        //qDebug() << "Movescount replied with \"" << _data << "\"";
+
+        if (reply->error() == QNetworkReply::NoError){
+            if (jsonParser.parseLogDirReply(_data, retList) != 0) {
+                qDebug() << "Parsing reply for movescount-entries failed";
+
+                // empty list if parse failed
+                retList.clear();
+            } else {
+                qDebug() << "Movescount returned" << retList.count() << "moves for startdate:" <<
+                    startTime.toString("yyyy-MM-dd") << ", enddate:" << endTime.toString("yyyy-MM-dd");
+            }
+        } else {
+            qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << _data << "\"";
         }
     }
 
