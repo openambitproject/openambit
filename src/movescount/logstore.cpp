@@ -214,14 +214,17 @@ QString LogStore::logEntryPath(QString device, QDateTime time)
 
 LogEntry *LogStore::storeInternal(QString serial, QDateTime dateTime, const DeviceInfo& deviceInfo, ambit_personal_settings_t *personalSettings, ambit_log_entry_t *logEntry, QString movescountId)
 {
-    LogEntry *retEntry = new LogEntry();
-
     XMLWriter writer(deviceInfo, dateTime, movescountId, personalSettings, logEntry);
+
+    // write out log-file
     QFile logfile(logEntryPath(serial, dateTime));
     logfile.open(QIODevice::WriteOnly);
     writer.write(&logfile);
     logfile.close();
     logfile.open(QIODevice::ReadOnly);
+
+    // read back log into the LogEntry structure
+    LogEntry *retEntry = new LogEntry();
     XMLReader reader(retEntry);
     if (!reader.read(&logfile)) {
         delete retEntry;
@@ -266,7 +269,7 @@ bool LogStore::XMLReader::read(QIODevice *device)
             readRoot();
         }
         else {
-            xml.raiseError(QObject::tr("The file is not an openambit version 1.0 file."));
+            xml.raiseError(QObject::tr("The file is not an Openambit version 1.0 file."));
         }
     }
 
