@@ -666,9 +666,6 @@ void MovesCount::writePersonalSettingsInThread(ambit_personal_settings_t *settin
 void MovesCount::writeLogInThread(LogEntry *logEntry)
 {
     QByteArray output;
-    QNetworkReply *reply;
-    QString moveId;
-    QByteArray data;
 
     jsonParser.generateLogData(logEntry, output);
 
@@ -677,14 +674,17 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
     writeJsonToStorage("log-" + logEntry->device + "-" + logEntry->time.toString("yyyy-MM-ddThh_mm_ss") + ".json", output);
 #endif
 
-    reply = syncPOST("/moves/", "", output, true);
+    QNetworkReply *reply = syncPOST("/moves/", "", output, true);
 
+    QByteArray data = reply->readAll();
     if (reply->error() == QNetworkReply::NoError){
-        data = reply->readAll();
+        QString moveId;
         if (jsonParser.parseLogReply(data, moveId) == 0) {
+            qDebug() << "Movescount reported move-id " << moveId << " for move '" << logEntry->logEntry->header.activity_name <<
+            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         } else {
-            qDebug() << "Failed to upload log, movescount.com replied with \"" << reply->readAll() << "\"";
+            qDebug() << "Failed to upload log, movescount.com replied with \"" << data << "\"";
             emit uploadError(data);
         }
     } 
@@ -692,10 +692,9 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
         // this is not useful currently as it seems that we re-visit some logs every time
         //emit uploadError("Move already uploaded");
         qDebug() << "Movescount replied with ContentConflictError for move '" << logEntry->logEntry->header.activity_name <<
-            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
-    }
-    else {
-        data = reply->readAll();
+            "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day <<
+            ": " << data;
+    } else {
         qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << data << "\"";
         emit uploadError(data);
     }

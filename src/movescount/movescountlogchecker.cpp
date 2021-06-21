@@ -47,14 +47,17 @@ void MovesCountLogChecker::checkUploadedLogs()
     qDebug() << "Found:" << entries.count() << "logs in directory" <<
         QString(getenv("HOME"))<<"/.openambit"; // NOLINT(concurrency-mt-unsafe)
 
+    // look at all logs stored locally
     foreach(LogStore::LogDirEntry entry, entries) {
         // This is a long operation, exit if application want to quit
         if (cancelRun) {
             cancelRun = false;
             return;
         }
+
         LogEntry *logEntry = logStore.read(entry);
         if (logEntry != NULL) {
+            // take a closer look if there is no movescountId yet
             if (logEntry->movescountId.length() == 0) {
                 missingEntries.append(logEntry);
                 if (logEntry->time < firstUnknown) {
@@ -78,6 +81,8 @@ void MovesCountLogChecker::checkUploadedLogs()
             cancelRun = false;
             return;
         }
+
+        // match the missing moves with all the known moves in that time-frame
         QList<MovesCountLogDirEntry> movescountEntries = movescount->getMovescountEntries(firstUnknown.date(), lastUnknown.date());
         foreach(MovesCountLogDirEntry entry, movescountEntries) {
             // This is a long operation, exit if application want to quit
@@ -87,6 +92,7 @@ void MovesCountLogChecker::checkUploadedLogs()
             }
             foreach(LogEntry *logEntry, missingEntries) {
                 if (entry.time == logEntry->time) {
+                    // we found a move already uploaded, so no need to upload and update the movescount-id in the logfile
                     missingEntries.removeOne(logEntry);
                     logStore.storeMovescountId(logEntry->device, logEntry->time, entry.moveId);
                     delete logEntry;
@@ -97,7 +103,7 @@ void MovesCountLogChecker::checkUploadedLogs()
 
         qDebug() << "Having: " << missingEntries.count() << " remaining entries after pruning found logs";
 
-        // Delete remaining entries
+        // Try to upload the remaining entries
         while (missingEntries.count() > 0) {
             // This is a long operation, exit if application want to quit
             if (cancelRun) {
