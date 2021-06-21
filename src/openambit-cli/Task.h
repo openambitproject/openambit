@@ -34,6 +34,9 @@ public slots:
 signals:
     void finished();
 
+private slots:
+    void logMovescountID(QString device, QDateTime time, QString moveID);
+
 private:
     const char* username;
     const char* userkey;

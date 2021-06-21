@@ -111,6 +111,10 @@ void Task::run() {
                            deviceInfo.access_status,
                            deviceInfo.is_supported);
 
+
+                    // Connect movescount Id feedback to local handler
+                    QObject::connect(movesCount, SIGNAL(logMoveID(QString,QDateTime,QString)), this, SLOT(logMovescountID(QString,QDateTime,QString)));
+
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
                               syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, appInputFile,
                               checkForMissingUploads, this);
@@ -151,6 +155,11 @@ void Task::hasError() {
 
 void Task::error() {
     ((QCoreApplication*)parent())->exit(1);
+}
+
+void Task::logMovescountID(QString device, QDateTime time, QString moveID)
+{
+    logStore.storeMovescountId(device, time, moveID);
 }
 
 MovesCount *movesCountSetup(const char *username, const char *userkey)
