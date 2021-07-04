@@ -31,9 +31,13 @@ done
 echo
 echo Testing openambit2gpx
 
+rm -f "${TMP:-/tmp}"/testlog.gpx
+
 python2.7 tools/openambit2gpx.py test-data/testlog.log -out "${TMP:-/tmp}"/testlog.gpx
 
 diff --ignore-all-space test-data/testlog.gpx "${TMP:-/tmp}"/testlog.gpx
+
+rm -f "${TMP:-/tmp}"/testlog.gpx
 
 python3 tools/openambit2gpx.py test-data/testlog.log -out "${TMP:-/tmp}"/testlog.gpx
 
