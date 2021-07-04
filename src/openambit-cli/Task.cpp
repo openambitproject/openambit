@@ -3,6 +3,7 @@
 //
 
 #include "Task.h"
+#include <thread>
 #include <movescount/movescount.h>
 #include <movescount/logstore.h>
 #include <movescount/movescountxml.h>
