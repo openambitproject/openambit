@@ -779,9 +779,6 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
     if (logEntry->logEntry->header.altitude_max >= -1000 && logEntry->logEntry->header.altitude_max <= 10000) {
         content.insert("HighAltitude", (double)logEntry->logEntry->header.altitude_max);
     }
-    else {
-        content.insert("HighAltitude", QVariant::Invalid);
-    }
     if (IBIContent.count() > 0) {
         uncompressedData = QJsonDocument(QJsonArray::fromVariantList(IBIContent)).toJson(QJsonDocument::Compact);
         compressData(uncompressedData, compressedData);
@@ -790,8 +787,9 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
         content.insert("IBIData", IBIDataMap);                        /* compressed */
     }
     content.insert("LocalStartTime", dateTimeString(localBaseTime));
-    if (logEntry->logEntry->header.altitude_min >= -1000 && logEntry->logEntry->header.altitude_min <= 10000)
+    if (logEntry->logEntry->header.altitude_min >= -1000 && logEntry->logEntry->header.altitude_min <= 10000) {
         content.insert("LowAltitude", (double)logEntry->logEntry->header.altitude_min);
+    }
     content.insert("Marks", marksContent);
     content.insert("MaxCadence", logEntry->logEntry->header.cadence_max);
     content.insert("MaxSpeed", (double)logEntry->logEntry->header.speed_max/3600.0);
