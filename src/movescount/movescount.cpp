@@ -621,7 +621,7 @@ QList<MovesCountLogDirEntry> MovesCount::getMovescountEntriesInThread(QDate star
                     startTime.toString("yyyy-MM-dd") << ", enddate:" << endTime.toString("yyyy-MM-dd");
             }
         } else {
-            qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << _data << "\"";
+            qDebug() << "Failed to fetch logs (err code:" << reply->error() << "), movescount.com replied with \"" << _data << "\"";
         }
     }
 
@@ -684,7 +684,9 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
             "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day;
             emit logMoveID(logEntry->device, logEntry->time, moveId);
         } else {
-            qDebug() << "Failed to upload log, movescount.com replied with \"" << data << "\"";
+            qDebug() << "Failed to upload log for move '" << logEntry->logEntry->header.activity_name <<
+                     "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day <<
+                     ", movescount.com replied with \"" << data << "\"";
             emit uploadError(data);
         }
     } 
@@ -695,7 +697,9 @@ void MovesCount::writeLogInThread(LogEntry *logEntry)
             "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day <<
             ": " << data;
     } else {
-        qDebug() << "Failed to upload log (err code:" << reply->error() << "), movescount.com replied with \"" << data << "\"";
+        qDebug() << "Failed to upload log for move '" << logEntry->logEntry->header.activity_name <<
+                 "' from " << logEntry->logEntry->header.date_time.year << "-" << logEntry->logEntry->header.date_time.month << "-" << logEntry->logEntry->header.date_time.day <<
+                 ": (err code:" << reply->error() << "), movescount.com replied with \"" << data << "\"";
         emit uploadError(data);
     }
 }
