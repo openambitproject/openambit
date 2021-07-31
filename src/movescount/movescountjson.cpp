@@ -546,8 +546,13 @@ int MovesCountJSON::generateLogData(LogEntry *logEntry, QByteArray &output)
             break;
         case ambit_log_sample_type_gps_base:
         {
+            double alt = (double)sample->u.gps_base.altitude/100.0;
+            if (alt < -1000 || alt > 10000) {
+                alt = 0;
+            }
+
             QVariantMap tmpMap;
-            tmpMap.insert("Altitude", (double)sample->u.gps_base.altitude/100.0);
+            tmpMap.insert("Altitude", alt);
             tmpMap.insert("EHPE", (double)sample->u.gps_base.ehpe/100.0);
             tmpMap.insert("Latitude", (double)sample->u.gps_base.latitude/10000000);
             tmpMap.insert("LocalTime", dateTimeString(localBaseTime.addMSecs(sample->time)));
@@ -1016,7 +1021,7 @@ bool MovesCountJSON::writePeriodicSample(ambit_log_sample_t *sample, QVariantMap
 
 int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
 {
-    int ret = -1, res, deflate_res;
+    int ret = -1;
     size_t destLen = compressBound(content.length());
 
     if (destLen > 0) {
@@ -1032,7 +1037,7 @@ int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
         strm.opaque = Z_NULL;
         header.os = 0x00; // FAT
 
-        res = deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY);
+        int res = deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY);
         res = deflateSetHeader(&strm, &header);
 
         strm.next_in = reinterpret_cast<uint8_t *>(content.data());
@@ -1043,7 +1048,7 @@ int MovesCountJSON::compressData(QByteArray &content, QByteArray &output)
         res = deflate(&strm, Z_NO_FLUSH);
 
         if (res == Z_OK) {
-            deflate_res = Z_OK;
+            int deflate_res = Z_OK;
             while (deflate_res == Z_OK) {
                 deflate_res = deflate(&strm, Z_FINISH);
             }
