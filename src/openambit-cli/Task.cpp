@@ -191,8 +191,6 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                bool writeLogs, bool writeSettingsJSON, const char *settingsInputFile, const char *appInputFile,
                bool checkForMissingUploads, Task *task)
 {
-    ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
-
     if (deviceObject != NULL) {
         // Reading personal settings + waypoints
         int res = libambit_personal_settings_get(deviceObject, currentPersonalSettings);
@@ -263,6 +261,8 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
         if (waypoint_sync_res != -1 && syncNavigation) {
             qDebug() << "Start reading navigation...";
 
+            ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
+
             qDebug() << "Get Personal Settings";
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
                 movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
@@ -274,6 +274,8 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 task->hasError();
             }
             qDebug() << "End reading navigation...";
+
+            libambit_personal_settings_free(movecountPersonalSettings);
         }
 
         if ((syncSportMode || (settingsInputFile != NULL && appInputFile != NULL)) && res != -1) {
@@ -369,18 +371,16 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 qDebug() << "End sync watch apps to JSON";
 
                 libambit_sport_mode_device_settings_free(ambitDeviceSettings);
-                libambit_app_rules_free(ambitApps);
             } else {
                 qDebug() << "ERROR: Failed to sync watch apps to JSON";
 
                 task->hasError();
             }
+            libambit_app_rules_free(ambitApps);
         }
 
         libambit_sync_display_clear(deviceObject);
     }
-
-    libambit_personal_settings_free(movecountPersonalSettings);
 }
 
 int readSportModesFromFile(const char *settingsInputFile, ambit_sport_mode_device_settings_t *ambitDeviceSettings) {
