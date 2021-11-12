@@ -36,6 +36,7 @@
 #define GPS_ORBIT_DATA_MIN_SIZE 30000 /* byte */
 
 static MovesCount *m_Instance;
+static void writeJson(QByteArray _data, const char* name);
 
 MovesCount* MovesCount::instance()
 {
@@ -381,6 +382,8 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
+            writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/personal_settings.json");
+
             jsonParser.parsePersonalSettings(_data, settings, this);
             ret = _data.length();
         }
@@ -404,6 +407,10 @@ int MovesCount::getRouteInThread(ambit_route_t *route, ambit_personal_settings_t
 
         if (_data.length() > 0) {
             jsonParser.parseRoute(_data, route, ps, this);
+
+            QString file = QString(getenv("HOME")).toUtf8() + QString("/.openambit/") + url.replace("/", "_") + "_" + QString::fromLatin1(route->name) + ".json";
+            writeJson(_data, file.toStdString().c_str());
+
             ret = _data.length();
         }
     }
@@ -425,6 +432,9 @@ int MovesCount::getRoutePointsInThread(ambit_route_t *route, ambit_personal_sett
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
+            QString file = QString(getenv("HOME")).toUtf8() + QString("/.openambit/") + url.replace("/", "_") + "_" + QString::fromLatin1(route->name) + "_points.json";
+            writeJson(_data, file.toStdString().c_str());
+
             ret = jsonParser.parseRoutePoints(_data, route, ps);
         }
     }
