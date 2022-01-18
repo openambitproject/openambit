@@ -72,12 +72,12 @@ int main(int argc, char *argv[]) {
     parser.addOption(writeJSONSettingsFileOption);
 
     QCommandLineOption customConfigFileOption(QStringList() << "c" << "custom-config",
-                                              QCoreApplication::translate("main", "A custom JSON config file to load settings for the watch. Not applied when --no-syn-sport-mode is specified."),
+                                              QCoreApplication::translate("main", "A custom JSON config file to load settings for the watch. Not applied when --no-sync-sport-mode is specified."),
                                               QCoreApplication::translate("main", "json-file"));
     parser.addOption(customConfigFileOption);
 
     QCommandLineOption customAppFileOption(QStringList() << "a" << "app-config",
-                                              QCoreApplication::translate("main", "A custom JSON config file to load apps for the watch. Not applied when --no-syn-sport-mode is specified."),
+                                              QCoreApplication::translate("main", "A custom JSON config file to load apps for the watch. Not applied when --no-sync-sport-mode is specified."),
                                               QCoreApplication::translate("main", "json-file"));
     parser.addOption(customAppFileOption);
 
