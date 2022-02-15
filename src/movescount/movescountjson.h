@@ -43,8 +43,10 @@ public:
     int parseFirmwareVersionReply(QByteArray &input, u_int8_t fw_version[3]);
     int parseLogReply(QByteArray &input, QString &moveId);
     int parseLogDirReply(QByteArray &input, QList<MovesCountLogDirEntry> &entries);
-    int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount);
-    int parseRoute(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps, MovesCount *movescount);
+    int parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount,
+                              const QString &routeDirectory);
+    int parseRoute(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps, MovesCount *movescount,
+                   const QString &directory);
     int parseRoutePoints(QByteArray &input, ambit_route_t *routes, ambit_personal_settings_t *ps);
     bool appendWaypoint(uint16_t count, ambit_personal_settings_t *ps, char *route_name, char *waypoint_name, int32_t lat, int32_t lon, uint16_t altitude, uint8_t type);
     int parseDeviceSettingsReply(QByteArray &input, MovescountSettings &movescountSettings);

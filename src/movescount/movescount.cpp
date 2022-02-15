@@ -28,6 +28,7 @@
 #include <QMutex>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 #include <QJsonDocument>
 
 #include "logstore.h"
@@ -172,6 +173,52 @@ int MovesCount::getRoute(ambit_route_t *route, ambit_personal_settings_t *ps, QS
     return ret;
 }
 
+int MovesCount::getRouteFromFile(ambit_route_t *route, ambit_personal_settings_t *ps, QString url, QString directory)
+{
+    // find filename based on directory and URL
+    // routes/310212
+    QString routeId = url.remove("routes/");
+
+    QStringList filters;
+    // routes_573247115_SMD22.v1.d1.Sexten-Innichen-Toblach-Marchkinkele-Winnebach-Sexten.55km.1550hm.json
+    filters << QString("routes_").append(routeId).append("_*");
+
+    QDir dir = QDir(directory);
+    QStringList dirs = dir.entryList(filters);
+    if (dirs.empty())
+    {
+        qDebug() << "Did not find " << filters << " at " << directory;
+        return -1;
+    }
+
+    QString fileName = dirs.at(0);
+
+    // both file-names start similar, so we need to make sure we use
+    // the non-points-one which we want to read here
+    if (fileName.contains("_points_")) {
+        fileName = dirs.at(1);
+    }
+
+    QFile routeFile(QString(directory).append("/").append(fileName));
+    qDebug() << "Reading route from " << routeFile;
+
+    if (!routeFile.open(QIODevice::ReadOnly)){
+        qDebug() << "Route file " << routeFile << " not available for reading!";
+        return -1;
+    }
+
+    QByteArray _data = routeFile.readAll();
+
+    int ret = -1;
+    if (_data.length() > 0) {
+        jsonParser.parseRoute(_data, route, ps, NULL, directory);
+
+        ret = _data.length();
+    }
+
+    return ret;
+}
+
 int MovesCount::getRoutePoints(ambit_route_t *route, ambit_personal_settings_t *ps, QString url)
 {
     int ret = -1;
@@ -183,6 +230,44 @@ int MovesCount::getRoutePoints(ambit_route_t *route, ambit_personal_settings_t *
         QMetaObject::invokeMethod(this, "getRoutePointsInThread", Qt::BlockingQueuedConnection,
                                   Q_RETURN_ARG(int, ret),
                                   Q_ARG(ambit_route_t *, route),Q_ARG(ambit_personal_settings_t *, ps), Q_ARG(QString, url));
+    }
+
+    return ret;
+}
+
+int MovesCount::getRoutePointsFromFile(ambit_route_t *route, ambit_personal_settings_t *ps, QString url, QString directory)
+{
+    // routes/310212
+    QString routeId = url.remove("routes/").remove("/points");
+
+    QStringList filters;
+    // routes_573247115_points_SMD22.v1.d1.Sexten-Innichen-Toblach-Marchkinkele-Winnebach-Sexten.55km.1550hm.json
+    filters << QString("routes_").append(routeId).append("_points_*");
+
+    QDir dir = QDir(directory);
+    QStringList dirs = dir.entryList(filters);
+
+    if (dirs.empty())
+    {
+        qDebug() << "Did not find " << filters << " at " << directory;
+        return -1;
+    }
+
+    const QString &fileName = dirs.at(0);
+    QFile routePointsFile(QString(directory).append("/").append(fileName));
+
+    qDebug() << "Reading points from " << routePointsFile;
+
+    if (!routePointsFile.open(QIODevice::ReadOnly)){
+        qDebug() << "Points file " << routePointsFile << " not available for reading!";
+        return -1;
+    }
+
+    QByteArray _data = routePointsFile.readAll();
+
+    int ret = -1;
+    if (_data.length() > 0) {
+        ret = jsonParser.parseRoutePoints(_data, route, ps);
     }
 
     return ret;
@@ -382,7 +467,7 @@ int MovesCount::getPersonalSettingsInThread(ambit_personal_settings_t *settings,
         if (_data.length() > 0) {
             writeJson(_data, QString(getenv("HOME")).toUtf8() + "/.openambit/personal_settings.json");
 
-            jsonParser.parsePersonalSettings(_data, settings, this);
+            jsonParser.parsePersonalSettings(_data, settings, this, NULL);
             ret = _data.length();
         }
     }
@@ -402,7 +487,7 @@ int MovesCount::getRouteInThread(ambit_route_t *route, ambit_personal_settings_t
         QByteArray _data = reply->readAll();
 
         if (_data.length() > 0) {
-            jsonParser.parseRoute(_data, route, ps, this);
+            jsonParser.parseRoute(_data, route, ps, this, NULL);
 
             QString file = QString(getenv("HOME")).toUtf8() + QString("/.openambit/") + url.replace("/", "_") + "_" + QString::fromLatin1(route->name) + ".json";
             writeJson(_data, file.toStdString().c_str());

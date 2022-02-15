@@ -264,6 +264,8 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
 
             ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
 
+            // TODO: if configured, read personal settings and routes from files instead of MovesCount
+
             qDebug() << "Get Personal Settings";
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
                 movesCount->applyPersonalSettingsFromDevice(movecountPersonalSettings, currentPersonalSettings);
@@ -274,7 +276,7 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
 
                 task->hasError();
             }
-            qDebug() << "End reading navigation...";
+            qDebug() << "End reading navigation, had " << currentPersonalSettings->routes.count << " changed routes...";
 
             libambit_personal_settings_free(movecountPersonalSettings);
         }

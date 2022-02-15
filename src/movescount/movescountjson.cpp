@@ -77,7 +77,8 @@ int MovesCountJSON::parseLogReply(QByteArray &input, QString &moveId)
     return -1;
 }
 
-int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount)
+int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_settings_t *ps, MovesCount *movescount,
+                                          const QString &routeDirectory)
 {
 
     if (input.length() <= 0) {
@@ -100,7 +101,13 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         ps->routes.count = routes.size();
         ps->routes.data  = libambit_route_alloc(ps->routes.count);
         for(int x=0; x<routes.size(); x++) {
-            movescount->getRoute(&(ps->routes.data[x]), ps, routes.value(x));
+            if (movescount == NULL) {
+                // handle reading the file from routeDirectory
+                MovesCount *movesCountLocal = MovesCount::instance();
+                movesCountLocal->getRouteFromFile(&(ps->routes.data[x]), ps, routes.value(x), routeDirectory);
+            } else {
+                movescount->getRoute(&(ps->routes.data[x]), ps, routes.value(x));
+            }
         }
 
         //Sort routes on name
@@ -194,7 +201,8 @@ bool MovesCountJSON::copyDataString(const QVariant& entry, char *data, size_t ma
     return true;
 }
 
-int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_personal_settings_t *ps, MovesCount *movescount)
+int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_personal_settings_t *ps, MovesCount *movescount,
+                               const QString &directory)
 {
     if (input.length() <= 0) {
         return -1;
@@ -219,7 +227,16 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
     int ret;
 
     if(result["RoutePointsURI"].type() == QVariant::String) {
-        if((ret = movescount->getRoutePoints(route, ps, result["RoutePointsURI"].toString())) < 2) {
+        if (movescount == NULL) {
+            if((ret = movescount->getRoutePointsFromFile(route, ps, result["RoutePointsURI"].toString(), directory)) < 2) {
+                if(route->points != NULL) {
+                    free(route->points);
+                    route->points = NULL;
+                }
+                route->points_count = 0;
+                return -1;
+            }
+        } else if((ret = movescount->getRoutePoints(route, ps, result["RoutePointsURI"].toString())) < 2) {
             if(route->points != NULL) {
                 free(route->points);
                 route->points = NULL;
@@ -237,9 +254,6 @@ int MovesCountJSON::parseRoute(QByteArray &input, ambit_route_t *route, ambit_pe
     route->altitude_dec = result["DescentAltitude"].toUInt();
     route->altitude_asc= result["AscentAltitude"].toUInt();
     route->distance = result["Distance"].toUInt();
-
-    //TODO: Remove
-    //libambit_debug_route_print(route);
 
     return (int)route->points_count;
 }
@@ -1164,6 +1178,11 @@ QVariantMap MovesCountJSON::parseJsonMap(const QByteArray& input, bool& ok) cons
     QJsonParseError err;
     QJsonDocument json = QJsonDocument::fromJson(input, &err);
     ok = !json.isNull();
+
+    if (!ok) {
+        qDebug() << "Error when parsing JSON: " << err.errorString() << " at offset " << QString::number(err.offset);
+    }
+
     return json.object().toVariantMap();
 }
 

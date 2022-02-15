@@ -57,7 +57,9 @@ public:
     int getOrbitalData(u_int8_t **data);
     int getPersonalSettings(ambit_personal_settings_t *settings, bool onlychangedsettings);
     int getRoute(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
+    int getRouteFromFile(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url, QString directory);
     int getRoutePoints(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url);
+    int getRoutePointsFromFile(ambit_route_t *routes, ambit_personal_settings_t *ps, QString url, QString directory);
     int applyPersonalSettingsFromDevice(ambit_personal_settings_t *movesPersonalSettings, ambit_personal_settings_t *devicePersonalSettings);
     void getDeviceSettings();
     int getCustomModeData(ambit_sport_mode_device_settings_t *ambitCustomModes);

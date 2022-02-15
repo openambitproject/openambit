@@ -57,4 +57,14 @@ TEST_CASE("testing fetching routes") {
     libambit_route_free(data, 1);
 }
 
+TEST_CASE("testing fetching routes from files") {
+    MovesCount *movesCount = MovesCount::instance();
+
+    ambit_route_t* data = libambit_route_alloc(1);
+    ambit_personal_settings_t *moveCountPersonalSettings = libambit_personal_settings_alloc();
+    CHECK_MESSAGE(-1 == movesCount->getRouteFromFile(data, moveCountPersonalSettings, QString("bla"), QString("dir")), "Did not expect to read route data");
+    libambit_personal_settings_free(moveCountPersonalSettings);
+    libambit_route_free(data, 1);
+}
+
 TEST_SUITE_END();
