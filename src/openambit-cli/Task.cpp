@@ -86,8 +86,12 @@ void Task::run() {
                 hasError();
             } else {
                 printf("Connecting to movescount\n");
-                MovesCount *movesCount = movesCountSetup(username, userkey);
-                if (movesCount != NULL) {
+                MovesCount *movesCount = NULL;
+                if (writeLogs) {
+                    movesCount = movesCountSetup(username, userkey);
+                }
+
+                if (movesCount != NULL || !writeLogs) {
                     printf("Connected\n");
 
                     //connect(movesCount, SIGNAL(movesCountAuth(bool)), this, SLOT(movesCountAuth(bool)), Qt::QueuedConnection);
@@ -95,9 +99,6 @@ void Task::run() {
                     DeviceInfo deviceInfo = DeviceInfo();
 
                     deviceInfo = *info;
-
-                    movesCount->setDevice(deviceInfo);
-                    //movesCount->getDeviceSettings();
 
                     printf("Having device: %s/%s/%s/%d.%d.%d/%d.%d.%d/%d/%d\n",
                            deviceInfo.name.toStdString().c_str(),
@@ -112,9 +113,12 @@ void Task::run() {
                            deviceInfo.access_status,
                            deviceInfo.is_supported);
 
+                    if (movesCount != NULL) {
+                        movesCount->setDevice(deviceInfo);
 
-                    // Connect movescount Id feedback to local handler
-                    QObject::connect(movesCount, SIGNAL(logMoveID(QString,QDateTime,QString)), this, SLOT(logMovescountID(QString,QDateTime,QString)));
+                        // Connect movescount Id feedback to local handler
+                        QObject::connect(movesCount, SIGNAL(logMoveID(QString,QDateTime,QString)), this, SLOT(logMovescountID(QString,QDateTime,QString)));
+                    }
 
                     startSync(ambit_object, &settings, movesCount, readAllLogs, syncTime, syncOrbit, syncSportMode,
                               syncNavigation, writeLogs, writeSettingsJSON, settingsInputFile, appInputFile,
@@ -124,7 +128,9 @@ void Task::run() {
                         free(settings.waypoints.data);
                     }
 
-                    movesCount->exit();
+                    if (movesCount != NULL) {
+                        movesCount->exit();
+                    }
                 }
             }
 
@@ -221,7 +227,9 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                 qDebug() << "Start reading log...";
 
                 // Exit with an exit-code if uploading fails
-                QObject::connect(movesCount, SIGNAL(uploadError(QByteArray)), task, SLOT(error(QByteArray)));
+                if (movesCount != NULL) {
+                    QObject::connect(movesCount, SIGNAL(uploadError(QByteArray)), task, SLOT(error(QByteArray)));
+                }
 
                 syncData_t syncData;
                 syncData.deviceObject = deviceObject;
@@ -263,8 +271,6 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             qDebug() << "Start reading navigation...";
 
             ambit_personal_settings_t *movecountPersonalSettings = libambit_personal_settings_alloc();
-
-            // TODO: if configured, read personal settings and routes from files instead of MovesCount
 
             qDebug() << "Get Personal Settings";
             if((movesCount->getPersonalSettings(movecountPersonalSettings, true)) != -1) {
@@ -467,7 +473,7 @@ static void log_data_cb(void *object, ambit_log_entry_t *log_entry)
             printf("Not sending log to movescount");
         }
 
-	libambit_log_synced(syncData->deviceObject, log_entry);
+	    libambit_log_synced(syncData->deviceObject, log_entry);
 	
         delete entry;
     }
