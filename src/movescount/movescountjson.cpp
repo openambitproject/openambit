@@ -94,7 +94,10 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
 
     //Empty waypoints in personal_settings (ps)
     ps->waypoints.count = 0;
-    if(ps->waypoints.data != NULL) free(ps->waypoints.data);
+    if(ps->waypoints.data != NULL) {
+        free(ps->waypoints.data);
+        ps->waypoints.data = NULL;
+    }
 
     if(ps->routes.count == 0 && result["RouteURIs"].type() == QVariant::String) {
         QStringList routes = result["RouteURIs"].toString().split(',');
@@ -146,6 +149,7 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
         for(int x=0; x<num_to_append; x++) {
             QDateTime dt;
             QVariantMap jsonWp = result["Waypoints"].toList().at(x).toMap();
+            waypoints_to_append[x].status = 0;
             waypoints_to_append[x].altitude = (uint16_t)jsonWp["Altitude"].toInt();
             waypoints_to_append[x].longitude = (uint32_t)(jsonWp["Longitude"].toFloat()*10000000);
             waypoints_to_append[x].latitude = (uint32_t)(jsonWp["Latitude"].toFloat()*10000000);
@@ -172,8 +176,9 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
     ambit_waypoint_t *wp_sorted = (ambit_waypoint_t*)calloc(ps->waypoints.count,sizeof(ambit_waypoint_t));
 
     for(int x=0; x < ps->waypoints.count;++x) {
-        if(x == 0 || last.compare(QString(ps->waypoints.data[x].route_name)) !=0 ) {
-            last = QString(ps->waypoints.data[x].route_name);
+        const QString &routeName = QString(ps->waypoints.data[x].route_name);
+        if(x == 0 || last.compare(routeName) != 0 ) {
+            last = routeName;
             qslist_route_name.append(last);
         }
     }
@@ -182,7 +187,8 @@ int MovesCountJSON::parsePersonalSettings(QByteArray &input, ambit_personal_sett
 
     for(int x=0; x < qslist_route_name.size(); ++x) {
         for(int y = 0; y < ps->waypoints.count;++y) {
-            if(qslist_route_name.at(x).compare(QString(ps->waypoints.data[y].route_name)) == 0) {
+            const QString &name = QString(ps->waypoints.data[y].route_name);
+            if(qslist_route_name.at(x).compare(name) == 0) {
                 wp_sorted[sort_offset++] = ps->waypoints.data[y];
             }
         }

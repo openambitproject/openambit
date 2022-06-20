@@ -40,6 +40,7 @@ set(TEST_SRCS
         # movescount
         movescount/logentry_test.cpp
         movescount/logstore_test.cpp
+        movescount/movescountjson_test.cpp
         movescount/movescountxml_test.cpp
         movescount/movescount_test.cpp
         movescount/movescountlogchecker_test.cpp

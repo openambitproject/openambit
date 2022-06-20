@@ -122,6 +122,7 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             qDebug() << "Start reading navigation...";
 
             ambit_personal_settings_t *newPersonalSettings = libambit_personal_settings_alloc();
+            memset(newPersonalSettings, 0, sizeof(ambit_personal_settings_t));
 
             qDebug() << "Get Personal Settings";
 
@@ -151,6 +152,8 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
                     libambit_navigation_write(deviceObject, newPersonalSettings);
 
                     qDebug() << "Written routes from " << directory;
+
+                    movesCount->exit();
                 } else {
                     qDebug() << "ERROR: Failed to read navigation-data from directory " << directory;
 
@@ -160,6 +163,11 @@ void startSync(ambit_object_t *deviceObject, ambit_personal_settings_t *currentP
             qDebug() << "End reading navigation";
 
             libambit_personal_settings_free(newPersonalSettings);
+        }
+
+        if(currentPersonalSettings->waypoints.data != NULL) {
+            free(currentPersonalSettings->waypoints.data);
+            currentPersonalSettings->waypoints.data = NULL;
         }
 
         libambit_sync_display_clear(deviceObject);
