@@ -437,10 +437,15 @@ void MovesCount::handleAuthorizationSignal(bool authorized)
 int MovesCount::getOrbitalDataInThread(u_int8_t **data)
 {
     int ret = -1;
+
+    qDebug() << "Fetching orbital data";
+
     QNetworkReply *reply = syncGET("/devices/gpsorbit/binary", "", false);
 
     if(reply->error() == QNetworkReply::NoError) {
         QByteArray _data = reply->readAll();
+
+        qDebug() << "Fetched orbital data (length:" << _data.length() << ")";
 
         if (_data.length() >= GPS_ORBIT_DATA_MIN_SIZE) {
             *data = (u_int8_t*)malloc(_data.length());
@@ -449,6 +454,8 @@ int MovesCount::getOrbitalDataInThread(u_int8_t **data)
 
             ret = _data.length();
         }
+    } else {
+        qDebug() << "Failed to fetch orbital data (err code:" << reply->error() << ")";
     }
 
     delete reply;
