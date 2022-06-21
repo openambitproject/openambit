@@ -87,7 +87,7 @@ void Task::run() {
             } else {
                 printf("Connecting to movescount\n");
                 MovesCount *movesCount = NULL;
-                if (writeLogs) {
+                if (writeLogs || syncOrbit || syncNavigation) {
                     movesCount = movesCountSetup(username, userkey);
                 }
 
