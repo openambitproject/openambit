@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
     parser.addHelpOption();
     parser.addVersionOption();
 
+    parser.addPositionalArgument("directory", QCoreApplication::translate("main", "Directory where the route-files and personal_settings.json are stored."));
+
     // Process the actual command line arguments given by the user
     parser.process(a);
 
