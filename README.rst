@@ -8,6 +8,12 @@ that far).  It enables you to get your hard-earned "move" log data off
 Openambit will pump that data into the cloud where Big Data can crunch
 it to pieces and analyze your moves to shreds.
 
+Update
+------
+
+Suunto has discontinued the `Movescount` service, Openambit still allows
+to fetch data from supported watches and also to update settings,
+sport-modes and routes on the watch from local settings files.
 
 Modules
 -------
@@ -20,6 +26,19 @@ src/libambit
 src/openambit
   a Qt based GUI application to get data off your watch and push it to
   Suunto's `Movescount`_ site.
+
+src/openambit-cli
+  a commandline application which allows to automate fetching data
+  from the watch or updating settings
+
+src/openambit-routes
+  a commandline application which can upload routes from local files.
+  it expects the same format as Movescount uses via an information-file
+  and a "points" file, referenced via the general settings file.
+
+src/unittests
+  a collection of tests which verify that parts of the code behave as
+  expected.
 
 src/example
   a very simple command-line application that reports on your watch's
