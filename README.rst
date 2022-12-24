@@ -15,6 +15,9 @@ Suunto has discontinued the `Movescount` service, Openambit still allows
 to fetch data from supported watches and also to update settings,
 sport-modes and routes on the watch from local settings files.
 
+See `Adjusting watch settings and routes without Movescount`_ for details 
+about how to use Openambit without Movescount.
+
 Modules
 -------
 
@@ -214,6 +217,7 @@ This configures access to the device via udev.
 .. _Ubuntu: http://packages.ubuntu.com/search?keywords=openambit
 .. _OSWatershed.org: http://oswatershed.org/pkg/openambit
 .. _release: https://github.com/openambitproject/openambit/releases
+.. _Adjusting watch settings and routes without Movescount: https://github.com/openambitproject/openambit/wiki/Adjusting-watch-settings-and-routes-without-Movescount
 
 More information
 ----------------
