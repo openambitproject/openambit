@@ -183,6 +183,14 @@ parts, simply install them with:
    cd /path/to/your/build/directory
    sudo make install
 
+If building for a mac computer, consider installing the hidapi driver
+and configure cmake for it:
+
+.. code-block:: sh
+
+  brew install hidapi
+  cmake -DHIDAPI_DRIVER=mac
+
 If you built directly with ``cmake``, installation is simply:
 
 .. code-block:: sh
@@ -224,3 +232,4 @@ More information
 
 Look at the wiki at https://github.com/openambitproject/openambit/wiki for
 more information.
+
