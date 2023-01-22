@@ -27,7 +27,6 @@
 #include <string.h>
 #include <time.h>
 #include <wchar.h>
-
 /**
  * Reduced implementation of the Unix specific strptime
  */

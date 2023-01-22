@@ -2,7 +2,7 @@ extern "C" {
 #include "utils.h"
 }
 
-#include <malloc.h>
+#include <stdlib.h>
 #include "doctest.h"
 
 TEST_SUITE_BEGIN ("utils");
