@@ -1,4 +1,3 @@
-#  CMakeLists.txt -- Openambit top-level build specification
 #  Copyright (C) 2015 Olaf Meeuwissen
 #
 #  This file is part of Openambit.
@@ -22,34 +21,54 @@ cmake_minimum_required(VERSION 3.0)
 project(Openambit
   LANGUAGES NONE)
 
-option(BUILD_EXTRAS "Build examples and wireshark dissector" OFF)
+option(BUILD_EXTRAS "Build examples" ON)
+option(BUILD_WS "Build wireshark plugin" OFF)
+
+# TODO: Enable this switch (for mac)
+# option(BUILD_MOVESCOUNT "Build movescount lib" ON)
+option(BUILD_UNIT_TESTS "Build unittests" ON)
+
+include(${CMAKE_SOURCE_DIR}/Mac.cmake)
 
 add_subdirectory(src/libambit)
-add_subdirectory(src/movescount)
+if (BUILD_MOVESCOUNT)
+  add_subdirectory(src/movescount)
+endif()
 add_subdirectory(src/openambit)
 add_subdirectory(src/openambit-cli)
 add_subdirectory(src/openambit-routes)
-add_subdirectory(src/unittest)
+if(BUILD_UNIT_TESTS)
+  add_subdirectory(src/unittest)
+endif()
 
 if (NOT ${LIBAMBIT_FOUND})
-  add_dependencies(movescount ambit)
+  if(MOVESCOUNT)
+    add_dependencies(movescount ambit)
+  endif ()
   add_dependencies(openambit ambit)
   add_dependencies(openambit-cli ambit)
   add_dependencies(openambit-routes ambit)
-  add_dependencies(unittest ambit)
+  if(BUILD_UNIT_TESTS)
+    add_dependencies(unittest ambit)
+  endif()
 endif ()
+if(MOVESCOUNT)
 if (NOT ${MOVESCOUNT_FOUND})
   add_dependencies(openambit movescount)
   add_dependencies(openambit-cli movescount)
-  add_dependencies(unittest movescount)
+  if(BUILD_UNIT_TESTS)
+    add_dependencies(unittest movescount)
+  endif()
+endif ()
 endif ()
 
 if (BUILD_EXTRAS)
   add_subdirectory(src/example)
-  add_subdirectory(wireshark_dissector)
-
   if (NOT ${LIBAMBIT_FOUND})
     add_dependencies(ambitconsole ambit)
   endif ()
-
 endif ()
+if (BUILD_WS)
+  add_subdirectory(wireshark_dissector)
+endif()
+
