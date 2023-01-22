@@ -6,7 +6,9 @@
 #  HIDAPI_INCLUDE_DIR
 #  HIDAPI_SOURCE_FILES
 #  HIDAPI_LIBS
+#  HIDAPI_EXTRA_LIBS
 
+set (HIDAPI_EXTRA_LIBS "")
 if (NOT HIDAPI_RESOLVED)
     if (HIDAPI_DRIVER STREQUAL "libusb")
         find_package(libusb REQUIRED)
@@ -23,7 +25,8 @@ if (NOT HIDAPI_RESOLVED)
 #        #find_package(PCAP REQUIRED)
         set (HIDAPI_INCLUDE_DIR "hidapi" "")
         set (HIDAPI_SOURCE_FILES "hidapi/hid-mac.c")
-        set (HIDAPI_LIBS "")
+        set (HIDAPI_LIBS "iconv")
+        set (HIDAPI_EXTRA_LIBS "-framework Cocoa -framework IOKit")
     elseif (HIDAPI_DRIVER STREQUAL "windows")
         find_package(iconv REQUIRED)
         set (HIDAPI_INCLUDE_DIR "hidapi" ${ICONV_INCLUDE_DIR})

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.0.0)
 project (OPENAMBIT CXX)
 
 set (OPENAMBIT_VERSION 0.5)
@@ -8,6 +8,9 @@ set(CMAKE_MODULE_PATH "${OPENAMBIT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+include(${CMAKE_SOURCE_DIR}/Mac.cmake)
+
+find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5LinguistTools REQUIRED)
 find_package(libambit REQUIRED)

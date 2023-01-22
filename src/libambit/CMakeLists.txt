@@ -3,9 +3,7 @@ project (LIBAMBIT C)
 
 # Where to lookup modules
 set(CMAKE_MODULE_PATH "${LIBAMBIT_SOURCE_DIR}/cmake")
-
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 # Debug defines
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG_PRINT_ERROR -DDEBUG_PRINT_WARNING")
@@ -15,8 +13,10 @@ ENDIF()
 IF (DEFINED DEBUG_PRINT_FILE_LINE)
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG_PRINT_FILE_LINE=${DEBUG_PRINT_FILE_LINE}")
 ENDIF()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall ${CMAKE_C_FLAGS_DEBUG}")
 
-include(HidapiDriver)
+include(${CMAKE_SOURCE_DIR}/Mac.cmake)
+include(${LIBAMBIT_SOURCE_DIR}/cmake/HidapiDriver.cmake)
 include(GNUInstallDirs)
 
 add_library (
@@ -45,6 +45,7 @@ target_link_libraries(
   ambit
   ${HIDAPI_LIBS}
   m
+  ${HIDAPI_EXTRA_LIBS}
 )
 
 set_target_properties(ambit PROPERTIES VERSION 0.5.0 SOVERSION 0)
@@ -55,11 +56,12 @@ include_directories(
 
 install(TARGETS ambit DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES libambit.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(CMAKE_INSTALL_UDEVRULESDIR /etc/udev/rules.d
+      CACHE PATH "Where to install udev rules")
+  mark_as_advanced(CMAKE_INSTALL_UDEVRULESDIR)
 
-set(CMAKE_INSTALL_UDEVRULESDIR /etc/udev/rules.d
-    CACHE PATH "Where to install udev rules")
-mark_as_advanced(CMAKE_INSTALL_UDEVRULESDIR)
-
-install(FILES libambit.rules
-        DESTINATION $ENV{DESTDIR}${CMAKE_INSTALL_UDEVRULESDIR}
-        COMPONENT system)
+  install(FILES libambit.rules
+          DESTINATION $ENV{DESTDIR}${CMAKE_INSTALL_UDEVRULESDIR}
+          COMPONENT system)
+endif()

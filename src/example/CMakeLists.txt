@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.0.0)
 project (EXAMPLE C)
 
 # Where to lookup modules
@@ -6,6 +6,7 @@ set(CMAKE_MODULE_PATH "${EXAMPLE_SOURCE_DIR}/cmake")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
+include(${CMAKE_SOURCE_DIR}/Mac.cmake)
 find_package(libambit REQUIRED)
 
 include_directories(
