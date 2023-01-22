@@ -24,7 +24,7 @@
 #include "sha256.h"
 #include "utils.h"
 #include "debug.h"
-
+#include "endian.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

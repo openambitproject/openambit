@@ -26,7 +26,7 @@
 #include "device_driver_ambit_navigation.h"
 #include "protocol.h"
 #include "debug.h"
-
+#include "endian.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
