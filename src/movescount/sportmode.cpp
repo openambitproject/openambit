@@ -60,20 +60,20 @@ CustomMode::CustomMode(QVariantMap &customModeMap, QObject *parent) :
     useHrLimits = customModeMap[USE_HR_LIMITS].toBool();
     useIntervals = customModeMap[USE_INTERVALS].toBool();
     sportmodeId = customModeMap[SPORT_MODE_ID].toUInt();
-    if (customModeMap[AUTO_SCROLING_SPEED].toString() == QString::null) {
+    if (customModeMap[AUTO_SCROLING_SPEED].toString() == QString()) {
         autoScrolingSpeed = 0;
     }
     else {
         autoScrolingSpeed = customModeMap[AUTO_SCROLING_SPEED].toUInt();
     }
     autoPauseSpeed = customModeMap[AUTO_PAUSE_SPEED].toFloat();
-    if (customModeMap[BACKLIGHT_MODE].toString() == QString::null) {
+    if (customModeMap[BACKLIGHT_MODE].toString() == QString()) {
         backlightMode = 0xff;
     }
     else {
         backlightMode = customModeMap[BACKLIGHT_MODE].toUInt();
     }
-    if (customModeMap[DISPLAY_IS_NEGATIVE].toString() == QString::null) {
+    if (customModeMap[DISPLAY_IS_NEGATIVE].toString() == QString()) {
         displayIsNegative = 0xff;
     }
     else {

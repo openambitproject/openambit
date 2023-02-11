@@ -1423,7 +1423,6 @@ bool LogStore::XMLWriter::writePersonalSettings()
         xml.writeTextElement("GPSTimeKeeping", QString("%1").arg(personalSettings->sync_time_w_gps));
         xml.writeTextElement("Use24hClock", QString("%1").arg(personalSettings->time_format));
         QString timeFormat;
-        timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour, personalSettings->alarm.minute);
         xml.writeTextElement("Alarm", timeFormat.sprintf("%02u:%02u", personalSettings->alarm.hour,
                                                          personalSettings->alarm.minute));
         xml.writeTextElement("AlarmEnable", QString("%1").arg(personalSettings->alarm_enable));
