@@ -8,8 +8,14 @@ that far).  It enables you to get your hard-earned "move" log data off
 Openambit will pump that data into the cloud where Big Data can crunch
 it to pieces and analyze your moves to shreds.
 
-Update
-------
+Current State
+=============
+All active developers of Openambit stopped using Ambit Watches. As a 
+result, this project is mostly dormant unless someone steps up to 
+revive and continue support. 
+
+Update - Movescount
+-------------------
 
 Suunto has discontinued the `Movescount` service, Openambit still allows
 to fetch data from supported watches and also to update settings,
