@@ -29,7 +29,7 @@
 #include "sbem0102.h"
 #include "utils.h"
 #include "debug.h"
-
+#include "endian.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

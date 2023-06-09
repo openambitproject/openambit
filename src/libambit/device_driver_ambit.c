@@ -28,11 +28,10 @@
 #include "personal.h"
 #include "sport_mode_serialize.h"
 #include "debug.h"
-
+#include "endian.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 /*
  * Local definitions

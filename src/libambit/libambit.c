@@ -587,7 +587,11 @@ static int device_info_get(ambit_object_t *object, ambit_device_info_t *info)
     if(komposti_version == NULL) {
         LOG_WARNING("Failed to get komposti version");
     }
-    
+    if(info->vendor_id == 0 && info->product_id == 0) {
+        LOG_WARNING("Empty info");
+        return ret;
+    }
+
     LOG_INFO("Reading device info");
 
     if (libambit_protocol_command(object, ambit_command_device_info, komposti_version, sizeof(uint8_t)*4, &reply_data, &replylen, 1) == 0) {

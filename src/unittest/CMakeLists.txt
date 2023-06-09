@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.0.0)
 project (TEST CXX)
 
 set (OPENAMBIT_VERSION 0.5)
@@ -8,6 +8,8 @@ set(CMAKE_MODULE_PATH "${TEST_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+include(${CMAKE_SOURCE_DIR}/Mac.cmake)
+
 find_package(libambit REQUIRED)
 find_package(Movescount REQUIRED)
 IF (!WIN32)
@@ -16,7 +18,6 @@ ELSE (!WIN32)
 set(UDEV_LIBS "")
 ENDIF (!WIN32)
 find_package(Qt5Core REQUIRED)
-
 include(GNUInstallDirs)
 
 include_directories(

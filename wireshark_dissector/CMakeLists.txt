@@ -22,7 +22,7 @@
 #
 
 project(ambit-wireshark-plugin C)
-
+if(
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_BACKWARDS_COMPATIBILITY 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -31,7 +31,7 @@ set(CMAKE_INSTALL_WIRESHARKPLUGINSDIR ~/.wireshark
 
 find_package (Python COMPONENTS Interpreter)
 INCLUDE(UseMakeDissectorReg)
-  
+
 set(GLIB2_MIN_VERSION 2.4.0)
 
 find_package(GLIB2)

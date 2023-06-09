@@ -22,7 +22,7 @@
 #include "device_driver_common.h"
 #include "protocol.h"
 #include "debug.h"
-
+#include "endian.h"
 #include <stdlib.h>
 #include <string.h>
 
