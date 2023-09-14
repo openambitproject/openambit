@@ -97,6 +97,10 @@ def uploadMove(activity):
         r = requests.get(activty_url, headers=headers)
         resp = r.json()
 
+        if resp.get('error', ''):
+            print(resp['error'])
+            return (r.status_code, resp['error'])
+        
     if r.status_code == 200:
         print('New activity at https://www.strava.com/activities/{}'.format(resp['activity_id']))
         return (r.status_code, 'OK')

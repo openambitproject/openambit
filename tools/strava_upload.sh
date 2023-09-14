@@ -30,7 +30,7 @@ else
     OPENAMBIT_CLI=openambit-cli
 fi
 
-$OPENAMBIT_CLI --no-sync-sport-mode --no-sync-navigation $@ || exit 1
+$OPENAMBIT_CLI --no-sync-sport-mode --no-sync-navigation --no-sync-orbit $@ || exit 1
 
 # Get new number of logs
 nb_new_logs=`ls -l ~/.openambit/*.log|wc -l`
